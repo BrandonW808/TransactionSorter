@@ -350,15 +350,14 @@
                 try {
                     showLoader();
                     const data = await parseReceipt();
-                    displayCSVData(data.transactions);
-                    displayCategorizedData(data.categorized);
+                    console.log(`Data: ${JSON.stringify(data, null, 2)}`);
                     hideLoader();
                     csvDataSection.classList.remove('hidden');
                     categorizedSection.classList.remove('hidden');
-                    showStatus('Transactions categorized successfully', 'success');
+                    showStatus('Receipt parsed successfully', 'success');
                 } catch (error) {
                     hideLoader();
-                    showStatus('Error categorizing transactions: ' + error.message, 'error');
+                    showStatus('Error parsing receipt: ' + error.message, 'error');
                 }
             });
 
@@ -624,7 +623,7 @@
                 }
 
                 return {
-                    receipt: result.data
+                    receipt: response.data
                 };
             }
 
