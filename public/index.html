@@ -1,0 +1,680 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0" />
+    <title>Transaction Categorizer v2.0</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 2rem;
+            background: #f4f4f4;
+        }
+
+        .file-upload {
+            margin-bottom: 1.5rem;
+        }
+
+        .file-upload-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: bold;
+        }
+
+        .controls {
+            margin: 1.5rem 0;
+        }
+
+        button {
+            padding: 0.5rem 1rem;
+            margin-right: 0.5rem;
+            font-size: 1rem;
+            cursor: pointer;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+        }
+
+        button:hover {
+            background-color: #45a049;
+        }
+
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+
+        .button-secondary {
+            background-color: #2196F3;
+        }
+
+        .button-secondary:hover {
+            background-color: #0b7dda;
+        }
+
+        .section {
+            margin-bottom: 2rem;
+            background: white;
+            padding: 1rem;
+            border-radius: 4px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .section-header {
+            margin-top: 0;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid #eee;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1rem 0;
+        }
+
+        th,
+        td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #f2f2f2;
+            position: sticky;
+            top: 0;
+        }
+
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+
+        tr:hover {
+            background-color: #f1f1f1;
+        }
+
+        .table-container {
+            max-height: 500px;
+            overflow-y: auto;
+            margin-top: 1rem;
+        }
+
+        .loader {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3498db;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            animation: spin 2s linear infinite;
+            display: none;
+            margin-left: 10px;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        select {
+            padding: 0.5rem;
+            font-size: 1rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            margin-right: 1rem;
+        }
+
+        .category-select-container {
+            margin-bottom: 1rem;
+        }
+
+        .status {
+            padding: 0.5rem 1rem;
+            margin: 1rem 0;
+            border-radius: 4px;
+            display: none;
+        }
+
+        .status.success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .status.error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Transaction Categorizer v2.0</h1>
+
+    <div class="section">
+        <h2 class="section-header">User Information</h2>
+
+        <div class="category-select-container">
+            <label for="userList">User List:</label>
+            <select id="userList">
+                <option value="">Loading user lists...</option>
+            </select>
+            <button id="refreshUsersBtn"
+                    class="button-secondary">Refresh Users</button>
+        </div>
+
+        <div id="user-status"
+             class="status"></div>
+    </div>
+
+
+    <div class="section">
+        <h2 class="section-header">Receipts</h2>
+
+        <div class="file-upload">
+            <label class="file-upload-label"
+                   for="receiptFile">Receipt CSV File:</label>
+            <input type="file"
+                   id="receiptFile"
+                   accept=".csv" />
+        </div>
+
+        <div class="controls">
+            <button id="parseReceiptBtn">Parse Receipt</button>
+            <button id="downloadBtn"
+                    class="button-secondary">Download Parsed CSV</button>
+            <div id="loader"
+                 class="loader"></div>
+        </div>
+    </div>
+
+    <div class="section">
+        <h2 class="section-header">Upload CSV Files</h2>
+
+        <div class="category-select-container">
+            <label for="categoryList">Category List:</label>
+            <select id="categoryList">
+                <option value="">Loading category lists...</option>
+            </select>
+            <button id="refreshListsBtn"
+                    class="button-secondary">Refresh Lists</button>
+        </div>
+
+        <div class="category-select-container">
+            <label for="categoryList">Category List:</label>
+            <select id="categoryList">
+                <option value="">Loading category lists...</option>
+            </select>
+            <button id="refreshListsBtn"
+                    class="button-secondary">Refresh Lists</button>
+        </div>
+
+
+        <div class="file-upload">
+            <label class="file-upload-label"
+                   for="transactionFile">Transactions CSV File:</label>
+            <input type="file"
+                   id="transactionFile"
+                   accept=".csv" />
+        </div>
+
+        <div class="file-upload">
+            <label class="file-upload-label"
+                   for="sharedFile">Shared Transactions CSV File (optional):</label>
+            <input type="file"
+                   id="sharedFile"
+                   accept=".csv" />
+        </div>
+
+        <div class="controls">
+            <button id="parseBtn">Parse CSV Only</button>
+            <button id="categorizeBtn">Categorize Transactions</button>
+            <button id="downloadBtn"
+                    class="button-secondary">Download Categorized CSV</button>
+            <div id="loader"
+                 class="loader"></div>
+        </div>
+
+        <div id="status"
+             class="status"></div>
+    </div>
+
+    <div id="csvDataSection"
+         class="section hidden">
+        <h2 class="section-header">CSV Data</h2>
+        <div class="table-container">
+            <table id="csvDataTable"></table>
+        </div>
+    </div>
+
+    <div id="categorizedSection"
+         class="section hidden">
+        <h2 class="section-header">Categorized Results</h2>
+        <div class="table-container">
+            <table id="categorizedTable"></table>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // Get references to DOM elements
+            const transactionFile = document.getElementById('transactionFile');
+            const sharedFile = document.getElementById('sharedFile');
+            const receiptFile = document.getElementById('receiptFile');
+            const parseBtn = document.getElementById('parseBtn');
+            const parseReceiptBtn = document.getElementById('parseReceiptBtn');
+            const categorizeBtn = document.getElementById('categorizeBtn');
+            const downloadBtn = document.getElementById('downloadBtn');
+            const refreshListsBtn = document.getElementById('refreshListsBtn');
+            const refreshUsersBtn = document.getElementById('refreshUsersBtn');
+            const categoryList = document.getElementById('categoryList');
+            const userList = document.getElementById('userList');
+            const csvDataTable = document.getElementById('csvDataTable');
+            const categorizedTable = document.getElementById('categorizedTable');
+            const csvDataSection = document.getElementById('csvDataSection');
+            const categorizedSection = document.getElementById('categorizedSection');
+            const loader = document.getElementById('loader');
+            const status = document.getElementById('status');
+            const userStatus = document.getElementById('user-status');
+
+            // Load category lists on page load
+            loadCategoryLists();
+            loadUserList();
+
+            // Refresh lists button
+            refreshListsBtn.addEventListener('click', loadCategoryLists);
+            refreshUsersBtn.addEventListener('click', loadUserList);
+
+            // Parse button click handler
+            parseBtn.addEventListener('click', async function () {
+                if (!transactionFile.files.length) {
+                    showStatus('Please select a transaction CSV file', 'error');
+                    return;
+                }
+
+                try {
+                    showLoader();
+                    const data = await parseCSV();
+                    displayCSVData(data.transactions);
+                    hideLoader();
+                    csvDataSection.classList.remove('hidden');
+                    categorizedSection.classList.add('hidden');
+                    showStatus(`Parsed ${data.transactions.length} transactions successfully`, 'success');
+                } catch (error) {
+                    hideLoader();
+                    showStatus('Error parsing CSV: ' + error.message, 'error');
+                }
+            });
+
+            // Categorize button click handler
+            categorizeBtn.addEventListener('click', async function () {
+                if (!transactionFile.files.length) {
+                    showStatus('Please select a transaction CSV file', 'error');
+                    return;
+                }
+
+                try {
+                    showLoader();
+                    const data = await categorizeCSV();
+                    displayCSVData(data.transactions);
+                    displayCategorizedData(data.categorized);
+                    hideLoader();
+                    csvDataSection.classList.remove('hidden');
+                    categorizedSection.classList.remove('hidden');
+                    showStatus('Transactions categorized successfully', 'success');
+                } catch (error) {
+                    hideLoader();
+                    showStatus('Error categorizing transactions: ' + error.message, 'error');
+                }
+            });
+
+            // Categorize button click handler
+            parseReceiptBtn.addEventListener('click', async function () {
+                if (!receiptFile.files.length) {
+                    showStatus('Please select a receipt CSV file', 'error');
+                    return;
+                }
+
+                try {
+                    showLoader();
+                    const data = await parseReceipt();
+                    displayCSVData(data.transactions);
+                    displayCategorizedData(data.categorized);
+                    hideLoader();
+                    csvDataSection.classList.remove('hidden');
+                    categorizedSection.classList.remove('hidden');
+                    showStatus('Transactions categorized successfully', 'success');
+                } catch (error) {
+                    hideLoader();
+                    showStatus('Error categorizing transactions: ' + error.message, 'error');
+                }
+            });
+
+            // Download button click handler
+            downloadBtn.addEventListener('click', async function () {
+                if (!transactionFile.files.length) {
+                    showStatus('Please select a transaction CSV file', 'error');
+                    return;
+                }
+
+                try {
+                    showLoader();
+                    await downloadCategorizedCSV();
+                    hideLoader();
+                    showStatus('CSV downloaded successfully', 'success');
+                } catch (error) {
+                    hideLoader();
+                    showStatus('Error downloading CSV: ' + error.message, 'error');
+                }
+            });
+
+            // Load category lists
+            async function loadCategoryLists() {
+                try {
+                    const response = await fetch('/api/category-lists');
+                    const result = await response.json();
+
+                    if (!result.success) {
+                        throw new Error(result.error);
+                    }
+
+                    categoryList.innerHTML = '<option value="">Use default categories</option>';
+                    result.data.forEach(list => {
+                        const option = document.createElement('option');
+                        option.value = list._id || list.id;
+                        option.textContent = list.name + (list.isDefault ? ' (Default)' : '');
+                        categoryList.appendChild(option);
+                    });
+                } catch (error) {
+                    showStatus('Error loading category lists: ' + error.message, 'error');
+                }
+            }
+
+            // Load user list
+            async function loadUserList() {
+                try {
+                    const response = await fetch('/api/users');
+                    const result = await response.json();
+
+                    if (!result.success) {
+                        throw new Error(result.error);
+                    }
+
+                    userList.innerHTML = '<option value="">None</option>';
+                    result.data.forEach(user => {
+                        const option = document.createElement('option');
+                        option.value = user._id || user.id;
+                        option.textContent = user.name;
+                        userList.appendChild(option);
+                    });
+                } catch (error) {
+                    showUserStatus('Error loading user lists: ' + error.message, 'error');
+                }
+            }
+
+            // Parse CSV files
+            async function parseCSV() {
+                const formData = new FormData();
+                formData.append('transactions', transactionFile.files[0]);
+
+                if (sharedFile.files.length) {
+                    formData.append('shared', sharedFile.files[0]);
+                }
+
+                const response = await fetch('/api/transactions/parse-csv', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Error ${response.status}: ${response.statusText}`);
+                }
+
+                const result = await response.json();
+
+                if (!result.success) {
+                    throw new Error(result.error);
+                }
+
+                return {
+                    transactions: result.data.transactions,
+                    shared: result.data.sharedTransactions
+                };
+            }
+
+            // Categorize CSV files
+            async function categorizeCSV() {
+                const formData = new FormData();
+                formData.append('transactions', transactionFile.files[0]);
+
+                if (sharedFile.files.length) {
+                    formData.append('shared', sharedFile.files[0]);
+                }
+
+                // Add selected category list if any
+                if (categoryList.value) {
+                    formData.append('categoryListId', categoryList.value);
+                }
+
+                const response = await fetch('/api/transactions/categorize-csv', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Error ${response.status}: ${response.statusText}`);
+                }
+
+                // Also parse to get raw data
+                const parseFormData = new FormData();
+                parseFormData.append('transactions', transactionFile.files[0]);
+                if (sharedFile.files.length) {
+                    parseFormData.append('shared', sharedFile.files[0]);
+                }
+
+                const parseResponse = await fetch('/api/transactions/parse-csv', {
+                    method: 'POST',
+                    body: parseFormData
+                });
+
+                if (!parseResponse.ok) {
+                    throw new Error(`Error ${parseResponse.status}: ${parseResponse.statusText}`);
+                }
+
+                const parseResult = await parseResponse.json();
+                const result = await response.json();
+
+                if (!result.success) {
+                    throw new Error(result.error);
+                }
+
+                return {
+                    transactions: parseResult.data.transactions,
+                    categorized: result.data
+                };
+            }
+
+            // Download categorized CSV
+            async function downloadCategorizedCSV() {
+                const formData = new FormData();
+                formData.append('transactions', transactionFile.files[0]);
+
+                if (sharedFile.files.length) {
+                    formData.append('shared', sharedFile.files[0]);
+                }
+
+                // Add selected category list if any
+                if (categoryList.value) {
+                    formData.append('categoryListId', categoryList.value);
+                }
+
+                const response = await fetch('/api/transactions/categorize-csv', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Error ${response.status}: ${response.statusText}`);
+                }
+
+                const result = await response.json();
+                if (!result.success) {
+                    throw new Error(result.error);
+                }
+
+                // Create a download link for CSV data
+                const csvData = result.data.map(row =>
+                    row.map(cell =>
+                        typeof cell === 'string' && cell.includes(',')
+                            ? `"${cell}"`
+                            : cell
+                    ).join(',')
+                ).join('\n');
+
+                const blob = new Blob([csvData], { type: 'text/csv' });
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `categorized_transactions_${new Date().toISOString().split('T')[0]}.csv`;
+                document.body.appendChild(a);
+                a.click();
+                setTimeout(() => {
+                    document.body.removeChild(a);
+                    window.URL.revokeObjectURL(url);
+                }, 0);
+            }
+
+            // Display CSV data as a table
+            function displayCSVData(transactions) {
+                if (!transactions || transactions.length === 0) {
+                    csvDataTable.innerHTML = '<tr><td>No data available</td></tr>';
+                    return;
+                }
+
+                // Create headers
+                let tableHTML = '<tr>';
+                const headers = Object.keys(transactions[0]);
+                headers.forEach(header => {
+                    tableHTML += `<th>${header}</th>`;
+                });
+                tableHTML += '</tr>';
+
+                // Create rows
+                transactions.forEach(transaction => {
+                    tableHTML += '<tr>';
+                    headers.forEach(header => {
+                        let value = transaction[header];
+                        // Format currency values
+                        if (typeof value === 'number' && (header === 'amount' || header === 'balance')) {
+                            value = `$${value.toFixed(2)}`;
+                        }
+                        tableHTML += `<td>${value !== undefined ? value : ''}</td>`;
+                    });
+                    tableHTML += '</tr>';
+                });
+
+                csvDataTable.innerHTML = tableHTML;
+            }
+
+            // Display categorized data as a table
+            function displayCategorizedData(categorized) {
+                if (!categorized || categorized.length === 0) {
+                    categorizedTable.innerHTML = '<tr><td>No categorized data available</td></tr>';
+                    return;
+                }
+
+                let tableHTML = '';
+
+                // Create table from categorized data
+                categorized.forEach(row => {
+                    tableHTML += '<tr>';
+                    row.forEach(cell => {
+                        tableHTML += `<td>${cell !== undefined ? cell : ''}</td>`;
+                    });
+                    tableHTML += '</tr>';
+                });
+
+                categorizedTable.innerHTML = tableHTML;
+            }
+
+            // Categorize CSV files
+            async function parseReceipt() {
+                const formData = new FormData();
+                formData.append('receipt', receiptFile.files[0]);
+
+                const response = await fetch('/api/receipts/parse-receipt-csv', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Error ${response.status}: ${response.statusText}`);
+                }
+
+                return {
+                    receipt: result.data
+                };
+            }
+
+            // Show loader
+            function showLoader() {
+                loader.style.display = 'inline-block';
+                parseBtn.disabled = true;
+                categorizeBtn.disabled = true;
+                downloadBtn.disabled = true;
+                refreshListsBtn.disabled = true;
+            }
+
+            // Hide loader
+            function hideLoader() {
+                loader.style.display = 'none';
+                parseBtn.disabled = false;
+                categorizeBtn.disabled = false;
+                downloadBtn.disabled = false;
+                refreshListsBtn.disabled = false;
+            }
+
+            // Show status message
+            function showStatus(message, type) {
+                status.textContent = message;
+                status.className = 'status ' + type;
+                status.style.display = 'block';
+
+                // Auto-hide success messages after 5 seconds
+                if (type === 'success') {
+                    setTimeout(() => {
+                        status.style.display = 'none';
+                    }, 5000);
+                }
+            }
+
+            // Show user status message
+            function showUserStatus(message, type) {
+                userStatus.textContent = message;
+                userStatus.className = 'status ' + type;
+                userStatus.style.display = 'block';
+
+                // Auto-hide success messages after 5 seconds
+                if (type === 'success') {
+                    setTimeout(() => {
+                        userStatus.style.display = 'none';
+                    }, 5000);
+                }
+            }
+        });
+    </script>
+</body>
+
+</html>
