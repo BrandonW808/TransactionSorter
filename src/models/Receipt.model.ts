@@ -1,56 +1,90 @@
-type ReceiptItem = {
+import mongoose, { Schema, Document, Model } from 'mongoose';
+
+export interface IReceiptItem {
+    originalText: string;
+    readableDescription: string;
+    price: number;
+    category?: string;
+}
+
+export interface IReceipt extends Document {
+    userId?: string;
+    items: IReceiptItem[];
+    total: number;
+    store?: string;
+    date: Date;
+    createdAt: Date;
+    updatedAt: Date;
+    calculateTotal(): number;
+}
+
+const ReceiptItemSchema: Schema = new Schema({
+    originalText: {
+        type: String,
+        required: true
+    },
+    readableDescription: {
+        type: String,
+        required: true
+    },
+    price: {
+        type: Number,
+        required: true
+    },
+    category: {
+        type: String
+    }
+}, { _id: false });
+
+const ReceiptSchema: Schema = new Schema({
+    userId: {
+        type: Schema.Types.ObjectId,
+        ref: 'User'
+    },
+    items: [ReceiptItemSchema],
+    total: {
+        type: Number,
+        required: true
+    },
+    store: {
+        type: String
+    },
+    date: {
+        type: Date,
+        default: Date.now
+    }
+}, {
+    timestamps: true
+});
+
+// Index for user queries
+ReceiptSchema.index({ userId: 1, date: -1 });
+
+// Virtual for item count
+ReceiptSchema.virtual<IReceipt>('itemCount').get(function () {
+    return this.items.length;
+});
+
+// Method to calculate total
+ReceiptSchema.methods.calculateTotal = function () {
+    this.total = this.items.reduce((sum: number, item: IReceiptItem) => sum + item.price, 0);
+    return this.total;
+};
+
+// Static method to get receipts by user
+ReceiptSchema.statics.findByUser = function (userId: string) {
+    return this.find({ userId }).sort({ date: -1 });
+};
+
+export interface ReceiptModel extends Model<IReceipt> {
+    findByUser(userId: string): Promise<IReceipt[]>;
+}
+
+export default mongoose.model<IReceipt, ReceiptModel>('Receipt', ReceiptSchema);
+
+// Helper type for receipt item parsing
+export type ReceiptItem = {
     originalText: string;
     readableDescription: string;
     price: number;
 };
-
-function parseReceiptLines(lines: string[]): ReceiptItem[] {
-    const items: ReceiptItem[] = [];
-
-    for (const line of lines) {
-        const trimmed = line.trim();
-
-        // Match item with price at end, e.g., "BAG.PAIN GRIL.AI 2.99"
-        const itemWithPriceMatch = trimmed.match(/^(.+?)\s+(-?\d+\.\d{2})$/);
-        if (itemWithPriceMatch) {
-            const [, rawDescription, priceStr] = itemWithPriceMatch;
-            const price = parseFloat(priceStr);
-
-            const readableDescription = makeHumanReadable(rawDescription);
-
-            items.push({
-                originalText: trimmed,
-                readableDescription,
-                price,
-            });
-
-            continue;
-        }
-
-        // Skip lines that don't match any expected format
-    }
-
-    return items;
-}
-
-function makeHumanReadable(raw: string): string {
-    return raw
-        .replace(/\./g, " ")
-        .replace(/\bPAIN\b/, "Bread")
-        .replace(/\bGRIL\b/, "Grilled")
-        .replace(/\bAI\b/, "Garlic")
-        .replace(/\bSELECTION\b/, "Selection")
-        .replace(/\bEPICE\b/, "Spices")
-        .replace(/\bLEG\.C\b/, "Canned Vegetables")
-        .replace(/\bRABAIS\b/, "Discount")
-        .trim();
-}
-
-// Example usage:
-const lines = [
-    "BAG.PAIN GRIL.AI 2.99",
-    "Rabais 0.80",
-    "SELECTION EPICE 1.99",
-    "SELECTION LEG.C 1.49",
-    "(1.49@30.00%) -0.45"
-];

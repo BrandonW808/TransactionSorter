@@ -55,6 +55,14 @@
             background-color: #0b7dda;
         }
 
+        .button-danger {
+            background-color: #f44336;
+        }
+
+        .button-danger:hover {
+            background-color: #da190b;
+        }
+
         .section {
             margin-bottom: 2rem;
             background: white;
@@ -157,6 +165,116 @@
             color: #721c24;
             border: 1px solid #f5c6cb;
         }
+
+        /* Receipt specific styles */
+        .receipt-item {
+            display: flex;
+            align-items: center;
+            padding: 0.5rem;
+            border-bottom: 1px solid #eee;
+        }
+
+        .receipt-item:hover {
+            background-color: #f5f5f5;
+        }
+
+        .receipt-original {
+            flex: 1;
+            font-family: monospace;
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        .receipt-readable {
+            flex: 2;
+            padding: 0 1rem;
+        }
+
+        .receipt-readable input {
+            width: 100%;
+            padding: 0.25rem;
+            border: 1px solid #ddd;
+            border-radius: 3px;
+        }
+
+        .receipt-price {
+            font-weight: bold;
+            min-width: 80px;
+            text-align: right;
+        }
+
+        .receipt-actions {
+            margin-left: 1rem;
+        }
+
+        .receipt-actions button {
+            padding: 0.25rem 0.5rem;
+            font-size: 0.875rem;
+            margin-left: 0.25rem;
+        }
+
+        .receipt-summary {
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 2px solid #333;
+            font-size: 1.1rem;
+        }
+
+        .receipt-summary .total {
+            display: flex;
+            justify-content: space-between;
+            font-weight: bold;
+            margin-top: 0.5rem;
+        }
+
+        .translation-mappings {
+            margin-top: 1rem;
+            padding: 1rem;
+            background: #f9f9f9;
+            border-radius: 4px;
+        }
+
+        .mapping-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background: white;
+            border-radius: 3px;
+        }
+
+        .mapping-original {
+            flex: 1;
+            font-family: monospace;
+            color: #666;
+        }
+
+        .mapping-arrow {
+            margin: 0 1rem;
+            color: #999;
+        }
+
+        .mapping-translation {
+            flex: 1;
+            font-weight: bold;
+        }
+
+        .mapping-delete {
+            margin-left: 1rem;
+        }
+
+        .add-mapping {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .add-mapping input {
+            flex: 1;
+            padding: 0.5rem;
+            border: 1px solid #ddd;
+            border-radius: 3px;
+        }
     </style>
 </head>
 
@@ -193,10 +311,51 @@
 
         <div class="controls">
             <button id="parseReceiptBtn">Parse Receipt</button>
-            <button id="downloadBtn"
-                    class="button-secondary">Download Parsed CSV</button>
-            <div id="loader"
+            <button id="saveReceiptBtn"
+                    class="button-secondary"
+                    style="display: none;">Save Receipt</button>
+            <button id="downloadReceiptBtn"
+                    class="button-secondary"
+                    style="display: none;">Download Receipt CSV</button>
+            <button id="manageMappingsBtn"
+                    class="button-secondary">Manage Translations</button>
+            <div id="receiptLoader"
                  class="loader"></div>
+        </div>
+
+        <div id="receipt-status"
+             class="status"></div>
+    </div>
+
+    <!-- Receipt Display Section -->
+    <div id="receiptDisplaySection"
+         class="section hidden">
+        <h2 class="section-header">Parsed Receipt Items</h2>
+        <div id="receiptItems"></div>
+        <div class="receipt-summary">
+            <div class="total">
+                <span>Total:</span>
+                <span id="receiptTotal">$0.00</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Translation Mappings Section -->
+    <div id="translationSection"
+         class="section hidden">
+        <h2 class="section-header">Translation Mappings</h2>
+        <div class="translation-mappings">
+            <div id="mappingsList"></div>
+            <div class="add-mapping">
+                <input type="text"
+                       id="newOriginal"
+                       placeholder="Original text (e.g., PAIN.GRIL)">
+                <input type="text"
+                       id="newTranslation"
+                       placeholder="Human readable (e.g., Grilled Bread)">
+                <button id="addMappingBtn"
+                        class="button-secondary">Add Mapping</button>
+            </div>
         </div>
     </div>
 
@@ -211,16 +370,6 @@
             <button id="refreshListsBtn"
                     class="button-secondary">Refresh Lists</button>
         </div>
-
-        <div class="category-select-container">
-            <label for="categoryList">Category List:</label>
-            <select id="categoryList">
-                <option value="">Loading category lists...</option>
-            </select>
-            <button id="refreshListsBtn"
-                    class="button-secondary">Refresh Lists</button>
-        </div>
-
 
         <div class="file-upload">
             <label class="file-upload-label"
@@ -275,6 +424,9 @@
             const receiptFile = document.getElementById('receiptFile');
             const parseBtn = document.getElementById('parseBtn');
             const parseReceiptBtn = document.getElementById('parseReceiptBtn');
+            const saveReceiptBtn = document.getElementById('saveReceiptBtn');
+            const downloadReceiptBtn = document.getElementById('downloadReceiptBtn');
+            const manageMappingsBtn = document.getElementById('manageMappingsBtn');
             const categorizeBtn = document.getElementById('categorizeBtn');
             const downloadBtn = document.getElementById('downloadBtn');
             const refreshListsBtn = document.getElementById('refreshListsBtn');
@@ -285,17 +437,33 @@
             const categorizedTable = document.getElementById('categorizedTable');
             const csvDataSection = document.getElementById('csvDataSection');
             const categorizedSection = document.getElementById('categorizedSection');
+            const receiptDisplaySection = document.getElementById('receiptDisplaySection');
+            const translationSection = document.getElementById('translationSection');
             const loader = document.getElementById('loader');
+            const receiptLoader = document.getElementById('receiptLoader');
             const status = document.getElementById('status');
+            const receiptStatus = document.getElementById('receipt-status');
             const userStatus = document.getElementById('user-status');
+
+            let currentReceiptData = null;
+            let translationMappings = new Map();
 
             // Load category lists on page load
             loadCategoryLists();
             loadUserList();
+            loadTranslationMappings();
 
             // Refresh lists button
             refreshListsBtn.addEventListener('click', loadCategoryLists);
             refreshUsersBtn.addEventListener('click', loadUserList);
+
+            // Manage mappings button
+            manageMappingsBtn.addEventListener('click', function () {
+                translationSection.classList.toggle('hidden');
+                if (!translationSection.classList.contains('hidden')) {
+                    loadTranslationMappings();
+                }
+            });
 
             // Parse button click handler
             parseBtn.addEventListener('click', async function () {
@@ -340,24 +508,76 @@
                 }
             });
 
-            // Categorize button click handler
+            // Parse receipt button click handler
             parseReceiptBtn.addEventListener('click', async function () {
                 if (!receiptFile.files.length) {
-                    showStatus('Please select a receipt CSV file', 'error');
+                    showReceiptStatus('Please select a receipt CSV file', 'error');
                     return;
                 }
 
                 try {
-                    showLoader();
-                    const data = await parseReceipt();
-                    console.log(`Data: ${JSON.stringify(data, null, 2)}`);
-                    hideLoader();
-                    csvDataSection.classList.remove('hidden');
-                    categorizedSection.classList.remove('hidden');
-                    showStatus('Receipt parsed successfully', 'success');
+                    showReceiptLoader();
+                    const parsed = await parseReceipt();
+                    currentReceiptData = parsed;
+                    displayReceiptData(parsed.data);
+                    hideReceiptLoader();
+                    receiptDisplaySection.classList.remove('hidden');
+                    saveReceiptBtn.style.display = 'inline-block';
+                    downloadReceiptBtn.style.display = 'inline-block';
+                    showReceiptStatus('Receipt parsed successfully', 'success');
                 } catch (error) {
-                    hideLoader();
-                    showStatus('Error parsing receipt: ' + error.message, 'error');
+                    hideReceiptLoader();
+                    showReceiptStatus('Error parsing receipt: ' + error.message, 'error');
+                }
+            });
+
+            // Save receipt button click handler
+            saveReceiptBtn.addEventListener('click', async function () {
+                if (!currentReceiptData) {
+                    showReceiptStatus('No receipt data to save', 'error');
+                    return;
+                }
+
+                try {
+                    showReceiptLoader();
+                    await saveReceipt(currentReceiptData);
+                    hideReceiptLoader();
+                    showReceiptStatus('Receipt saved successfully', 'success');
+                } catch (error) {
+                    hideReceiptLoader();
+                    showReceiptStatus('Error saving receipt: ' + error.message, 'error');
+                }
+            });
+
+            // Download receipt button click handler
+            downloadReceiptBtn.addEventListener('click', function () {
+                if (!currentReceiptData) {
+                    showReceiptStatus('No receipt data to download', 'error');
+                    return;
+                }
+
+                downloadReceiptCSV(currentReceiptData);
+                showReceiptStatus('Receipt downloaded successfully', 'success');
+            });
+
+            // Add translation mapping button
+            document.getElementById('addMappingBtn').addEventListener('click', async function () {
+                const original = document.getElementById('newOriginal').value.trim();
+                const translation = document.getElementById('newTranslation').value.trim();
+
+                if (!original || !translation) {
+                    alert('Please enter both original and translation text');
+                    return;
+                }
+
+                try {
+                    await addTranslationMapping(original, translation);
+                    document.getElementById('newOriginal').value = '';
+                    document.getElementById('newTranslation').value = '';
+                    loadTranslationMappings();
+                    showReceiptStatus('Translation mapping added successfully', 'success');
+                } catch (error) {
+                    showReceiptStatus('Error adding translation: ' + error.message, 'error');
                 }
             });
 
@@ -422,6 +642,74 @@
                     showUserStatus('Error loading user lists: ' + error.message, 'error');
                 }
             }
+
+            // Load translation mappings
+            async function loadTranslationMappings() {
+                try {
+                    const response = await fetch('/api/receipts/translations');
+                    const result = await response.json();
+
+                    if (result.success) {
+                        translationMappings.clear();
+                        const mappingsList = document.getElementById('mappingsList');
+                        mappingsList.innerHTML = '';
+
+                        result.data.forEach(mapping => {
+                            translationMappings.set(mapping.original, mapping.translation);
+
+                            const mappingItem = document.createElement('div');
+                            mappingItem.className = 'mapping-item';
+                            mappingItem.innerHTML = `
+                                <span class="mapping-original">${mapping.original}</span>
+                                <span class="mapping-arrow">→</span>
+                                <span class="mapping-translation">${mapping.translation}</span>
+                                <button class="mapping-delete button-danger" onclick="deleteTranslationMapping('${mapping._id}')">Delete</button>
+                            `;
+                            mappingsList.appendChild(mappingItem);
+                        });
+                    }
+                } catch (error) {
+                    console.error('Error loading translation mappings:', error);
+                }
+            }
+
+            // Add translation mapping
+            async function addTranslationMapping(original, translation) {
+                const response = await fetch('/api/receipts/translations', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ original, translation })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Error ${response.status}: ${response.statusText}`);
+                }
+
+                const result = await response.json();
+                if (!result.success) {
+                    throw new Error(result.error);
+                }
+            }
+
+            // Delete translation mapping (make it global for onclick)
+            window.deleteTranslationMapping = async function (id) {
+                try {
+                    const response = await fetch(`/api/receipts/translations/${id}`, {
+                        method: 'DELETE'
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(`Error ${response.status}: ${response.statusText}`);
+                    }
+
+                    loadTranslationMappings();
+                    showReceiptStatus('Translation mapping deleted', 'success');
+                } catch (error) {
+                    showReceiptStatus('Error deleting translation: ' + error.message, 'error');
+                }
+            };
 
             // Parse CSV files
             async function parseCSV() {
@@ -503,6 +791,212 @@
                     transactions: parseResult.data.transactions,
                     categorized: result.data
                 };
+            }
+
+            // Parse receipt
+            async function parseReceipt() {
+                const formData = new FormData();
+                formData.append('receipt', receiptFile.files[0]);
+
+                const response = await fetch('/api/receipts/parse-receipt-csv', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Error ${response.status}: ${response.statusText}`);
+                }
+
+                const result = await response.json();
+                return result;
+            }
+
+            function displayReceiptData(data) {
+                if (!data || !Array.isArray(data)) {
+                    document.getElementById('receiptItems').innerHTML = '<p>No receipt data available</p>';
+                    return;
+                }
+
+                const receiptItems = document.getElementById('receiptItems');
+                receiptItems.innerHTML = '';
+
+                let total = 0;
+
+                data.forEach((item, index) => {
+                    const itemDiv = document.createElement('div');
+                    itemDiv.className = 'receipt-item';
+
+                    const price = typeof item.price === 'number' ? item.price : 0;
+
+                    if (item.readableDescription === 'TOTAL') {
+                        total = price;
+                    }
+
+                    const originalDiv = document.createElement('div');
+                    originalDiv.className = 'receipt-original';
+                    originalDiv.textContent = item.originalText || '';
+
+                    const readableDiv = document.createElement('div');
+                    readableDiv.className = 'receipt-readable';
+                    const input = document.createElement('input');
+                    input.type = 'text';
+                    input.id = `readable-${index}`;
+                    input.value = item.readableDescription || '';
+                    input.dataset.index = index;
+                    input.addEventListener('change', (event) => {
+                        updateReceiptItem(index, event.target.value);
+                    });
+                    readableDiv.appendChild(input);
+
+                    const priceDiv = document.createElement('div');
+                    priceDiv.className = 'receipt-price';
+                    priceDiv.textContent = `$${price.toFixed(2)}`;
+
+                    const actionsDiv = document.createElement('div');
+                    actionsDiv.className = 'receipt-actions';
+                    const button = document.createElement('button');
+                    button.className = 'button-secondary';
+                    button.textContent = 'Apply Translation';
+                    button.addEventListener('click', () => {
+                        applyTranslation(index, item.originalText);
+                    });
+                    actionsDiv.appendChild(button);
+
+                    itemDiv.appendChild(originalDiv);
+                    itemDiv.appendChild(readableDiv);
+                    itemDiv.appendChild(priceDiv);
+                    itemDiv.appendChild(actionsDiv);
+
+                    receiptItems.appendChild(itemDiv);
+                });
+
+                document.getElementById('receiptTotal').textContent = `$${total.toFixed(2)}`;
+            }
+
+            // Update receipt item (make it global for onchange)
+            window.updateReceiptItem = async function (index, newValue, translation) {
+                try {
+                    if (translation) {
+                        translation.translation = newValue;
+                        const response = await fetch(`/api/receipts/translations/${translation._id}`, {
+                            method: "PUT",
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({ translation: newValue })
+                        });
+                        const result = await response.json();
+
+                        if (result.success && result.data) {
+                            if (currentReceiptData && currentReceiptData[index]) {
+                                currentReceiptData[index].readableDescription = newValue;
+                            }
+                        } else {
+                            showReceiptStatus('No translation found for this item', 'error');
+                        }
+                    }
+                    translationMappings.translation = newValue;
+                } catch (error) {
+                    showReceiptStatus('Error applying translation: ' + error.message, 'error');
+                }
+            };
+
+            // Apply translation to an item (make it global for onclick)
+            window.applyTranslation = async function (index, originalText) {
+                // First check local mappings
+
+                const readable = document.getElementById(`readable-${index}`).value;
+
+                // Try to get translation from server
+                try {
+                    const response = await fetch(`/api/receipts/translate?text=${encodeURIComponent(originalText)}`);
+                    const result = await response.json();
+
+                    if (result.success && result.translation) {
+                        updateReceiptItem(index, readable, result.translation);
+                    } else {
+                        // Create a translation
+                        const response = await fetch(`/api/receipts/translations`, {
+                            method: "POST",
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({
+                                original: originalText,
+                                translation: readable,
+                                userId: null,
+                            })
+                        });
+                        const result = await response.json();
+
+                        if (result.success && result.translation) {
+                            if (currentReceiptData && currentReceiptData[index]) {
+                                currentReceiptData[index].readableDescription = newValue;
+                            }
+                        } else {
+                            showReceiptStatus('Error creating translation for this item', 'error');
+                        }
+                    }
+                } catch (error) {
+                    showReceiptStatus('Error applying translation: ' + error.message, 'error');
+                }
+            };
+
+            // Save receipt
+            async function saveReceipt(data) {
+                const userId = userList.value;
+
+                const response = await fetch('/api/receipts/save', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        items: data,
+                        userId: userId || null
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Error ${response.status}: ${response.statusText}`);
+                }
+
+                const result = await response.json();
+                if (!result.success) {
+                    throw new Error(result.error);
+                }
+            }
+
+            // Download receipt as CSV
+            function downloadReceiptCSV(data) {
+                const csvRows = [
+                    ['Original Text', 'Description', 'Price'],
+                    ...data.map(item => [
+                        item.originalText || '',
+                        item.readableDescription || '',
+                        item.price || 0
+                    ])
+                ];
+
+                const csvData = csvRows.map(row =>
+                    row.map(cell =>
+                        typeof cell === 'string' && cell.includes(',')
+                            ? `"${cell}"`
+                            : cell
+                    ).join(',')
+                ).join('\n');
+
+                const blob = new Blob([csvData], { type: 'text/csv' });
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `receipt_${new Date().toISOString().split('T')[0]}.csv`;
+                document.body.appendChild(a);
+                a.click();
+                setTimeout(() => {
+                    document.body.removeChild(a);
+                    window.URL.revokeObjectURL(url);
+                }, 0);
             }
 
             // Download categorized CSV
@@ -608,25 +1102,6 @@
                 categorizedTable.innerHTML = tableHTML;
             }
 
-            // Categorize CSV files
-            async function parseReceipt() {
-                const formData = new FormData();
-                formData.append('receipt', receiptFile.files[0]);
-
-                const response = await fetch('/api/receipts/parse-receipt-csv', {
-                    method: 'POST',
-                    body: formData
-                });
-
-                if (!response.ok) {
-                    throw new Error(`Error ${response.status}: ${response.statusText}`);
-                }
-
-                return {
-                    receipt: response.data
-                };
-            }
-
             // Show loader
             function showLoader() {
                 loader.style.display = 'inline-block';
@@ -645,6 +1120,22 @@
                 refreshListsBtn.disabled = false;
             }
 
+            // Show receipt loader
+            function showReceiptLoader() {
+                receiptLoader.style.display = 'inline-block';
+                parseReceiptBtn.disabled = true;
+                saveReceiptBtn.disabled = true;
+                downloadReceiptBtn.disabled = true;
+            }
+
+            // Hide receipt loader
+            function hideReceiptLoader() {
+                receiptLoader.style.display = 'none';
+                parseReceiptBtn.disabled = false;
+                saveReceiptBtn.disabled = false;
+                downloadReceiptBtn.disabled = false;
+            }
+
             // Show status message
             function showStatus(message, type) {
                 status.textContent = message;
@@ -655,6 +1146,20 @@
                 if (type === 'success') {
                     setTimeout(() => {
                         status.style.display = 'none';
+                    }, 5000);
+                }
+            }
+
+            // Show receipt status message
+            function showReceiptStatus(message, type) {
+                receiptStatus.textContent = message;
+                receiptStatus.className = 'status ' + type;
+                receiptStatus.style.display = 'block';
+
+                // Auto-hide success messages after 5 seconds
+                if (type === 'success') {
+                    setTimeout(() => {
+                        receiptStatus.style.display = 'none';
                     }, 5000);
                 }
             }
