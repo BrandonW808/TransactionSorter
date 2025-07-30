@@ -18,24 +18,133 @@ export async function parseReceiptCSV(csv: string): Promise<ReceiptItem[]> {
 
 export async function parseReceiptLines(lines: string[]): Promise<ReceiptItem[]> {
     const items: ReceiptItem[] = [];
+    let i = 0;
 
-    for (const line of lines) {
-        const trimmed = line.trim();
+    while (i < lines.length) {
+        const line = lines[i].trim();
 
-        const match = trimmed.match(/^(.+?)\s+(-?\d+\.\d{2})$/);
-        if (match) {
-            const [, rawDescription, priceStr] = match;
+        if (!line) {
+            i++;
+            continue;
+        }
+
+        // Check if this line is a price line only (matching pattern like "2 @ $2.99 5.98")
+        const priceOnlyMatch = line.match(/^(\d+)\s*@\s*\$?(\d+\.\d{2})\s+(-?\d+\.\d{2})$/);
+        if (priceOnlyMatch) {
+            // This is a quantity @ unit price total line
+            // Look back to find the item name
+            let itemName = "";
+            let lookBack = i - 1;
+
+            while (lookBack >= 0 && lines[lookBack].trim()) {
+                const prevLine = lines[lookBack].trim();
+                // Check if previous line is NOT a price line
+                if (!prevLine.match(/\d+\.\d{2}$/) && !prevLine.match(/^(\d+)\s*@/)) {
+                    itemName = prevLine;
+                    break;
+                }
+                lookBack--;
+            }
+
+            if (itemName) {
+                const [, quantity, unitPrice, totalPrice] = priceOnlyMatch;
+
+                const price = parseFloat(totalPrice);
+
+                const fullText = `${itemName} ${line}`;
+                const readableDescription = await translateText(itemName) + ` (${quantity} @ $${unitPrice})`;
+
+                items.push({
+                    originalText: fullText,
+                    readableDescription,
+                    price,
+                });
+            }
+            i++;
+            continue;
+        }
+
+        // Check if this line ends with a price
+        const lineWithPriceMatch = line.match(/^(.+?)\s+(-?\d+\.\d{2})$/);
+        if (lineWithPriceMatch) {
+            const [, rawDescription, priceStr] = lineWithPriceMatch;
+
             const price = parseFloat(priceStr);
 
-            // Try to find existing translation
-            const readableDescription = await translateText(trimmed);
+            // Check if this is a discount line
+            const isDiscount = rawDescription.toUpperCase().includes('RABAIS') ||
+                rawDescription.toUpperCase().includes('DISCOUNT') ||
+                price < 0;
 
-            items.push({
-                originalText: trimmed,
-                readableDescription,
-                price,
-            });
+            if (isDiscount && items.length > 0) {
+                // Apply discount to the previous item
+                const lastItem = items[items.length - 1];
+                if (price < 0) {
+                    // Price is negative for discount
+                    lastItem.price += price; // price is negative for discounts
+                } else {
+                    // Price is positive for discount
+                    lastItem.price -= price; // price is negative for discounts
+                }
+                lastItem.readableDescription += ` (Discount: $${Math.abs(price)})`;
+                lastItem.suffixText = line;
+            } else {
+                // Regular item with price
+                const readableDescription = await translateText(line);
+                items.push({
+                    originalText: line,
+                    readableDescription,
+                    price,
+                });
+            }
+            i++;
+            continue;
         }
+
+        // Check if the next line contains price information
+        if (i + 1 < lines.length) {
+            const nextLine = lines[i + 1].trim();
+
+            // Check if next line is a quantity @ price line
+            const quantityPriceMatch = nextLine.match(/^(\d+)\s*@\s*\$?(\d+\.\d{2})\s+(-?\d+\.\d{2})$/);
+            if (quantityPriceMatch) {
+                const [, quantity, unitPrice, totalPrice] = quantityPriceMatch;
+                const price = parseFloat(totalPrice);
+                console.log(`Quantity Price Match: ${price}`);
+                const readableDescription = await translateText(line) + ` (${quantity} @ $${unitPrice})`;
+
+                items.push({
+                    originalText: line,
+                    suffixText: nextLine,
+                    readableDescription,
+                    price,
+                });
+                i += 2; // Skip both lines
+                continue;
+            }
+
+            // // Check if next line ends with a price
+            const nextLineWithPrice = nextLine.match(/^(.+?)\s+(-?\d+\.\d{2})$/);
+            if (nextLineWithPrice) {
+                const [, , priceStr] = nextLineWithPrice;
+
+                const price = parseFloat(priceStr);
+                console.log(`Line: ${line} Next Line: ${nextLine}`);
+                const readableDescription = await translateText(line);
+
+                items.push({
+                    originalText: line,
+                    suffixText: nextLine,
+                    readableDescription,
+                    price,
+                });
+                i += 2; // Skip both lines
+                continue;
+            }
+        }
+
+        // Line doesn't have associated price information, skip it
+        i++;
     }
 
     return items;
@@ -58,12 +167,13 @@ async function translateText(raw: string): Promise<string> {
 }
 
 function makeHumanReadable(raw: string): string {
+    // Remove price if present
     const match = raw.match(/^(.+?)\s+(-?\d+\.\d{2})$/);
     if (match) {
         const [, rawDescription, priceStr] = match;
-        const price = parseFloat(priceStr);
         raw = rawDescription;
     }
+
     // Basic transformation rules
     let result = raw
         .replace(/\./g, " ")
@@ -117,7 +227,9 @@ function makeHumanReadable(raw: string): string {
         'VIANDE': 'Meat',
         'POISSON': 'Fish',
         'FRUITS': 'Fruits',
+        'FRUIT': 'Fruit',
         'LEGUMES': 'Vegetables',
+        'LEGUME': 'Vegetable',
         'SURGELE': 'Frozen',
         'FRAIS': 'Fresh',
         'BIO': 'Organic',
@@ -127,7 +239,12 @@ function makeHumanReadable(raw: string): string {
         'BLANC': 'White',
         'VERT': 'Green',
         'JAUNE': 'Yellow',
-        'NOIR': 'Black'
+        'NOIR': 'Black',
+        'TOFU': 'Tofu',
+        'ET': 'And',
+        'M-ET': 'And',
+        'EXT': 'Extra',
+        'FE': 'Iron'
     };
 
     // Apply word-by-word translations

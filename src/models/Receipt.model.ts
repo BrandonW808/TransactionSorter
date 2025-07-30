@@ -2,6 +2,7 @@ import mongoose, { Schema, Document, Model } from 'mongoose';
 
 export interface IReceiptItem {
     originalText: string;
+    suffixText?: string;
     readableDescription: string;
     price: number;
     category?: string;
@@ -22,6 +23,9 @@ const ReceiptItemSchema: Schema = new Schema({
     originalText: {
         type: String,
         required: true
+    },
+    suffixText: {
+        type: String
     },
     readableDescription: {
         type: String,
@@ -85,6 +89,7 @@ export default mongoose.model<IReceipt, ReceiptModel>('Receipt', ReceiptSchema);
 // Helper type for receipt item parsing
 export type ReceiptItem = {
     originalText: string;
+    suffixText?: string;
     readableDescription: string;
     price: number;
 };

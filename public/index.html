@@ -834,7 +834,7 @@
 
                     const originalDiv = document.createElement('div');
                     originalDiv.className = 'receipt-original';
-                    originalDiv.textContent = item.originalText || '';
+                    originalDiv.textContent = item.originalText ? `${item.originalText} ${item.suffixText ? item.suffixText : ''}` : '';
 
                     const readableDiv = document.createElement('div');
                     readableDiv.className = 'receipt-readable';
@@ -904,7 +904,7 @@
             // Apply translation to an item (make it global for onclick)
             window.applyTranslation = async function (index, originalText) {
                 // First check local mappings
-
+                console.log(`Original Text: ${originalText}`)
                 const readable = document.getElementById(`readable-${index}`).value;
 
                 // Try to get translation from server
