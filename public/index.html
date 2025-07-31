@@ -3,1181 +3,788 @@
 
 <head>
     <meta charset="UTF-8" />
-    <meta name="viewport"
-          content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Transaction Categorizer v2.0</title>
+    <link rel="stylesheet" href="styles.css" />
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            padding: 2rem;
-            background: #f4f4f4;
+        /* Transaction specific styles */
+        .file-upload-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin-bottom: 2rem;
         }
 
-        .file-upload {
+        .file-upload-card {
+            background: white;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: var(--shadow-sm);
+            transition: all 0.3s;
+        }
+
+        .file-upload-card:hover {
+            box-shadow: var(--shadow-md);
+            transform: translateY(-2px);
+        }
+
+        .file-upload-card h4 {
+            margin-bottom: 1rem;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .file-icon {
+            font-size: 1.5rem;
+        }
+
+        .file-input-wrapper {
+            position: relative;
+            overflow: hidden;
+            display: inline-block;
+            width: 100%;
+        }
+
+        .file-input-wrapper input[type=file] {
+            position: absolute;
+            left: -9999px;
+        }
+
+        .file-input-label {
+            display: block;
+            padding: 1rem;
+            border: 2px dashed var(--primary-color);
+            border-radius: 6px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: rgba(76, 175, 80, 0.05);
+        }
+
+        .file-input-label:hover {
+            background: rgba(76, 175, 80, 0.1);
+            border-color: var(--primary-hover);
+        }
+
+        .file-selected {
+            background: rgba(76, 175, 80, 0.15);
+            border-style: solid;
+        }
+
+        .file-name {
+            margin-top: 0.5rem;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            margin-top: 1.5rem;
+        }
+
+        .results-tabs {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            border-bottom: 2px solid var(--border-color);
+        }
+
+        .tab-button {
+            padding: 1rem 1.5rem;
+            background: none;
+            border: none;
+            border-bottom: 3px solid transparent;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+            transition: all 0.3s;
+        }
+
+        .tab-button:hover {
+            color: var(--primary-color);
+        }
+
+        .tab-button.active {
+            color: var(--primary-color);
+            border-bottom-color: var(--primary-color);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+            animation: fadeIn 0.3s;
+        }
+
+        .quick-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
             margin-bottom: 1.5rem;
         }
 
-        .file-upload-label {
-            display: block;
-            margin-bottom: 0.5rem;
-            font-weight: bold;
-        }
-
-        .controls {
-            margin: 1.5rem 0;
-        }
-
-        button {
-            padding: 0.5rem 1rem;
-            margin-right: 0.5rem;
-            font-size: 1rem;
-            cursor: pointer;
-            background-color: #4CAF50;
+        .quick-stat {
+            background: linear-gradient(135deg, #667eea, #764ba2);
             color: white;
-            border: none;
-            border-radius: 4px;
-        }
-
-        button:hover {
-            background-color: #45a049;
-        }
-
-        button:disabled {
-            background-color: #cccccc;
-            cursor: not-allowed;
-        }
-
-        .button-secondary {
-            background-color: #2196F3;
-        }
-
-        .button-secondary:hover {
-            background-color: #0b7dda;
-        }
-
-        .button-danger {
-            background-color: #f44336;
-        }
-
-        .button-danger:hover {
-            background-color: #da190b;
-        }
-
-        .section {
-            margin-bottom: 2rem;
-            background: white;
             padding: 1rem;
-            border-radius: 4px;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+            text-align: center;
         }
 
-        .section-header {
-            margin-top: 0;
-            padding-bottom: 0.5rem;
-            border-bottom: 1px solid #eee;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin: 1rem 0;
-        }
-
-        th,
-        td {
-            border: 1px solid #ddd;
-            padding: 8px;
-            text-align: left;
-        }
-
-        th {
-            background-color: #f2f2f2;
-            position: sticky;
-            top: 0;
-        }
-
-        tr:nth-child(even) {
-            background-color: #f9f9f9;
-        }
-
-        tr:hover {
-            background-color: #f1f1f1;
-        }
-
-        .table-container {
-            max-height: 500px;
-            overflow-y: auto;
-            margin-top: 1rem;
-        }
-
-        .loader {
-            border: 4px solid #f3f3f3;
-            border-top: 4px solid #3498db;
-            border-radius: 50%;
-            width: 20px;
-            height: 20px;
-            animation: spin 2s linear infinite;
-            display: none;
-            margin-left: 10px;
-        }
-
-        @keyframes spin {
-            0% {
-                transform: rotate(0deg);
-            }
-
-            100% {
-                transform: rotate(360deg);
-            }
-        }
-
-        .hidden {
-            display: none;
-        }
-
-        select {
-            padding: 0.5rem;
-            font-size: 1rem;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            margin-right: 1rem;
-        }
-
-        .category-select-container {
-            margin-bottom: 1rem;
-        }
-
-        .status {
-            padding: 0.5rem 1rem;
-            margin: 1rem 0;
-            border-radius: 4px;
-            display: none;
-        }
-
-        .status.success {
-            background-color: #d4edda;
-            color: #155724;
-            border: 1px solid #c3e6cb;
-        }
-
-        .status.error {
-            background-color: #f8d7da;
-            color: #721c24;
-            border: 1px solid #f5c6cb;
-        }
-
-        /* Receipt specific styles */
-        .receipt-item {
-            display: flex;
-            align-items: center;
-            padding: 0.5rem;
-            border-bottom: 1px solid #eee;
-        }
-
-        .receipt-item:hover {
-            background-color: #f5f5f5;
-        }
-
-        .receipt-original {
-            flex: 1;
-            font-family: monospace;
-            color: #666;
-            font-size: 0.9rem;
-        }
-
-        .receipt-readable {
-            flex: 2;
-            padding: 0 1rem;
-        }
-
-        .receipt-readable input {
-            width: 100%;
-            padding: 0.25rem;
-            border: 1px solid #ddd;
-            border-radius: 3px;
-        }
-
-        .receipt-price {
+        .quick-stat-value {
+            font-size: 1.5rem;
             font-weight: bold;
-            min-width: 80px;
-            text-align: right;
         }
 
-        .receipt-actions {
-            margin-left: 1rem;
+        .quick-stat-label {
+            font-size: 0.85rem;
+            opacity: 0.9;
         }
 
-        .receipt-actions button {
-            padding: 0.25rem 0.5rem;
-            font-size: 0.875rem;
-            margin-left: 0.25rem;
-        }
-
-        .receipt-summary {
-            margin-top: 1rem;
-            padding-top: 1rem;
-            border-top: 2px solid #333;
-            font-size: 1.1rem;
-        }
-
-        .receipt-summary .total {
-            display: flex;
-            justify-content: space-between;
-            font-weight: bold;
-            margin-top: 0.5rem;
-        }
-
-        .translation-mappings {
-            margin-top: 1rem;
-            padding: 1rem;
-            background: #f9f9f9;
-            border-radius: 4px;
-        }
-
-        .mapping-item {
-            display: flex;
-            align-items: center;
-            margin-bottom: 0.5rem;
-            padding: 0.5rem;
+        .filters-section {
             background: white;
-            border-radius: 3px;
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin-bottom: 1.5rem;
+            box-shadow: var(--shadow-sm);
         }
 
-        .mapping-original {
-            flex: 1;
-            font-family: monospace;
-            color: #666;
+        .filter-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
         }
 
-        .mapping-arrow {
-            margin: 0 1rem;
-            color: #999;
-        }
-
-        .mapping-translation {
-            flex: 1;
-            font-weight: bold;
-        }
-
-        .mapping-delete {
-            margin-left: 1rem;
-        }
-
-        .add-mapping {
-            display: flex;
-            gap: 0.5rem;
-            margin-top: 1rem;
-        }
-
-        .add-mapping input {
-            flex: 1;
-            padding: 0.5rem;
-            border: 1px solid #ddd;
-            border-radius: 3px;
+        @media (max-width: 768px) {
+            .file-upload-section {
+                grid-template-columns: 1fr;
+            }
         }
     </style>
 </head>
 
 <body>
-    <h1>Transaction Categorizer v2.0</h1>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-brand">
+                <h1>Transaction Categorizer v2.0</h1>
+            </div>
+            <ul class="nav-menu">
+                <li class="nav-item active">
+                    <a href="index.html" class="nav-link">
+                        <span class="nav-icon">📊</span>
+                        Transactions
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="receipts.html" class="nav-link">
+                        <span class="nav-icon">🧾</span>
+                        Receipts
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="categories.html" class="nav-link">
+                        <span class="nav-icon">📂</span>
+                        Categories
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="users.html" class="nav-link">
+                        <span class="nav-icon">👥</span>
+                        Users
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </nav>
 
-    <div class="section">
-        <h2 class="section-header">User Information</h2>
-
-        <div class="category-select-container">
-            <label for="userList">User List:</label>
-            <select id="userList">
-                <option value="">Loading user lists...</option>
-            </select>
-            <button id="refreshUsersBtn"
-                    class="button-secondary">Refresh Users</button>
+    <div class="container">
+        <!-- Page Header -->
+        <div class="page-header">
+            <h2>Transaction Processing</h2>
         </div>
 
-        <div id="user-status"
-             class="status"></div>
-    </div>
-
-
-    <div class="section">
-        <h2 class="section-header">Receipts</h2>
-
-        <div class="file-upload">
-            <label class="file-upload-label"
-                   for="receiptFile">Receipt CSV File:</label>
-            <input type="file"
-                   id="receiptFile"
-                   accept=".csv" />
-        </div>
-
-        <div class="controls">
-            <button id="parseReceiptBtn">Parse Receipt</button>
-            <button id="saveReceiptBtn"
-                    class="button-secondary"
-                    style="display: none;">Save Receipt</button>
-            <button id="downloadReceiptBtn"
-                    class="button-secondary"
-                    style="display: none;">Download Receipt CSV</button>
-            <button id="manageMappingsBtn"
-                    class="button-secondary">Manage Translations</button>
-            <div id="receiptLoader"
-                 class="loader"></div>
-        </div>
-
-        <div id="receipt-status"
-             class="status"></div>
-    </div>
-
-    <!-- Receipt Display Section -->
-    <div id="receiptDisplaySection"
-         class="section hidden">
-        <h2 class="section-header">Parsed Receipt Items</h2>
-        <div id="receiptItems"></div>
-        <div class="receipt-summary">
-            <div class="total">
-                <span>Total:</span>
-                <span id="receiptTotal">$0.00</span>
+        <!-- Quick Stats -->
+        <div class="quick-stats">
+            <div class="quick-stat">
+                <div class="quick-stat-value" id="totalProcessed">0</div>
+                <div class="quick-stat-label">Processed Today</div>
+            </div>
+            <div class="quick-stat">
+                <div class="quick-stat-value" id="categorizedCount">0</div>
+                <div class="quick-stat-label">Categorized</div>
+            </div>
+            <div class="quick-stat">
+                <div class="quick-stat-value" id="uncategorizedCount">0</div>
+                <div class="quick-stat-label">Uncategorized</div>
+            </div>
+            <div class="quick-stat">
+                <div class="quick-stat-value" id="accuracyRate">0%</div>
+                <div class="quick-stat-label">Accuracy</div>
             </div>
         </div>
-    </div>
 
-    <!-- Translation Mappings Section -->
-    <div id="translationSection"
-         class="section hidden">
-        <h2 class="section-header">Translation Mappings</h2>
-        <div class="translation-mappings">
-            <div id="mappingsList"></div>
-            <div class="add-mapping">
-                <input type="text"
-                       id="newOriginal"
-                       placeholder="Original text (e.g., PAIN.GRIL)">
-                <input type="text"
-                       id="newTranslation"
-                       placeholder="Human readable (e.g., Grilled Bread)">
-                <button id="addMappingBtn"
-                        class="button-secondary">Add Mapping</button>
+        <!-- Status Messages -->
+        <div id="status" class="status"></div>
+
+        <!-- Configuration Section -->
+        <div class="filters-section">
+            <h3 class="section-header">Configuration</h3>
+            <div class="filter-grid">
+                <div class="form-group">
+                    <label for="categoryList">Category List:</label>
+                    <select id="categoryList" class="form-control">
+                        <option value="">Use default categories</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="userSelect">User (Optional):</label>
+                    <select id="userSelect" class="form-control">
+                        <option value="">Select user...</option>
+                    </select>
+                </div>
+                <div class="form-group" style="display: flex; align-items: flex-end;">
+                    <button id="refreshConfigBtn" class="button button-secondary">
+                        <span class="button-icon">🔄</span>
+                        Refresh
+                    </button>
+                </div>
             </div>
         </div>
-    </div>
 
-    <div class="section">
-        <h2 class="section-header">Upload CSV Files</h2>
+        <!-- File Upload Section -->
+        <div class="section">
+            <h3 class="section-header">Upload CSV Files</h3>
+            <div class="file-upload-section">
+                <div class="file-upload-card">
+                    <h4>
+                        <span class="file-icon">📄</span>
+                        Transaction File
+                    </h4>
+                    <div class="file-input-wrapper">
+                        <input type="file" id="transactionFile" accept=".csv" />
+                        <label for="transactionFile" class="file-input-label" id="transactionLabel">
+                            Click to select or drag & drop
+                            <br>
+                            <small>Required - Main transaction CSV</small>
+                        </label>
+                    </div>
+                    <div class="file-name" id="transactionFileName"></div>
+                </div>
+                
+                <div class="file-upload-card">
+                    <h4>
+                        <span class="file-icon">📋</span>
+                        Shared Transaction File
+                    </h4>
+                    <div class="file-input-wrapper">
+                        <input type="file" id="sharedFile" accept=".csv" />
+                        <label for="sharedFile" class="file-input-label" id="sharedLabel">
+                            Click to select or drag & drop
+                            <br>
+                            <small>Optional - Shared transactions CSV</small>
+                        </label>
+                    </div>
+                    <div class="file-name" id="sharedFileName"></div>
+                </div>
+            </div>
 
-        <div class="category-select-container">
-            <label for="categoryList">Category List:</label>
-            <select id="categoryList">
-                <option value="">Loading category lists...</option>
-            </select>
-            <button id="refreshListsBtn"
-                    class="button-secondary">Refresh Lists</button>
+            <div class="action-buttons">
+                <button id="parseBtn" class="button button-primary">
+                    <span class="button-icon">🔍</span>
+                    Parse CSV Only
+                </button>
+                <button id="categorizeBtn" class="button button-primary">
+                    <span class="button-icon">🏷️</span>
+                    Categorize Transactions
+                </button>
+                <button id="downloadBtn" class="button button-secondary">
+                    <span class="button-icon">⬇️</span>
+                    Download Results
+                </button>
+                <button id="clearBtn" class="button button-secondary">
+                    <span class="button-icon">🗑️</span>
+                    Clear
+                </button>
+            </div>
         </div>
 
-        <div class="file-upload">
-            <label class="file-upload-label"
-                   for="transactionFile">Transactions CSV File:</label>
-            <input type="file"
-                   id="transactionFile"
-                   accept=".csv" />
+        <!-- Results Section -->
+        <div id="resultsSection" class="section hidden">
+            <h3 class="section-header">Results</h3>
+            
+            <div class="results-tabs">
+                <button class="tab-button active" data-tab="parsed">Parsed Data</button>
+                <button class="tab-button" data-tab="categorized">Categorized Data</button>
+                <button class="tab-button" data-tab="summary">Summary</button>
+            </div>
+
+            <div id="parsed" class="tab-content active">
+                <div class="table-container">
+                    <table id="parsedTable"></table>
+                </div>
+            </div>
+
+            <div id="categorized" class="tab-content">
+                <div class="table-container">
+                    <table id="categorizedTable"></table>
+                </div>
+            </div>
+
+            <div id="summary" class="tab-content">
+                <div id="summaryContent">
+                    <!-- Summary will be generated here -->
+                </div>
+            </div>
         </div>
 
-        <div class="file-upload">
-            <label class="file-upload-label"
-                   for="sharedFile">Shared Transactions CSV File (optional):</label>
-            <input type="file"
-                   id="sharedFile"
-                   accept=".csv" />
-        </div>
-
-        <div class="controls">
-            <button id="parseBtn">Parse CSV Only</button>
-            <button id="categorizeBtn">Categorize Transactions</button>
-            <button id="downloadBtn"
-                    class="button-secondary">Download Categorized CSV</button>
-            <div id="loader"
-                 class="loader"></div>
-        </div>
-
-        <div id="status"
-             class="status"></div>
-    </div>
-
-    <div id="csvDataSection"
-         class="section hidden">
-        <h2 class="section-header">CSV Data</h2>
-        <div class="table-container">
-            <table id="csvDataTable"></table>
-        </div>
-    </div>
-
-    <div id="categorizedSection"
-         class="section hidden">
-        <h2 class="section-header">Categorized Results</h2>
-        <div class="table-container">
-            <table id="categorizedTable"></table>
-        </div>
+        <!-- Loader -->
+        <div id="loader" class="loader"></div>
     </div>
 
     <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            // Get references to DOM elements
-            const transactionFile = document.getElementById('transactionFile');
-            const sharedFile = document.getElementById('sharedFile');
-            const receiptFile = document.getElementById('receiptFile');
-            const parseBtn = document.getElementById('parseBtn');
-            const parseReceiptBtn = document.getElementById('parseReceiptBtn');
-            const saveReceiptBtn = document.getElementById('saveReceiptBtn');
-            const downloadReceiptBtn = document.getElementById('downloadReceiptBtn');
-            const manageMappingsBtn = document.getElementById('manageMappingsBtn');
-            const categorizeBtn = document.getElementById('categorizeBtn');
-            const downloadBtn = document.getElementById('downloadBtn');
-            const refreshListsBtn = document.getElementById('refreshListsBtn');
-            const refreshUsersBtn = document.getElementById('refreshUsersBtn');
-            const categoryList = document.getElementById('categoryList');
-            const userList = document.getElementById('userList');
-            const csvDataTable = document.getElementById('csvDataTable');
-            const categorizedTable = document.getElementById('categorizedTable');
-            const csvDataSection = document.getElementById('csvDataSection');
-            const categorizedSection = document.getElementById('categorizedSection');
-            const receiptDisplaySection = document.getElementById('receiptDisplaySection');
-            const translationSection = document.getElementById('translationSection');
-            const loader = document.getElementById('loader');
-            const receiptLoader = document.getElementById('receiptLoader');
-            const status = document.getElementById('status');
-            const receiptStatus = document.getElementById('receipt-status');
-            const userStatus = document.getElementById('user-status');
+        // Global variables
+        let parsedData = null;
+        let categorizedData = null;
+        let activeTab = 'parsed';
 
-            let currentReceiptData = null;
-            let translationMappings = new Map();
+        // DOM elements
+        const transactionFile = document.getElementById('transactionFile');
+        const sharedFile = document.getElementById('sharedFile');
+        const transactionLabel = document.getElementById('transactionLabel');
+        const sharedLabel = document.getElementById('sharedLabel');
+        const transactionFileName = document.getElementById('transactionFileName');
+        const sharedFileName = document.getElementById('sharedFileName');
+        const categoryList = document.getElementById('categoryList');
+        const userSelect = document.getElementById('userSelect');
+        const parseBtn = document.getElementById('parseBtn');
+        const categorizeBtn = document.getElementById('categorizeBtn');
+        const downloadBtn = document.getElementById('downloadBtn');
+        const clearBtn = document.getElementById('clearBtn');
+        const refreshConfigBtn = document.getElementById('refreshConfigBtn');
+        const resultsSection = document.getElementById('resultsSection');
+        const parsedTable = document.getElementById('parsedTable');
+        const categorizedTable = document.getElementById('categorizedTable');
+        const summaryContent = document.getElementById('summaryContent');
+        const loader = document.getElementById('loader');
+        const status = document.getElementById('status');
 
-            // Load category lists on page load
-            loadCategoryLists();
-            loadUserList();
-            loadTranslationMappings();
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            loadConfiguration();
+            setupEventListeners();
+            updateQuickStats();
+        });
 
-            // Refresh lists button
-            refreshListsBtn.addEventListener('click', loadCategoryLists);
-            refreshUsersBtn.addEventListener('click', loadUserList);
+        // Setup event listeners
+        function setupEventListeners() {
+            // File inputs
+            transactionFile.addEventListener('change', () => handleFileSelect('transaction'));
+            sharedFile.addEventListener('change', () => handleFileSelect('shared'));
+            
+            // Drag and drop
+            setupDragAndDrop(transactionLabel, transactionFile);
+            setupDragAndDrop(sharedLabel, sharedFile);
+            
+            // Buttons
+            parseBtn.addEventListener('click', parseFiles);
+            categorizeBtn.addEventListener('click', categorizeFiles);
+            downloadBtn.addEventListener('click', downloadResults);
+            clearBtn.addEventListener('click', clearAll);
+            refreshConfigBtn.addEventListener('click', loadConfiguration);
+            
+            // Tabs
+            document.querySelectorAll('.tab-button').forEach(button => {
+                button.addEventListener('click', () => {
+                    const tab = button.dataset.tab;
+                    switchResultTab(tab);
+                });
+            });
+        }
 
-            // Manage mappings button
-            manageMappingsBtn.addEventListener('click', function () {
-                translationSection.classList.toggle('hidden');
-                if (!translationSection.classList.contains('hidden')) {
-                    loadTranslationMappings();
+        // Setup drag and drop
+        function setupDragAndDrop(label, input) {
+            label.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                label.classList.add('file-selected');
+            });
+            
+            label.addEventListener('dragleave', () => {
+                label.classList.remove('file-selected');
+            });
+            
+            label.addEventListener('drop', (e) => {
+                e.preventDefault();
+                label.classList.remove('file-selected');
+                if (e.dataTransfer.files.length > 0) {
+                    input.files = e.dataTransfer.files;
+                    input.dispatchEvent(new Event('change'));
                 }
             });
+        }
 
-            // Parse button click handler
-            parseBtn.addEventListener('click', async function () {
-                if (!transactionFile.files.length) {
-                    showStatus('Please select a transaction CSV file', 'error');
-                    return;
-                }
+        // Handle file selection
+        function handleFileSelect(type) {
+            if (type === 'transaction' && transactionFile.files.length > 0) {
+                const file = transactionFile.files[0];
+                transactionFileName.textContent = `📄 ${file.name} (${formatFileSize(file.size)})`;
+                transactionLabel.classList.add('file-selected');
+            } else if (type === 'shared' && sharedFile.files.length > 0) {
+                const file = sharedFile.files[0];
+                sharedFileName.textContent = `📋 ${file.name} (${formatFileSize(file.size)})`;
+                sharedLabel.classList.add('file-selected');
+            }
+        }
 
-                try {
-                    showLoader();
-                    const data = await parseCSV();
-                    displayCSVData(data.transactions);
-                    hideLoader();
-                    csvDataSection.classList.remove('hidden');
-                    categorizedSection.classList.add('hidden');
-                    showStatus(`Parsed ${data.transactions.length} transactions successfully`, 'success');
-                } catch (error) {
-                    hideLoader();
-                    showStatus('Error parsing CSV: ' + error.message, 'error');
-                }
-            });
-
-            // Categorize button click handler
-            categorizeBtn.addEventListener('click', async function () {
-                if (!transactionFile.files.length) {
-                    showStatus('Please select a transaction CSV file', 'error');
-                    return;
-                }
-
-                try {
-                    showLoader();
-                    const data = await categorizeCSV();
-                    displayCSVData(data.transactions);
-                    displayCategorizedData(data.categorized);
-                    hideLoader();
-                    csvDataSection.classList.remove('hidden');
-                    categorizedSection.classList.remove('hidden');
-                    showStatus('Transactions categorized successfully', 'success');
-                } catch (error) {
-                    hideLoader();
-                    showStatus('Error categorizing transactions: ' + error.message, 'error');
-                }
-            });
-
-            // Parse receipt button click handler
-            parseReceiptBtn.addEventListener('click', async function () {
-                if (!receiptFile.files.length) {
-                    showReceiptStatus('Please select a receipt CSV file', 'error');
-                    return;
-                }
-
-                try {
-                    showReceiptLoader();
-                    const parsed = await parseReceipt();
-                    currentReceiptData = parsed;
-                    displayReceiptData(parsed.data);
-                    hideReceiptLoader();
-                    receiptDisplaySection.classList.remove('hidden');
-                    saveReceiptBtn.style.display = 'inline-block';
-                    downloadReceiptBtn.style.display = 'inline-block';
-                    showReceiptStatus('Receipt parsed successfully', 'success');
-                } catch (error) {
-                    hideReceiptLoader();
-                    showReceiptStatus('Error parsing receipt: ' + error.message, 'error');
-                }
-            });
-
-            // Save receipt button click handler
-            saveReceiptBtn.addEventListener('click', async function () {
-                if (!currentReceiptData) {
-                    showReceiptStatus('No receipt data to save', 'error');
-                    return;
-                }
-
-                try {
-                    showReceiptLoader();
-                    await saveReceipt(currentReceiptData);
-                    hideReceiptLoader();
-                    showReceiptStatus('Receipt saved successfully', 'success');
-                } catch (error) {
-                    hideReceiptLoader();
-                    showReceiptStatus('Error saving receipt: ' + error.message, 'error');
-                }
-            });
-
-            // Download receipt button click handler
-            downloadReceiptBtn.addEventListener('click', function () {
-                if (!currentReceiptData) {
-                    showReceiptStatus('No receipt data to download', 'error');
-                    return;
-                }
-
-                downloadReceiptCSV(currentReceiptData);
-                showReceiptStatus('Receipt downloaded successfully', 'success');
-            });
-
-            // Add translation mapping button
-            document.getElementById('addMappingBtn').addEventListener('click', async function () {
-                const original = document.getElementById('newOriginal').value.trim();
-                const translation = document.getElementById('newTranslation').value.trim();
-
-                if (!original || !translation) {
-                    alert('Please enter both original and translation text');
-                    return;
-                }
-
-                try {
-                    await addTranslationMapping(original, translation);
-                    document.getElementById('newOriginal').value = '';
-                    document.getElementById('newTranslation').value = '';
-                    loadTranslationMappings();
-                    showReceiptStatus('Translation mapping added successfully', 'success');
-                } catch (error) {
-                    showReceiptStatus('Error adding translation: ' + error.message, 'error');
-                }
-            });
-
-            // Download button click handler
-            downloadBtn.addEventListener('click', async function () {
-                if (!transactionFile.files.length) {
-                    showStatus('Please select a transaction CSV file', 'error');
-                    return;
-                }
-
-                try {
-                    showLoader();
-                    await downloadCategorizedCSV();
-                    hideLoader();
-                    showStatus('CSV downloaded successfully', 'success');
-                } catch (error) {
-                    hideLoader();
-                    showStatus('Error downloading CSV: ' + error.message, 'error');
-                }
-            });
-
-            // Load category lists
-            async function loadCategoryLists() {
-                try {
-                    const response = await fetch('/api/category-lists');
-                    const result = await response.json();
-
-                    if (!result.success) {
-                        throw new Error(result.error);
-                    }
-
+        // Load configuration
+        async function loadConfiguration() {
+            try {
+                // Load category lists
+                const categoryResponse = await fetch('/api/category-lists');
+                const categoryResult = await categoryResponse.json();
+                
+                if (categoryResult.success) {
                     categoryList.innerHTML = '<option value="">Use default categories</option>';
-                    result.data.forEach(list => {
+                    categoryResult.data.forEach(list => {
                         const option = document.createElement('option');
                         option.value = list._id || list.id;
                         option.textContent = list.name + (list.isDefault ? ' (Default)' : '');
                         categoryList.appendChild(option);
                     });
-                } catch (error) {
-                    showStatus('Error loading category lists: ' + error.message, 'error');
                 }
-            }
-
-            // Load user list
-            async function loadUserList() {
-                try {
-                    const response = await fetch('/api/users');
-                    const result = await response.json();
-
-                    if (!result.success) {
-                        throw new Error(result.error);
-                    }
-
-                    userList.innerHTML = '<option value="">None</option>';
-                    result.data.forEach(user => {
+                
+                // Load users
+                const userResponse = await fetch('/api/users');
+                const userResult = await userResponse.json();
+                
+                if (userResult.success) {
+                    userSelect.innerHTML = '<option value="">Select user...</option>';
+                    userResult.data.forEach(user => {
                         const option = document.createElement('option');
                         option.value = user._id || user.id;
                         option.textContent = user.name;
-                        userList.appendChild(option);
+                        userSelect.appendChild(option);
                     });
-                } catch (error) {
-                    showUserStatus('Error loading user lists: ' + error.message, 'error');
                 }
+            } catch (error) {
+                showStatus('Error loading configuration: ' + error.message, 'error');
             }
+        }
 
-            // Load translation mappings
-            async function loadTranslationMappings() {
-                try {
-                    const response = await fetch('/api/receipts/translations');
-                    const result = await response.json();
-
-                    if (result.success) {
-                        translationMappings.clear();
-                        const mappingsList = document.getElementById('mappingsList');
-                        mappingsList.innerHTML = '';
-
-                        result.data.forEach(mapping => {
-                            translationMappings.set(mapping.original, mapping.translation);
-
-                            const mappingItem = document.createElement('div');
-                            mappingItem.className = 'mapping-item';
-                            mappingItem.innerHTML = `
-                                <span class="mapping-original">${mapping.original}</span>
-                                <span class="mapping-arrow">→</span>
-                                <span class="mapping-translation">${mapping.translation}</span>
-                                <button class="mapping-delete button-danger" onclick="deleteTranslationMapping('${mapping._id}')">Delete</button>
-                            `;
-                            mappingsList.appendChild(mappingItem);
-                        });
-                    }
-                } catch (error) {
-                    console.error('Error loading translation mappings:', error);
-                }
+        // Parse files
+        async function parseFiles() {
+            if (!transactionFile.files.length) {
+                showStatus('Please select a transaction file', 'warning');
+                return;
             }
-
-            // Add translation mapping
-            async function addTranslationMapping(original, translation) {
-                const response = await fetch('/api/receipts/translations', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({ original, translation })
-                });
-
-                if (!response.ok) {
-                    throw new Error(`Error ${response.status}: ${response.statusText}`);
-                }
-
-                const result = await response.json();
-                if (!result.success) {
-                    throw new Error(result.error);
-                }
-            }
-
-            // Delete translation mapping (make it global for onclick)
-            window.deleteTranslationMapping = async function (id) {
-                try {
-                    const response = await fetch(`/api/receipts/translations/${id}`, {
-                        method: 'DELETE'
-                    });
-
-                    if (!response.ok) {
-                        throw new Error(`Error ${response.status}: ${response.statusText}`);
-                    }
-
-                    loadTranslationMappings();
-                    showReceiptStatus('Translation mapping deleted', 'success');
-                } catch (error) {
-                    showReceiptStatus('Error deleting translation: ' + error.message, 'error');
-                }
-            };
-
-            // Parse CSV files
-            async function parseCSV() {
+            
+            try {
+                showLoader();
                 const formData = new FormData();
                 formData.append('transactions', transactionFile.files[0]);
-
+                
                 if (sharedFile.files.length) {
                     formData.append('shared', sharedFile.files[0]);
                 }
-
+                
                 const response = await fetch('/api/transactions/parse-csv', {
                     method: 'POST',
                     body: formData
                 });
-
-                if (!response.ok) {
-                    throw new Error(`Error ${response.status}: ${response.statusText}`);
-                }
-
+                
                 const result = await response.json();
-
-                if (!result.success) {
-                    throw new Error(result.error);
+                
+                if (result.success) {
+                    parsedData = result.data.transactions;
+                    displayParsedData(parsedData);
+                    resultsSection.classList.remove('hidden');
+                    switchResultTab('parsed');
+                    updateQuickStats();
+                    showStatus(`Parsed ${parsedData.length} transactions successfully`, 'success');
+                } else {
+                    showStatus('Error parsing files: ' + result.error, 'error');
                 }
-
-                return {
-                    transactions: result.data.transactions,
-                    shared: result.data.sharedTransactions
-                };
+            } catch (error) {
+                showStatus('Error parsing files: ' + error.message, 'error');
+            } finally {
+                hideLoader();
             }
+        }
 
-            // Categorize CSV files
-            async function categorizeCSV() {
+        // Categorize files
+        async function categorizeFiles() {
+            if (!transactionFile.files.length) {
+                showStatus('Please select a transaction file', 'warning');
+                return;
+            }
+            
+            try {
+                showLoader();
                 const formData = new FormData();
                 formData.append('transactions', transactionFile.files[0]);
-
+                
                 if (sharedFile.files.length) {
                     formData.append('shared', sharedFile.files[0]);
                 }
-
-                // Add selected category list if any
+                
                 if (categoryList.value) {
                     formData.append('categoryListId', categoryList.value);
                 }
-
-                const response = await fetch('/api/transactions/categorize-csv', {
-                    method: 'POST',
-                    body: formData
-                });
-
-                if (!response.ok) {
-                    throw new Error(`Error ${response.status}: ${response.statusText}`);
-                }
-
-                // Also parse to get raw data
-                const parseFormData = new FormData();
-                parseFormData.append('transactions', transactionFile.files[0]);
-                if (sharedFile.files.length) {
-                    parseFormData.append('shared', sharedFile.files[0]);
-                }
-
+                
+                // Parse first to get raw data
                 const parseResponse = await fetch('/api/transactions/parse-csv', {
                     method: 'POST',
-                    body: parseFormData
+                    body: formData
                 });
-
-                if (!parseResponse.ok) {
-                    throw new Error(`Error ${parseResponse.status}: ${parseResponse.statusText}`);
-                }
-
                 const parseResult = await parseResponse.json();
-                const result = await response.json();
-
-                if (!result.success) {
-                    throw new Error(result.error);
-                }
-
-                return {
-                    transactions: parseResult.data.transactions,
-                    categorized: result.data
-                };
-            }
-
-            // Parse receipt
-            async function parseReceipt() {
-                const formData = new FormData();
-                formData.append('receipt', receiptFile.files[0]);
-
-                const response = await fetch('/api/receipts/parse-receipt-csv', {
+                
+                // Then categorize
+                const categorizeResponse = await fetch('/api/transactions/categorize-csv', {
                     method: 'POST',
                     body: formData
                 });
-
-                if (!response.ok) {
-                    throw new Error(`Error ${response.status}: ${response.statusText}`);
+                const categorizeResult = await categorizeResponse.json();
+                
+                if (parseResult.success && categorizeResult.success) {
+                    parsedData = parseResult.data.transactions;
+                    categorizedData = categorizeResult.data;
+                    
+                    displayParsedData(parsedData);
+                    displayCategorizedData(categorizedData);
+                    displaySummary();
+                    
+                    resultsSection.classList.remove('hidden');
+                    switchResultTab('categorized');
+                    updateQuickStats();
+                    showStatus('Transactions categorized successfully', 'success');
+                } else {
+                    showStatus('Error categorizing transactions', 'error');
                 }
-
-                const result = await response.json();
-                return result;
+            } catch (error) {
+                showStatus('Error categorizing transactions: ' + error.message, 'error');
+            } finally {
+                hideLoader();
             }
+        }
 
-            function displayReceiptData(data) {
-                if (!data || !Array.isArray(data)) {
-                    document.getElementById('receiptItems').innerHTML = '<p>No receipt data available</p>';
-                    return;
-                }
-
-                const receiptItems = document.getElementById('receiptItems');
-                receiptItems.innerHTML = '';
-
-                let total = 0;
-
-                data.forEach((item, index) => {
-                    const itemDiv = document.createElement('div');
-                    itemDiv.className = 'receipt-item';
-
-                    const price = typeof item.price === 'number' ? item.price : 0;
-
-                    if (item.readableDescription === 'TOTAL') {
-                        total = price;
-                    }
-
-                    const originalDiv = document.createElement('div');
-                    originalDiv.className = 'receipt-original';
-                    originalDiv.textContent = item.originalText ? `${item.originalText} ${item.suffixText ? item.suffixText : ''}` : '';
-
-                    const readableDiv = document.createElement('div');
-                    readableDiv.className = 'receipt-readable';
-                    const input = document.createElement('input');
-                    input.type = 'text';
-                    input.id = `readable-${index}`;
-                    input.value = item.readableDescription || '';
-                    input.dataset.index = index;
-                    input.addEventListener('change', (event) => {
-                        updateReceiptItem(index, event.target.value);
-                    });
-                    readableDiv.appendChild(input);
-
-                    const priceDiv = document.createElement('div');
-                    priceDiv.className = 'receipt-price';
-                    priceDiv.textContent = `$${price.toFixed(2)}`;
-
-                    const actionsDiv = document.createElement('div');
-                    actionsDiv.className = 'receipt-actions';
-                    const button = document.createElement('button');
-                    button.className = 'button-secondary';
-                    button.textContent = 'Apply Translation';
-                    button.addEventListener('click', () => {
-                        applyTranslation(index, item.originalText);
-                    });
-                    actionsDiv.appendChild(button);
-
-                    itemDiv.appendChild(originalDiv);
-                    itemDiv.appendChild(readableDiv);
-                    itemDiv.appendChild(priceDiv);
-                    itemDiv.appendChild(actionsDiv);
-
-                    receiptItems.appendChild(itemDiv);
-                });
-
-                document.getElementById('receiptTotal').textContent = `$${total.toFixed(2)}`;
+        // Display parsed data
+        function displayParsedData(data) {
+            if (!data || data.length === 0) {
+                parsedTable.innerHTML = '<tr><td>No parsed data available</td></tr>';
+                return;
             }
-
-            // Update receipt item (make it global for onchange)
-            window.updateReceiptItem = async function (index, newValue, translation) {
-                try {
-                    if (translation) {
-                        translation.translation = newValue;
-                        const response = await fetch(`/api/receipts/translations/${translation._id}`, {
-                            method: "PUT",
-                            headers: {
-                                'Content-Type': 'application/json'
-                            },
-                            body: JSON.stringify({ translation: newValue })
-                        });
-                        const result = await response.json();
-
-                        if (result.success && result.data) {
-                            if (currentReceiptData && currentReceiptData[index]) {
-                                currentReceiptData[index].readableDescription = newValue;
-                            }
-                        } else {
-                            showReceiptStatus('No translation found for this item', 'error');
-                        }
-                    }
-                    translationMappings.translation = newValue;
-                } catch (error) {
-                    showReceiptStatus('Error applying translation: ' + error.message, 'error');
-                }
-            };
-
-            // Apply translation to an item (make it global for onclick)
-            window.applyTranslation = async function (index, originalText) {
-                // First check local mappings
-                console.log(`Original Text: ${originalText}`)
-                const readable = document.getElementById(`readable-${index}`).value;
-
-                // Try to get translation from server
-                try {
-                    const response = await fetch(`/api/receipts/translate?text=${encodeURIComponent(originalText)}`);
-                    const result = await response.json();
-
-                    if (result.success && result.translation) {
-                        updateReceiptItem(index, readable, result.translation);
-                    } else {
-                        // Create a translation
-                        const response = await fetch(`/api/receipts/translations`, {
-                            method: "POST",
-                            headers: {
-                                'Content-Type': 'application/json'
-                            },
-                            body: JSON.stringify({
-                                original: originalText,
-                                translation: readable,
-                                userId: null,
-                            })
-                        });
-                        const result = await response.json();
-
-                        if (result.success && result.translation) {
-                            if (currentReceiptData && currentReceiptData[index]) {
-                                currentReceiptData[index].readableDescription = newValue;
-                            }
-                        } else {
-                            showReceiptStatus('Error creating translation for this item', 'error');
-                        }
-                    }
-                } catch (error) {
-                    showReceiptStatus('Error applying translation: ' + error.message, 'error');
-                }
-            };
-
-            // Save receipt
-            async function saveReceipt(data) {
-                const userId = userList.value;
-
-                const response = await fetch('/api/receipts/save', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        items: data,
-                        userId: userId || null
-                    })
-                });
-
-                if (!response.ok) {
-                    throw new Error(`Error ${response.status}: ${response.statusText}`);
-                }
-
-                const result = await response.json();
-                if (!result.success) {
-                    throw new Error(result.error);
-                }
-            }
-
-            // Download receipt as CSV
-            function downloadReceiptCSV(data) {
-                const csvRows = [
-                    ['Original Text', 'Description', 'Price'],
-                    ...data.map(item => [
-                        item.originalText || '',
-                        item.readableDescription || '',
-                        item.price || 0
-                    ])
-                ];
-
-                const csvData = csvRows.map(row =>
-                    row.map(cell =>
-                        typeof cell === 'string' && cell.includes(',')
-                            ? `"${cell}"`
-                            : cell
-                    ).join(',')
-                ).join('\n');
-
-                const blob = new Blob([csvData], { type: 'text/csv' });
-                const url = window.URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = `receipt_${new Date().toISOString().split('T')[0]}.csv`;
-                document.body.appendChild(a);
-                a.click();
-                setTimeout(() => {
-                    document.body.removeChild(a);
-                    window.URL.revokeObjectURL(url);
-                }, 0);
-            }
-
-            // Download categorized CSV
-            async function downloadCategorizedCSV() {
-                const formData = new FormData();
-                formData.append('transactions', transactionFile.files[0]);
-
-                if (sharedFile.files.length) {
-                    formData.append('shared', sharedFile.files[0]);
-                }
-
-                // Add selected category list if any
-                if (categoryList.value) {
-                    formData.append('categoryListId', categoryList.value);
-                }
-
-                const response = await fetch('/api/transactions/categorize-csv', {
-                    method: 'POST',
-                    body: formData
-                });
-
-                if (!response.ok) {
-                    throw new Error(`Error ${response.status}: ${response.statusText}`);
-                }
-
-                const result = await response.json();
-                if (!result.success) {
-                    throw new Error(result.error);
-                }
-
-                // Create a download link for CSV data
-                const csvData = result.data.map(row =>
-                    row.map(cell =>
-                        typeof cell === 'string' && cell.includes(',')
-                            ? `"${cell}"`
-                            : cell
-                    ).join(',')
-                ).join('\n');
-
-                const blob = new Blob([csvData], { type: 'text/csv' });
-                const url = window.URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = `categorized_transactions_${new Date().toISOString().split('T')[0]}.csv`;
-                document.body.appendChild(a);
-                a.click();
-                setTimeout(() => {
-                    document.body.removeChild(a);
-                    window.URL.revokeObjectURL(url);
-                }, 0);
-            }
-
-            // Display CSV data as a table
-            function displayCSVData(transactions) {
-                if (!transactions || transactions.length === 0) {
-                    csvDataTable.innerHTML = '<tr><td>No data available</td></tr>';
-                    return;
-                }
-
-                // Create headers
-                let tableHTML = '<tr>';
-                const headers = Object.keys(transactions[0]);
+            
+            const headers = Object.keys(data[0]);
+            let tableHTML = '<tr>';
+            headers.forEach(header => {
+                tableHTML += `<th>${escapeHtml(header)}</th>`;
+            });
+            tableHTML += '</tr>';
+            
+            data.forEach(row => {
+                tableHTML += '<tr>';
                 headers.forEach(header => {
-                    tableHTML += `<th>${header}</th>`;
+                    let value = row[header];
+                    if (typeof value === 'number' && (header === 'amount' || header === 'balance')) {
+                        value = `$${value.toFixed(2)}`;
+                    }
+                    tableHTML += `<td>${value !== undefined ? escapeHtml(String(value)) : ''}</td>`;
                 });
                 tableHTML += '</tr>';
+            });
+            
+            parsedTable.innerHTML = tableHTML;
+        }
 
-                // Create rows
-                transactions.forEach(transaction => {
-                    tableHTML += '<tr>';
-                    headers.forEach(header => {
-                        let value = transaction[header];
-                        // Format currency values
-                        if (typeof value === 'number' && (header === 'amount' || header === 'balance')) {
-                            value = `$${value.toFixed(2)}`;
-                        }
-                        tableHTML += `<td>${value !== undefined ? value : ''}</td>`;
-                    });
-                    tableHTML += '</tr>';
+        // Display categorized data
+        function displayCategorizedData(data) {
+            if (!data || data.length === 0) {
+                categorizedTable.innerHTML = '<tr><td>No categorized data available</td></tr>';
+                return;
+            }
+            
+            let tableHTML = '';
+            data.forEach(row => {
+                tableHTML += '<tr>';
+                row.forEach(cell => {
+                    const isHeader = data.indexOf(row) === 0;
+                    tableHTML += `<${isHeader ? 'th' : 'td'}>${escapeHtml(String(cell))}</${isHeader ? 'th' : 'td'}>`;
                 });
+                tableHTML += '</tr>';
+            });
+            
+            categorizedTable.innerHTML = tableHTML;
+        }
 
-                csvDataTable.innerHTML = tableHTML;
+        // Display summary
+        function displaySummary() {
+            if (!categorizedData || categorizedData.length <= 1) {
+                summaryContent.innerHTML = '<p>No summary available</p>';
+                return;
             }
-
-            // Display categorized data as a table
-            function displayCategorizedData(categorized) {
-                if (!categorized || categorized.length === 0) {
-                    categorizedTable.innerHTML = '<tr><td>No categorized data available</td></tr>';
-                    return;
-                }
-
-                let tableHTML = '';
-
-                // Create table from categorized data
-                categorized.forEach(row => {
-                    tableHTML += '<tr>';
-                    row.forEach(cell => {
-                        tableHTML += `<td>${cell !== undefined ? cell : ''}</td>`;
-                    });
-                    tableHTML += '</tr>';
+            
+            // Calculate category statistics
+            const categories = {};
+            for (let i = 1; i < categorizedData.length; i++) {
+                const category = categorizedData[i][categorizedData[i].length - 1]; // Assuming category is last column
+                categories[category] = (categories[category] || 0) + 1;
+            }
+            
+            let summaryHTML = `
+                <div class="summary-grid">
+                    <div class="summary-card">
+                        <h4>Category Distribution</h4>
+                        <div class="category-list">
+            `;
+            
+            Object.entries(categories)
+                .sort((a, b) => b[1] - a[1])
+                .forEach(([category, count]) => {
+                    const percentage = ((count / (categorizedData.length - 1)) * 100).toFixed(1);
+                    summaryHTML += `
+                        <div class="category-row">
+                            <span class="category-name">${escapeHtml(category)}</span>
+                            <div class="category-bar">
+                                <div class="category-bar-fill" style="width: ${percentage}%"></div>
+                            </div>
+                            <span class="category-count">${count} (${percentage}%)</span>
+                        </div>
+                    `;
                 });
+            
+            summaryHTML += `
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            summaryContent.innerHTML = summaryHTML;
+        }
 
-                categorizedTable.innerHTML = tableHTML;
+        // Switch result tab
+        function switchResultTab(tab) {
+            document.querySelectorAll('.tab-button').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            
+            document.querySelector(`[data-tab="${tab}"]`).classList.add('active');
+            document.getElementById(tab).classList.add('active');
+            activeTab = tab;
+        }
+
+        // Download results
+        async function downloadResults() {
+            if (!categorizedData) {
+                showStatus('No categorized data to download', 'warning');
+                return;
             }
+            
+            const csvData = categorizedData.map(row =>
+                row.map(cell =>
+                    typeof cell === 'string' && cell.includes(',')
+                        ? `"${cell}"`
+                        : cell
+                ).join(',')
+            ).join('\n');
+            
+            const blob = new Blob([csvData], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `categorized_transactions_${new Date().toISOString().split('T')[0]}.csv`;
+            document.body.appendChild(a);
+            a.click();
+            setTimeout(() => {
+                document.body.removeChild(a);
+                window.URL.revokeObjectURL(url);
+            }, 0);
+            
+            showStatus('Results downloaded successfully', 'success');
+        }
 
-            // Show loader
-            function showLoader() {
-                loader.style.display = 'inline-block';
-                parseBtn.disabled = true;
-                categorizeBtn.disabled = true;
-                downloadBtn.disabled = true;
-                refreshListsBtn.disabled = true;
+        // Clear all
+        function clearAll() {
+            transactionFile.value = '';
+            sharedFile.value = '';
+            transactionFileName.textContent = '';
+            sharedFileName.textContent = '';
+            transactionLabel.classList.remove('file-selected');
+            sharedLabel.classList.remove('file-selected');
+            parsedData = null;
+            categorizedData = null;
+            resultsSection.classList.add('hidden');
+            showStatus('All data cleared', 'info');
+        }
+
+        // Update quick stats
+        function updateQuickStats() {
+            if (parsedData) {
+                document.getElementById('totalProcessed').textContent = parsedData.length;
             }
-
-            // Hide loader
-            function hideLoader() {
-                loader.style.display = 'none';
-                parseBtn.disabled = false;
-                categorizeBtn.disabled = false;
-                downloadBtn.disabled = false;
-                refreshListsBtn.disabled = false;
+            
+            if (categorizedData && categorizedData.length > 1) {
+                const categorized = categorizedData.length - 1; // Exclude header
+                const uncategorized = categorizedData.filter(row => 
+                    row[row.length - 1] === 'Uncategorized' || 
+                    row[row.length - 1] === ''
+                ).length;
+                
+                document.getElementById('categorizedCount').textContent = categorized - uncategorized;
+                document.getElementById('uncategorizedCount').textContent = uncategorized;
+                
+                const accuracy = ((categorized - uncategorized) / categorized * 100).toFixed(0);
+                document.getElementById('accuracyRate').textContent = `${accuracy}%`;
             }
+        }
 
-            // Show receipt loader
-            function showReceiptLoader() {
-                receiptLoader.style.display = 'inline-block';
-                parseReceiptBtn.disabled = true;
-                saveReceiptBtn.disabled = true;
-                downloadReceiptBtn.disabled = true;
+        // Utility functions
+        function showLoader() {
+            loader.style.display = 'block';
+        }
+
+        function hideLoader() {
+            loader.style.display = 'none';
+        }
+
+        function showStatus(message, type) {
+            status.textContent = message;
+            status.className = 'status ' + type;
+            status.style.display = 'block';
+            
+            if (type === 'success' || type === 'info') {
+                setTimeout(() => {
+                    status.style.display = 'none';
+                }, 5000);
             }
+        }
 
-            // Hide receipt loader
-            function hideReceiptLoader() {
-                receiptLoader.style.display = 'none';
-                parseReceiptBtn.disabled = false;
-                saveReceiptBtn.disabled = false;
-                downloadReceiptBtn.disabled = false;
-            }
+        function escapeHtml(unsafe) {
+            return unsafe
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
 
-            // Show status message
-            function showStatus(message, type) {
-                status.textContent = message;
-                status.className = 'status ' + type;
-                status.style.display = 'block';
-
-                // Auto-hide success messages after 5 seconds
-                if (type === 'success') {
-                    setTimeout(() => {
-                        status.style.display = 'none';
-                    }, 5000);
-                }
-            }
-
-            // Show receipt status message
-            function showReceiptStatus(message, type) {
-                receiptStatus.textContent = message;
-                receiptStatus.className = 'status ' + type;
-                receiptStatus.style.display = 'block';
-
-                // Auto-hide success messages after 5 seconds
-                if (type === 'success') {
-                    setTimeout(() => {
-                        receiptStatus.style.display = 'none';
-                    }, 5000);
-                }
-            }
-
-            // Show user status message
-            function showUserStatus(message, type) {
-                userStatus.textContent = message;
-                userStatus.className = 'status ' + type;
-                userStatus.style.display = 'block';
-
-                // Auto-hide success messages after 5 seconds
-                if (type === 'success') {
-                    setTimeout(() => {
-                        userStatus.style.display = 'none';
-                    }, 5000);
-                }
-            }
-        });
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
+        }
     </script>
 </body>
 

@@ -1,0 +1,1062 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0" />
+    <title>Category Management - Transaction Categorizer</title>
+    <link rel="stylesheet"
+          href="styles.css" />
+    <style>
+        /* Category specific styles */
+        .category-list-card {
+            background: white;
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            box-shadow: var(--shadow-sm);
+            transition: all 0.3s;
+        }
+
+        .category-list-card:hover {
+            box-shadow: var(--shadow-md);
+            transform: translateY(-2px);
+        }
+
+        .category-list-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid var(--bg-primary);
+        }
+
+        .category-list-name {
+            font-size: 1.3rem;
+            font-weight: bold;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .default-badge {
+            background: var(--primary-color);
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: normal;
+        }
+
+        .category-list-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .categories-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .category-item {
+            background: var(--bg-primary);
+            padding: 1rem;
+            border-radius: 6px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.2s;
+        }
+
+        .category-item:hover {
+            background: rgba(76, 175, 80, 0.1);
+            transform: translateX(5px);
+        }
+
+        .category-name {
+            font-weight: 500;
+            color: var(--text-primary);
+        }
+
+        .category-keywords {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            margin-top: 0.25rem;
+        }
+
+        .remove-category {
+            background: none;
+            border: none;
+            color: var(--danger-color);
+            cursor: pointer;
+            font-size: 1.2rem;
+            padding: 0.25rem;
+            transition: all 0.2s;
+        }
+
+        .remove-category:hover {
+            transform: scale(1.2);
+        }
+
+        .add-category-form {
+            display: grid;
+            grid-template-columns: 1fr 2fr auto;
+            gap: 1rem;
+            padding: 1rem;
+            background: var(--bg-primary);
+            border-radius: 6px;
+            margin-top: 1rem;
+        }
+
+        .keywords-input {
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+        }
+
+        .empty-categories {
+            text-align: center;
+            padding: 2rem;
+            color: var(--text-secondary);
+            background: var(--bg-primary);
+            border-radius: 6px;
+        }
+
+        .modal-body {
+            max-height: 60vh;
+            overflow-y: auto;
+        }
+
+        .import-export-section {
+            display: flex;
+            gap: 1rem;
+            padding: 1rem;
+            background: var(--bg-primary);
+            border-radius: 6px;
+        }
+
+        .import-export-section>div {
+            flex: 1;
+            text-align: center;
+            padding: 1rem;
+        }
+
+        .category-stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1rem;
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--primary-color);
+        }
+
+        .stat-label {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+        }
+
+        .json-preview {
+            background: #f5f5f5;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 1rem;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+            max-height: 300px;
+            overflow: auto;
+            white-space: pre-wrap;
+        }
+
+        .file-drop-zone {
+            border: 2px dashed var(--primary-color);
+            border-radius: 8px;
+            padding: 2rem;
+            text-align: center;
+            background: rgba(76, 175, 80, 0.05);
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .file-drop-zone:hover {
+            background: rgba(76, 175, 80, 0.1);
+        }
+
+        .file-drop-zone.dragging {
+            background: rgba(76, 175, 80, 0.2);
+            border-color: var(--primary-hover);
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-brand">
+                <h1>Transaction Categorizer v2.0</h1>
+            </div>
+            <ul class="nav-menu">
+                <li class="nav-item">
+                    <a href="index.html"
+                       class="nav-link">
+                        <span class="nav-icon">📊</span>
+                        Transactions
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="receipts.html"
+                       class="nav-link">
+                        <span class="nav-icon">🧾</span>
+                        Receipts
+                    </a>
+                </li>
+                <li class="nav-item active">
+                    <a href="categories.html"
+                       class="nav-link">
+                        <span class="nav-icon">📂</span>
+                        Categories
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="users.html"
+                       class="nav-link">
+                        <span class="nav-icon">👥</span>
+                        Users
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="container">
+        <!-- Page Header -->
+        <div class="page-header">
+            <h2>Category Management</h2>
+            <div>
+                <button id="createListBtn"
+                        class="button button-primary">
+                    <span class="button-icon">➕</span>
+                    Create New List
+                </button>
+                <button id="importExportBtn"
+                        class="button button-secondary">
+                    <span class="button-icon">📋</span>
+                    Import/Export
+                </button>
+            </div>
+        </div>
+
+        <!-- Stats Overview -->
+        <div class="section">
+            <h3 class="section-header">Overview</h3>
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-value"
+                         id="totalLists">0</div>
+                    <div class="stat-label">Category Lists</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value"
+                         id="totalCategories">0</div>
+                    <div class="stat-label">Total Categories</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value"
+                         id="avgCategories">0</div>
+                    <div class="stat-label">Avg per List</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Status Messages -->
+        <div id="status"
+             class="status"></div>
+
+        <!-- Category Lists -->
+        <div class="section">
+            <h3 class="section-header">Category Lists</h3>
+            <div id="categoryLists">
+                <!-- Category lists will be loaded here -->
+            </div>
+        </div>
+
+        <!-- Loader -->
+        <div id="loader"
+             class="loader"></div>
+    </div>
+
+    <!-- Create/Edit List Modal -->
+    <div class="container">
+        <div class="section">
+            <div id="listModal"
+                 class="modal">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h3 class="modal-title"
+                            id="modalTitle">Create New Category List</h3>
+                        <button class="close-btn"
+                                onclick="closeModal()">&times;</button>
+                    </div>
+                    <form id="listForm">
+                        <div class="form-group">
+                            <label for="listName">List Name *</label>
+                            <input type="text"
+                                   id="listName"
+                                   name="name"
+                                   required
+                                   placeholder="Enter list name">
+                        </div>
+                        <div class="form-group">
+                            <label for="listDescription">Description</label>
+                            <textarea id="listDescription"
+                                      name="description"
+                                      rows="3"
+                                      placeholder="Optional description"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label>
+                                <input type="checkbox"
+                                       id="isDefault"
+                                       name="isDefault">
+                                Set as default category list
+                            </label>
+                        </div>
+                        <div class="form-actions">
+                            <button type="button"
+                                    class="button button-secondary"
+                                    onclick="closeModal()">Cancel</button>
+                            <button type="submit"
+                                    class="button button-primary"
+                                    id="submitBtn">Create List</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Categories Modal -->
+    <div class="container">
+        <div class="section">
+            <div id="categoriesModal"
+                 class="modal">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h3 class="modal-title"
+                            id="categoriesModalTitle">Edit Categories</h3>
+                        <button class="close-btn"
+                                onclick="closeCategoriesModal()">&times;</button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="add-category-form">
+                            <input type="text"
+                                   id="newCategoryName"
+                                   placeholder="Category name"
+                                   class="form-control">
+                            <input type="text"
+                                   id="newSubCategoryName"
+                                   placeholder="Subcategory name"
+                                   class="form-control">
+                            <input type="text"
+                                   id="newSubCategoryKeywords"
+                                   placeholder="Keywords (comma separated)"
+                                   class="form-control keywords-input">
+                            <button id="addCategoryBtn"
+                                    class="button button-primary">
+                                Add Category
+                            </button>
+                        </div>
+                        <div id="categoriesList"
+                             class="categories-grid">
+                            <!-- Categories will be loaded here -->
+                        </div>
+                    </div>
+                    <div class="form-actions">
+                        <button type="button"
+                                class="button button-secondary"
+                                id="closeEditBtn">Close</button>
+                        <button type="button"
+                                class="button button-primary"
+                                id="saveChangesBtn">Save Changes</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Import/Export Modal -->
+    <div class="container">
+        <div class="section">
+            <div id="importExportModal"
+                 class="modal">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h3 class="modal-title">Import/Export Category Lists</h3>
+                        <button class="close-btn"
+                                onclick="closeImportExportModal()">&times;</button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="import-export-section">
+                            <div>
+                                <h4>Export</h4>
+                                <p class="text-secondary mb-2">Export all category lists as JSON</p>
+                                <button id="exportBtn"
+                                        class="button button-secondary">
+                                    <span class="button-icon">⬇️</span>
+                                    Export All Lists
+                                </button>
+                            </div>
+                            <div>
+                                <h4>Import</h4>
+                                <p class="text-secondary mb-2">Import category lists from JSON</p>
+                                <div class="file-drop-zone"
+                                     id="dropZone">
+                                    <div>📤</div>
+                                    <p>Drop JSON file here or click to browse</p>
+                                    <input type="file"
+                                           id="importFile"
+                                           accept=".json"
+                                           style="display: none;">
+                                </div>
+                            </div>
+                        </div>
+                        <div id="importPreview"
+                             style="display: none;">
+                            <h4>Preview</h4>
+                            <div class="json-preview"
+                                 id="jsonPreview"></div>
+                            <div class="form-actions">
+                                <button class="button button-primary"
+                                        onclick="confirmImport()">
+                                    Confirm Import
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+        // Global variables
+        let categoryLists = [];
+        let currentEditListId = null;
+        let currentEditCategories = {};
+        let importData = null;
+
+        // DOM elements
+        const categoryListsContainer = document.getElementById('categoryLists');
+        const listModal = document.getElementById('listModal');
+        const categoriesModal = document.getElementById('categoriesModal');
+        const importExportModal = document.getElementById('importExportModal');
+        const listForm = document.getElementById('listForm');
+        const loader = document.getElementById('loader');
+        const status = document.getElementById('status');
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function () {
+            loadCategoryLists();
+            setupEventListeners();
+        });
+
+        // Setup event listeners
+        function setupEventListeners() {
+            document.getElementById('createListBtn').addEventListener('click', () => openModal());
+            document.getElementById('importExportBtn').addEventListener('click', () => openImportExportModal());
+            listForm.addEventListener('submit', handleSubmit);
+            document.getElementById('addCategoryBtn').addEventListener('click', addCategory);
+            document.getElementById('exportBtn').addEventListener('click', exportLists);
+            document.getElementById('saveChangesBtn').addEventListener('click', saveCategories);
+            document.getElementById('closeEditBtn').addEventListener('click', closeCategoriesModal);
+
+            // Import functionality
+            const dropZone = document.getElementById('dropZone');
+            const importFile = document.getElementById('importFile');
+
+            dropZone.addEventListener('click', () => importFile.click());
+            dropZone.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                dropZone.classList.add('dragging');
+            });
+            dropZone.addEventListener('dragleave', () => {
+                dropZone.classList.remove('dragging');
+            });
+            dropZone.addEventListener('drop', handleFileDrop);
+            importFile.addEventListener('change', handleFileSelect);
+        }
+
+        // Load category lists
+        async function loadCategoryLists() {
+            try {
+                showLoader();
+                const response = await fetch('/api/category-lists');
+                const result = await response.json();
+
+                if (result.success) {
+                    categoryLists = result.data;
+                    displayCategoryLists(categoryLists);
+                    updateStats();
+                } else {
+                    showStatus('Failed to load category lists: ' + result.error, 'error');
+                }
+            } catch (error) {
+                showStatus('Error loading category lists: ' + error.message, 'error');
+            } finally {
+                hideLoader();
+            }
+        }
+
+        function displayCategoryLists(lists) {
+            categoryListsContainer.innerHTML = '';
+
+            if (!lists || lists.length === 0) {
+                categoryListsContainer.innerHTML = `
+            <div class="empty-state">
+                <p>No category lists found.</p>
+                <p>Click "Create New List" to get started.</p>
+            </div>
+        `;
+                return;
+            }
+
+            lists.forEach(list => {
+                const card = document.createElement('div');
+                card.className = 'category-list-card';
+
+                // Header
+                const header = document.createElement('div');
+                header.className = 'category-list-header';
+
+                const nameDiv = document.createElement('div');
+                nameDiv.className = 'category-list-name';
+                nameDiv.innerHTML = escapeHtml(list.name) +
+                    (list.isDefault ? ' <span class="default-badge">Default</span>' : '');
+
+                const actionsDiv = document.createElement('div');
+                actionsDiv.className = 'category-list-actions';
+
+                // Action Buttons
+                const editCategoriesBtn = document.createElement('button');
+                editCategoriesBtn.className = 'button button-small button-secondary';
+                editCategoriesBtn.innerHTML = '<span class="button-icon">📝</span> Edit Categories';
+                editCategoriesBtn.addEventListener('click', () => editCategories(list._id || list.id));
+
+                const editListBtn = document.createElement('button');
+                editListBtn.className = 'button button-small button-secondary';
+                editListBtn.innerHTML = '<span class="button-icon">⚙️</span> Settings';
+                editListBtn.addEventListener('click', () => editList(list._id || list.id));
+
+                const deleteBtn = document.createElement('button');
+                deleteBtn.className = 'button button-small button-danger';
+                deleteBtn.innerHTML = '<span class="button-icon">🗑️</span> Delete';
+                deleteBtn.addEventListener('click', () => deleteList(list._id || list.id));
+
+                actionsDiv.appendChild(editCategoriesBtn);
+                actionsDiv.appendChild(editListBtn);
+                actionsDiv.appendChild(deleteBtn);
+
+                header.appendChild(nameDiv);
+                header.appendChild(actionsDiv);
+                card.appendChild(header);
+
+                // Description
+                if (list.description) {
+                    const desc = document.createElement('p');
+                    desc.className = 'text-secondary mb-2';
+                    desc.textContent = list.description;
+                    card.appendChild(desc);
+                }
+
+                // Flatten categories
+                const flatCategories = [];
+                Object.entries(list.categories).forEach(([mainCat, subCats]) => {
+                    Object.entries(subCats).forEach(([subCat, keywords]) => {
+                        flatCategories.push({ name: `${mainCat} > ${subCat}`, keywords });
+                    });
+                });
+
+                // Categories Grid
+                const grid = document.createElement('div');
+                grid.className = 'categories-grid';
+
+                if (flatCategories.length > 0) {
+                    flatCategories.slice(0, 5).forEach(cat => {
+                        const item = document.createElement('div');
+                        item.className = 'category-item';
+
+                        const name = document.createElement('div');
+                        name.className = 'category-name';
+                        name.textContent = cat.name;
+
+                        const kw = document.createElement('div');
+                        kw.className = 'category-keywords';
+                        kw.textContent = cat.keywords.slice(0, 3).join(', ') +
+                            (cat.keywords.length > 3 ? '...' : '');
+
+                        item.appendChild(name);
+                        item.appendChild(kw);
+                        grid.appendChild(item);
+                    });
+
+                    if (flatCategories.length > 5) {
+                        const more = document.createElement('div');
+                        more.className = 'category-item text-secondary';
+                        more.textContent = `+${flatCategories.length - 5} more...`;
+                        grid.appendChild(more);
+                    }
+                } else {
+                    const empty = document.createElement('div');
+                    empty.className = 'empty-categories';
+                    empty.textContent = 'No categories defined';
+                    grid.appendChild(empty);
+                }
+
+                card.appendChild(grid);
+
+                // Stats
+                const stats = document.createElement('div');
+                stats.className = 'category-stats';
+
+                const statData = [
+                    { label: 'Categories', value: flatCategories.length },
+                    { label: 'Keywords', value: flatCategories.reduce((sum, c) => sum + c.keywords.length, 0) },
+                    { label: 'Created', value: formatDate(list.createdAt) }
+                ];
+
+                statData.forEach(stat => {
+                    const statItem = document.createElement('div');
+                    statItem.className = 'stat-item';
+
+                    const valueDiv = document.createElement('div');
+                    valueDiv.className = 'stat-value';
+                    valueDiv.textContent = stat.value;
+
+                    const labelDiv = document.createElement('div');
+                    labelDiv.className = 'stat-label';
+                    labelDiv.textContent = stat.label;
+
+                    statItem.appendChild(valueDiv);
+                    statItem.appendChild(labelDiv);
+                    stats.appendChild(statItem);
+                });
+
+                card.appendChild(stats);
+                categoryListsContainer.appendChild(card);
+            });
+        }
+        // Update statistics
+        function updateStats() {
+            document.getElementById('totalLists').textContent = categoryLists.length;
+            const totalCategories = categoryLists.reduce((sum, list) =>
+                sum + (list.categories ? list.categories.length : 0), 0);
+            document.getElementById('totalCategories').textContent = totalCategories;
+            const avgCategories = categoryLists.length > 0 ?
+                Math.round(totalCategories / categoryLists.length) : 0;
+            document.getElementById('avgCategories').textContent = avgCategories;
+        }
+
+        // Open modal for create/edit list
+        function openModal(listId = null) {
+            currentEditListId = listId;
+
+            if (listId) {
+                const list = categoryLists.find(l => (l._id || l.id) === listId);
+                if (list) {
+                    document.getElementById('modalTitle').textContent = 'Edit Category List';
+                    document.getElementById('submitBtn').textContent = 'Update List';
+                    document.getElementById('listName').value = list.name;
+                    document.getElementById('listDescription').value = list.description || '';
+                    document.getElementById('isDefault').checked = list.isDefault || false;
+                }
+            } else {
+                document.getElementById('modalTitle').textContent = 'Create New Category List';
+                document.getElementById('submitBtn').textContent = 'Create List';
+                listForm.reset();
+            }
+
+            listModal.classList.add('active');
+        }
+
+        // Close modal
+        function closeModal() {
+            listModal.classList.remove('active');
+            listForm.reset();
+            currentEditListId = null;
+        }
+
+        // Handle form submission
+        async function handleSubmit(e) {
+            e.preventDefault();
+
+            const formData = new FormData(listForm);
+            const listData = {
+                name: formData.get('name'),
+                description: formData.get('description'),
+                isDefault: formData.get('isDefault') === 'on',
+                categories: currentEditListId ? undefined : []
+            };
+
+            try {
+                showLoader();
+
+                let response;
+                if (currentEditListId) {
+                    response = await fetch(`/api/category-lists/ ${currentEditListId}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(listData)
+                    });
+                } else {
+                    response = await fetch('/api/category-lists', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(listData)
+                    });
+                }
+
+                const result = await response.json();
+
+                if (result.success) {
+                    showStatus(
+                        currentEditListId ? 'Category list updated successfully' : 'Category list created successfully',
+                        'success'
+                    );
+                    closeModal();
+                    loadCategoryLists();
+                } else {
+                    showStatus('Error: ' + result.error, 'error');
+                }
+            } catch (error) {
+                showStatus('Error saving category list: ' + error.message, 'error');
+            } finally {
+                hideLoader();
+            }
+        }
+
+        // Edit list settings
+        window.editList = function (listId) {
+            openModal(listId);
+        };
+
+        // Edit categories in a list
+        window.editCategories = function (listId) {
+            currentEditListId = listId;
+            const list = categoryLists.find(l => (l._id || l.id) === listId);
+
+            if (list) {
+                document.getElementById('categoriesModalTitle').textContent = `Edit Categories - ${list.name}`;
+                currentEditCategories = list.categories;
+
+                displayCategories();
+                categoriesModal.classList.add('active');
+            }
+        };
+
+        // Display categories in modal
+        function displayCategories() {
+            const categoriesList = document.getElementById('categoriesList');
+            categoriesList.innerHTML = '';
+
+            if (Object.keys(currentEditCategories).length === 0) {
+                categoriesList.innerHTML = '<div class="empty-categories">No categories yet. Add your first category above.</div>';
+                return;
+            }
+
+            const html = [];
+
+            Object.entries(currentEditCategories).forEach(([mainCatName, subCats]) => {
+                Object.entries(subCats).forEach(([subCatName, keywords]) => {
+                    const item = document.createElement('div');
+                    item.className = 'category-item';
+
+                    const content = document.createElement('div');
+                    const main = document.createElement('div');
+                    main.className = 'category-name';
+                    main.textContent = mainCatName;
+
+                    const sub = document.createElement('div');
+                    sub.className = 'category-name';
+                    sub.textContent = subCatName;
+
+                    const kw = document.createElement('div');
+                    kw.className = 'category-keywords';
+                    kw.textContent = keywords.join(', ');
+
+                    content.appendChild(main);
+                    content.appendChild(sub);
+                    content.appendChild(kw);
+
+                    const removeBtn = document.createElement('button');
+                    removeBtn.className = 'remove-category';
+                    removeBtn.textContent = '×';
+                    removeBtn.addEventListener('click', () => {
+                        removeCategory(mainCatName, subCatName);
+                    });
+
+                    item.appendChild(content);
+                    item.appendChild(removeBtn);
+                    categoriesList.appendChild(item);
+                });
+            });
+        }
+
+
+        // Add category
+        function addCategory() {
+            const mainCatName = document.getElementById('newCategoryName').value.trim();
+            const subCatName = document.getElementById('newSubCategoryName').value.trim();
+            const keywords = document.getElementById('newSubCategoryKeywords').value
+                .split(',')
+                .map(k => k.trim())
+                .filter(k => k);
+
+            if (!mainCatName) {
+                showStatus('Please enter a main category name', 'warning');
+                return;
+            }
+
+            if (!subCatName) {
+                showStatus('Please enter a sub category name', 'warning');
+                return;
+            }
+
+            if (currentEditCategories[mainCatName] && currentEditCategories[mainCatName][subCatName]) {
+                showStatus('Category already exists', 'warning');
+                return;
+            }
+
+            if (!currentEditCategories[mainCatName]) {
+                currentEditCategories[mainCatName] = {};
+            }
+
+            currentEditCategories[mainCatName][subCatName] = keywords;
+
+            displayCategories();
+
+            document.getElementById('newCategoryName').value = '';
+            document.getElementById('newSubCategoryName').value = '';
+            document.getElementById('newSubCategoryKeywords').value = '';
+            showStatus('Category added', 'success');
+        }
+
+        // Remove category
+        window.removeCategory = function (mainCat, subCat) {
+            if (!subCat) {
+                delete currentEditCategories[mainCat];
+            }
+            if (currentEditCategories[mainCat]) {
+                delete currentEditCategories[mainCat][subCat];
+            }
+            displayCategories();
+        };
+
+        // Save categories
+        window.saveCategories = async function () {
+            try {
+                showLoader();
+                const response = await fetch(`/api/category-lists/${currentEditListId}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ currentEditCategories })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    showStatus('Categories updated successfully', 'success');
+                    closeCategoriesModal();
+                    loadCategoryLists();
+                } else {
+                    showStatus('Error updating categories: ' + result.error, 'error');
+                }
+            } catch (error) {
+                showStatus('Error saving categories: ' + error.message, 'error');
+            } finally {
+                hideLoader();
+            }
+        };
+
+        // Close categories modal
+        function closeCategoriesModal() {
+            categoriesModal.classList.remove('active');
+            currentEditCategories = {};
+            currentEditListId = null;
+        }
+
+        // Delete list
+        window.deleteList = async function (listId) {
+            if (!confirm('Are you sure you want to delete this category list? This action cannot be undone.')) {
+                return;
+            }
+
+            try {
+                showLoader();
+                const response = await fetch(`/api/category-lists/${listId}`, {
+                    method: 'DELETE'
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    showStatus('Category list deleted successfully', 'success');
+                    loadCategoryLists();
+                } else {
+                    showStatus('Error deleting list: ' + result.error, 'error');
+                }
+            } catch (error) {
+                showStatus('Error deleting list: ' + error.message, 'error');
+            } finally {
+                hideLoader();
+            }
+        };
+
+        // Import/Export functionality
+        function openImportExportModal() {
+            importExportModal.classList.add('active');
+        }
+
+        function closeImportExportModal() {
+            importExportModal.classList.remove('active');
+            document.getElementById('importPreview').style.display = 'none';
+            importData = null;
+        }
+
+        // Export lists
+        async function exportLists() {
+            const exportData = {
+                version: '1.0',
+                exportDate: new Date().toISOString(),
+                categoryLists: categoryLists
+            };
+
+            const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `category_lists_${new Date().toISOString().split('T')[0]}.json`;
+            document.body.appendChild(a);
+            a.click();
+            setTimeout(() => {
+                document.body.removeChild(a);
+                window.URL.revokeObjectURL(url);
+            }, 0);
+
+            showStatus('Category lists exported successfully', 'success');
+        }
+
+        // Handle file drop
+        function handleFileDrop(e) {
+            e.preventDefault();
+            e.currentTarget.classList.remove('dragging');
+
+            const files = e.dataTransfer.files;
+            if (files.length > 0 && files[0].type === 'application/json') {
+                handleFile(files[0]);
+            }
+        }
+
+        // Handle file select
+        function handleFileSelect(e) {
+            const files = e.target.files;
+            if (files.length > 0) {
+                handleFile(files[0]);
+            }
+        }
+
+        // Handle file
+        function handleFile(file) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    importData = JSON.parse(e.target.result);
+                    document.getElementById('jsonPreview').textContent = JSON.stringify(importData, null, 2);
+                    document.getElementById('importPreview').style.display = 'block';
+                } catch (error) {
+                    showStatus('Invalid JSON file', 'error');
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        // Confirm import
+        window.confirmImport = async function () {
+            if (!importData || !importData.categoryLists) {
+                showStatus('Invalid import data', 'error');
+                return;
+            }
+
+            try {
+                showLoader();
+                // Here you would implement the actual import logic
+                // This is a placeholder for the demonstration
+                showStatus(`Ready to import ${importData.categoryLists.length} category lists`, 'info');
+                closeImportExportModal();
+            } catch (error) {
+                showStatus('Error importing data: ' + error.message, 'error');
+            } finally {
+                hideLoader();
+            }
+        };
+
+        // Utility functions
+        function showLoader() {
+            loader.style.display = 'block';
+        }
+
+        function hideLoader() {
+            loader.style.display = 'none';
+        }
+
+        function showStatus(message, type) {
+            status.textContent = message;
+            status.className = 'status ' + type;
+            status.style.display = 'block';
+
+            if (type === 'success' || type === 'info') {
+                setTimeout(() => {
+                    status.style.display = 'none';
+                }, 5000);
+            }
+        }
+
+        function escapeHtml(unsafe) {
+            if (unsafe) {
+                return unsafe
+                    .replace(/&/g, "&amp;")
+                    .replace(/</g, "&lt;")
+                    .replace(/>/g, "&gt;")
+                    .replace(/"/g, "&quot;")
+                    .replace(/'/g, "&#039;");
+            } else {
+                return undefined;
+            }
+        }
+
+        function formatDate(dateString) {
+            if (!dateString) return 'N/A';
+            const date = new Date(dateString);
+            return date.toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric'
+            });
+        }
+    </script>
+</body>
+
+</html>
