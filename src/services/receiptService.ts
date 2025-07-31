@@ -244,7 +244,10 @@ function makeHumanReadable(raw: string): string {
         'ET': 'And',
         'M-ET': 'And',
         'EXT': 'Extra',
-        'FE': 'Iron'
+        'FE': 'Iron',
+        'CITRON': 'LEMON',
+        'OIGNON VERT': 'GREEN ONION',
+        'HERBE': 'HERB'
     };
 
     // Apply word-by-word translations
