@@ -11,7 +11,8 @@ export function categorizeTransactions(
   categories: Categories,
   autoAssignUnknown: boolean = true
 ): OutputRow[] {
-  const normalize = (s: string) => s.toLowerCase().replace(/[^\w\s]/g, "").replace(/\s+/g, " ").trim();
+  const normalize = (s: string): string =>
+    s.toLowerCase().replace(/[^\w\s]/g, "").replace(/\s+/g, " ").trim();
 
   const output: OutputRow[] = [];
   const categorized: {
@@ -24,90 +25,92 @@ export function categorizeTransactions(
     const description = normalize(`${txn.subDescription ?? ""} ${txn.description ?? ""}`);
     let matched = false;
 
-    // Handle special case for virgin plus
-    if (txn.subDescription.toLowerCase().includes('virgin plus') && txn.amount == -153.34) {
-      let mainCat = "Expenses";
-      let subCat = "Living Expenses";
-      if (!categorized[mainCat]) categorized[mainCat] = {};
-      if (!categorized[mainCat][subCat]) categorized[mainCat][subCat] = [];
-      categorized["Expenses"]["Living Expenses"].push({ desc: `Internet + TV`, amount: -60.16 });
+    // Special case for Virgin Plus
+    if (
+      txn.subDescription?.toLowerCase().includes("virgin plus") &&
+      txn.amount === -153.34
+    ) {
+      const addToCategory = (main: string, sub: string, desc: string, amount: number) => {
+        if (!categorized[main]) categorized[main] = {};
+        if (!categorized[main][sub]) categorized[main][sub] = [];
+        categorized[main][sub].push({ desc, amount });
+      };
 
-      mainCat = "Expenses";
-      subCat = "Phone Bill";
-      if (!categorized[mainCat]) categorized[mainCat] = {};
-      if (!categorized[mainCat][subCat]) categorized[mainCat][subCat] = [];
-      categorized["Expenses"]["Phone Bill"].push({ desc: `Phone Bill`, amount: (txn.amount + 60.16) });
+      addToCategory("Housing", "Utilities", "Internet + TV", -60.16);
+      addToCategory("Housing", "Utilities", "Phone Bill", txn.amount + 60.16);
       matched = true;
-    } else {
-      // Normal categorization
-      for (const [mainCat, subCats] of Object.entries(categories)) {
-        for (const [subCat, keywords] of Object.entries(subCats)) {
-          if (keywords.some(keyword => description.includes(normalize(keyword)))) {
-            if (!categorized[mainCat]) categorized[mainCat] = {};
-            if (!categorized[mainCat][subCat]) categorized[mainCat][subCat] = [];
-
-            categorized[mainCat][subCat].push({
-              desc: `${txn.description} ${txn.subDescription}`,
-              amount: txn.amount
-            });
-
-            matched = true;
-            break;
-          }
-        }
-        if (matched) break;
-      }
+      continue;
     }
 
-    // Handle unmatched transactions
-    if (!matched) {
-      if (txn.description.includes("date=")) {
-        continue;
-      }
+    // Try to match against categories
+    for (const [mainCat, subCats] of Object.entries(categories)) {
+      for (const [subCat, keywords] of Object.entries(subCats)) {
+        if (keywords.some(keyword => description.includes(normalize(keyword)))) {
+          if (!categorized[mainCat]) categorized[mainCat] = {};
+          if (!categorized[mainCat][subCat]) categorized[mainCat][subCat] = [];
 
-      if (autoAssignUnknown) {
-        // Auto-assign to "Misc Spending" if not matched
-        const mainCat = "Expenses";
-        const subCat = "Misc Spending";
-        if (!categorized[mainCat]) categorized[mainCat] = {};
-        if (!categorized[mainCat][subCat]) categorized[mainCat][subCat] = [];
-        categorized[mainCat][subCat].push({
-          desc: `${txn.description} ${txn.subDescription}`,
-          amount: txn.amount
-        });
+          categorized[mainCat][subCat].push({
+            desc: `${txn.description ?? ""} ${txn.subDescription ?? ""}`.trim(),
+            amount: txn.amount
+          });
+
+          matched = true;
+          break;
+        }
       }
+      if (matched) break;
+    }
+
+    // Unmatched fallback
+    if (!matched && autoAssignUnknown) {
+      const mainCat = "Uncategorized";
+      const subCat = "Misc Spending";
+      if (!categorized[mainCat]) categorized[mainCat] = {};
+      if (!categorized[mainCat][subCat]) categorized[mainCat][subCat] = [];
+
+      categorized[mainCat][subCat].push({
+        desc: `${txn.description ?? ""} ${txn.subDescription ?? ""}`.trim(),
+        amount: txn.amount
+      });
     }
   }
 
-  // Build output format
-  const expenseCategories = categories.Expenses ? Object.keys(categories.Expenses) : [];
-  const headerRow1: OutputRow = ["Expenses"];
+  // Build headers
+  const headerRow1: OutputRow = ["Category"];
   const headerRow2: OutputRow = [""];
 
-  for (const sub of expenseCategories) {
-    headerRow1.push(sub, "");
-    headerRow2.push("Description", "Amount");
+  const columnOrder: { main: string; sub: string }[] = [];
+
+  for (const [mainCat, subCats] of Object.entries(categorized)) {
+    for (const subCat of Object.keys(subCats)) {
+      headerRow1.push(`${mainCat} → ${subCat}`, "");
+      headerRow2.push("Description", "Amount");
+      columnOrder.push({ main: mainCat, sub: subCat });
+    }
   }
 
   output.push(headerRow1);
   output.push(headerRow2);
 
-  const maxRows = Math.max(...expenseCategories.map(sub => categorized.Expenses?.[sub]?.length || 0));
+  // Determine max number of rows
+  const maxRows = Math.max(
+    ...columnOrder.map(({ main, sub }) => categorized[main][sub].length)
+  );
 
   for (let i = 0; i < maxRows; i++) {
     const row: OutputRow = [""];
-    for (const sub of expenseCategories) {
-      const entry = categorized.Expenses?.[sub]?.[i];
+    for (const { main, sub } of columnOrder) {
+      const entry = categorized[main][sub][i];
       row.push(entry?.desc ?? "", entry ? `$ ${entry.amount.toFixed(2)}` : "");
     }
     output.push(row);
   }
 
-  // Totals row
+  // Add totals row
   const totalRow: OutputRow = ["Total"];
-  for (const sub of expenseCategories) {
-    const total = (categorized.Expenses?.[sub] || []).reduce((sum, entry) => sum + entry.amount, 0);
-    totalRow.push("", total ? `$ ${total.toFixed(2)}` : "$ -");
+  for (const { main, sub } of columnOrder) {
+    const total = categorized[main][sub].reduce((sum, entry) => sum + entry.amount, 0);
+    totalRow.push("", `$ ${total.toFixed(2)}`);
   }
   output.push(totalRow);
 

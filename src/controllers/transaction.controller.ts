@@ -7,7 +7,7 @@ import { CategorizeRequest, Categories } from '../types';
 export const categorize = async (req: Request, res: Response): Promise<void> => {
   try {
     const { transactions, categories, sharedTransactions, categoryListId }: CategorizeRequest & { categoryListId?: string } = req.body;
-    
+
     if (!transactions || !Array.isArray(transactions)) {
       res.status(400).json({
         success: false,
@@ -79,6 +79,7 @@ export const categorizeCsv = async (req: Request, res: Response): Promise<void> 
     const sharedCsv = files.shared && files.shared[0] ? files.shared[0].buffer.toString('utf-8') : null;
 
     const transactions = parseTransactionCSV(transactionsCsv);
+
     const sharedTransactions = sharedCsv ? parseSharedCsv(sharedCsv) : [];
 
     let categoriesToUse: Categories;
@@ -122,7 +123,6 @@ export const categorizeCsv = async (req: Request, res: Response): Promise<void> 
     }
 
     let output = categorizeTransactions(transactions, categoriesToUse);
-
     if (sharedTransactions.length > 0) {
       output = processSharedTransactions(output, sharedTransactions);
     }
