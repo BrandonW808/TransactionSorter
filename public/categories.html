@@ -872,7 +872,7 @@
                 const response = await fetch(`/api/category-lists/${currentEditListId}`, {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ currentEditCategories })
+                    body: JSON.stringify({ ...currentEditCategories })
                 });
 
                 const result = await response.json();

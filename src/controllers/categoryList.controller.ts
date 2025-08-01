@@ -104,6 +104,7 @@ export const createCategoryList = async (req: Request, res: Response): Promise<v
 export const updateCategoryList = async (req: Request, res: Response): Promise<void> => {
   try {
     const updateData: UpdateCategoryListRequest = req.body;
+
     const categoryList = await categoryListService.updateCategoryList(req.params.id, updateData);
 
     if (!categoryList) {
