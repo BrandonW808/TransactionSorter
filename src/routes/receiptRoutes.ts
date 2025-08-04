@@ -5,6 +5,8 @@ import {
     saveReceiptData,
     getUserReceipts,
     getReceiptDetails,
+    getReceiptWithTotals,
+    applySplitToItems,
     deleteReceiptById,
     getTranslations,
     createTranslation,
@@ -21,6 +23,8 @@ router.post('/parse-receipt-csv', upload.fields([{ name: 'receipt', maxCount: 1 
 router.post('/save', saveReceiptData);
 router.get('/user/:userId', getUserReceipts);
 router.get('/receipt/:id', getReceiptDetails);
+router.get('/receipt/:id/with-totals', getReceiptWithTotals); // New endpoint for receipt with user totals
+router.post('/receipt/apply-split', applySplitToItems); // New endpoint for applying splits
 router.delete('/receipt/:id', deleteReceiptById);
 
 // Translation management

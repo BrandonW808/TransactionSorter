@@ -8,10 +8,14 @@ import {
     deleteTranslation,
     getTranslation,
     saveReceipt,
+    saveReceiptWithSplits,
     getReceiptsByUser,
     getReceiptById,
-    deleteReceipt
+    deleteReceipt,
+    applyItemSplits,
+    getReceiptWithUserTotals
 } from "../services/receiptService";
+import { SaveReceiptRequest, ApplySplitRequest } from "../types";
 
 export const parseReceipt = async (req: Request, res: Response): Promise<void> => {
     try {
@@ -43,7 +47,7 @@ export const parseReceipt = async (req: Request, res: Response): Promise<void> =
 
 export const saveReceiptData = async (req: Request, res: Response): Promise<void> => {
     try {
-        const { items, userId, store } = req.body;
+        const { items, userId, store, date } = req.body as SaveReceiptRequest;
 
         if (!items || !Array.isArray(items)) {
             res.status(400).json({
@@ -53,7 +57,22 @@ export const saveReceiptData = async (req: Request, res: Response): Promise<void
             return;
         }
 
-        const receipt = await saveReceipt(items, userId, store);
+        // Check if any items have splits
+        const hasSplits = items.some(item => item.isSplit && item.userSplits && item.userSplits.length > 0);
+
+        let receipt;
+        if (hasSplits) {
+            receipt = await saveReceiptWithSplits(items, store, date);
+        } else {
+            if (!userId) {
+                res.status(400).json({
+                    success: false,
+                    error: 'User ID is required for non-split receipts'
+                });
+                return;
+            }
+            receipt = await saveReceipt(items, userId, store, date);
+        }
 
         res.json({
             success: true,
@@ -99,6 +118,14 @@ export const getReceiptDetails = async (req: Request, res: Response): Promise<vo
     try {
         const { id } = req.params;
 
+        if (!id) {
+            res.status(400).json({
+                success: false,
+                error: 'Receipt ID is required'
+            });
+            return;
+        }
+
         const receipt = await getReceiptById(id);
 
         if (!receipt) {
@@ -122,19 +149,81 @@ export const getReceiptDetails = async (req: Request, res: Response): Promise<vo
     }
 };
 
-export const deleteReceiptById = async (req: Request, res: Response): Promise<void> => {
+export const getReceiptWithTotals = async (req: Request, res: Response): Promise<void> => {
     try {
         const { id } = req.params;
 
-        const deleted = await deleteReceipt(id);
+        if (!id) {
+            res.status(400).json({
+                success: false,
+                error: 'Receipt ID is required'
+            });
+            return;
+        }
 
-        if (!deleted) {
+        const receipt = await getReceiptWithUserTotals(id);
+
+        if (!receipt) {
             res.status(404).json({
                 success: false,
                 error: 'Receipt not found'
             });
             return;
         }
+
+        res.json({
+            success: true,
+            data: receipt
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({
+            success: false,
+            error: error instanceof Error ? error.message : 'Failed to get receipt with totals'
+        });
+    }
+};
+
+export const applySplitToItems = async (req: Request, res: Response): Promise<void> => {
+    try {
+        const { receiptId, itemIndices, splitConfig } = req.body as ApplySplitRequest;
+
+        if (!receiptId || !itemIndices || !splitConfig) {
+            res.status(400).json({
+                success: false,
+                error: 'Receipt ID, item indices, and split configuration are required'
+            });
+            return;
+        }
+
+        const updatedReceipt = await applyItemSplits(receiptId, itemIndices, splitConfig);
+
+        res.json({
+            success: true,
+            data: updatedReceipt
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({
+            success: false,
+            error: error instanceof Error ? error.message : 'Failed to apply split'
+        });
+    }
+};
+
+export const deleteReceiptById = async (req: Request, res: Response): Promise<void> => {
+    try {
+        const { id } = req.params;
+
+        if (!id) {
+            res.status(400).json({
+                success: false,
+                error: 'Receipt ID is required'
+            });
+            return;
+        }
+
+        await deleteReceipt(id);
 
         res.json({
             success: true,
@@ -149,11 +238,10 @@ export const deleteReceiptById = async (req: Request, res: Response): Promise<vo
     }
 };
 
-// Translation endpoints
+// Translation management functions remain the same
 export const getTranslations = async (req: Request, res: Response): Promise<void> => {
     try {
         const translations = await getAllTranslations();
-
         res.json({
             success: true,
             data: translations
@@ -169,20 +257,20 @@ export const getTranslations = async (req: Request, res: Response): Promise<void
 
 export const createTranslation = async (req: Request, res: Response): Promise<void> => {
     try {
-        const { original, translation, userId } = req.body;
+        const { originalText, translatedText } = req.body;
 
-        if (!original || !translation) {
+        if (!originalText || !translatedText) {
             res.status(400).json({
                 success: false,
-                error: 'Original and translation text are required'
+                error: 'Both originalText and translatedText are required'
             });
             return;
         }
 
-        const mapping = await addTranslation(original, translation, userId);
+        const translation = await addTranslation(originalText, translatedText);
         res.json({
             success: true,
-            data: mapping
+            data: translation
         });
     } catch (error) {
         console.error(error);
@@ -196,19 +284,19 @@ export const createTranslation = async (req: Request, res: Response): Promise<vo
 export const editTranslation = async (req: Request, res: Response): Promise<void> => {
     try {
         const { id } = req.params;
-        const { translation } = req.body;
+        const { originalText, translatedText } = req.body;
 
-        if (!translation) {
+        if (!id || !originalText || !translatedText) {
             res.status(400).json({
                 success: false,
-                error: 'Translation text is required'
+                error: 'ID, originalText, and translatedText are required'
             });
             return;
         }
 
-        const mapping = await updateTranslation(id, translation);
-
-        if (!mapping) {
+        const translation = await updateTranslation(id, originalText, translatedText);
+        
+        if (!translation) {
             res.status(404).json({
                 success: false,
                 error: 'Translation not found'
@@ -218,7 +306,7 @@ export const editTranslation = async (req: Request, res: Response): Promise<void
 
         res.json({
             success: true,
-            data: mapping
+            data: translation
         });
     } catch (error) {
         console.error(error);
@@ -233,16 +321,15 @@ export const removeTranslation = async (req: Request, res: Response): Promise<vo
     try {
         const { id } = req.params;
 
-        const deleted = await deleteTranslation(id);
-
-        if (!deleted) {
-            res.status(404).json({
+        if (!id) {
+            res.status(400).json({
                 success: false,
-                error: 'Translation not found'
+                error: 'Translation ID is required'
             });
             return;
         }
 
+        await deleteTranslation(id);
         res.json({
             success: true,
             message: 'Translation deleted successfully'
@@ -269,10 +356,9 @@ export const translateText = async (req: Request, res: Response): Promise<void> 
         }
 
         const translation = await getTranslation(text);
-
         res.json({
             success: true,
-            translation: translation
+            data: translation
         });
     } catch (error) {
         console.error(error);

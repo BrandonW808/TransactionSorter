@@ -47,6 +47,44 @@ export interface SuccessResponse<T> {
 
 export type ApiResponse<T> = SuccessResponse<T> | ErrorResponse;
 
+// User split information for receipts
+export interface UserSplit {
+  userId: string;
+  userName?: string; // For display purposes
+  amount: number;
+  percentage?: number;
+}
+
+// Enhanced receipt item with split support
+export interface ReceiptItemWithSplit {
+  originalText: string;
+  suffixText?: string;
+  readableDescription: string;
+  price: number;
+  category?: string;
+  userSplits?: UserSplit[];
+  isSplit?: boolean;
+}
+
+// Request for saving receipt with splits
+export interface SaveReceiptRequest {
+  items: ReceiptItemWithSplit[];
+  userId?: string; // Primary user (optional if all items are split)
+  store?: string;
+  date?: string;
+}
+
+// Response for receipt with user totals
+export interface ReceiptWithUserTotals {
+  _id: string;
+  items: ReceiptItemWithSplit[];
+  total: number;
+  store?: string;
+  date: Date;
+  userTotals: { [userId: string]: number };
+  userIds: string[];
+}
+
 // Mongoose document interfaces
 export interface IUser {
   name: string;
@@ -92,4 +130,19 @@ export interface UpdateCategoryListRequest {
   name?: string;
   categories?: Categories;
   isDefault?: boolean;
+}
+
+// Split configuration for receipts
+export interface SplitConfig {
+  type: 'equal' | 'percentage' | 'custom';
+  userIds: string[];
+  percentages?: { [userId: string]: number }; // For percentage splits
+  amounts?: { [userId: string]: number }; // For custom amount splits
+}
+
+// Request to apply split to receipt items
+export interface ApplySplitRequest {
+  receiptId: string;
+  itemIndices: number[]; // Which items to split
+  splitConfig: SplitConfig;
 }

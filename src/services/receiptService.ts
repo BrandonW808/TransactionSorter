@@ -1,5 +1,6 @@
 import TranslationMapping, { ITranslationMapping } from '../models/TranslationMapping.model';
 import Receipt, { IReceipt, IReceiptItem, ReceiptItem } from '../models/Receipt.model';
+import { SplitConfig, ReceiptWithUserTotals } from '../types';
 
 export async function parseReceiptCSV(csv: string): Promise<ReceiptItem[]> {
     const lines = csv.trim().split("\n");
@@ -150,198 +151,204 @@ export async function parseReceiptLines(lines: string[]): Promise<ReceiptItem[]>
     return items;
 }
 
-async function translateText(raw: string): Promise<string> {
-    try {
-        // First check if we have a translation in the database
-        const mapping = await TranslationMapping.findOne({ original: raw });
-        if (mapping) {
-            await mapping.incrementUsage();
-            return mapping.translation;
-        }
-    } catch (error) {
-        console.error('Error looking up translation:', error);
-    }
-
-    // If no translation found, use the default transformation
-    return makeHumanReadable(raw);
-}
-
-function makeHumanReadable(raw: string): string {
-    // Remove price if present
-    const match = raw.match(/^(.+?)\s+(-?\d+\.\d{2})$/);
-    if (match) {
-        const [, rawDescription, priceStr] = match;
-        raw = rawDescription;
-    }
-
-    // Basic transformation rules
-    let result = raw
-        .replace(/\./g, " ")
-        .replace(/\s+/g, " ")
-        .trim();
-
-    // Common French to English translations
-    const translations: { [key: string]: string } = {
-        'PAIN': 'Bread',
-        'GRIL': 'Grilled',
-        'AI': 'Garlic',
-        'SELECTION': 'Selection',
-        'EPICE': 'Spices',
-        'LEG.C': 'Canned Vegetables',
-        'RABAIS': 'Discount',
-        'BAG': 'Baguette',
-        'POULET': 'Chicken',
-        'BOEUF': 'Beef',
-        'PORC': 'Pork',
-        'LAIT': 'Milk',
-        'FROMAGE': 'Cheese',
-        'BEURRE': 'Butter',
-        'OEUF': 'Egg',
-        'OEUFS': 'Eggs',
-        'TOMATE': 'Tomato',
-        'TOMATES': 'Tomatoes',
-        'POMME': 'Apple',
-        'POMMES': 'Apples',
-        'ORANGE': 'Orange',
-        'BANANE': 'Banana',
-        'BANANES': 'Bananas',
-        'CAROTTE': 'Carrot',
-        'CAROTTES': 'Carrots',
-        'SALADE': 'Salad',
-        'RIZ': 'Rice',
-        'PATES': 'Pasta',
-        'HUILE': 'Oil',
-        'SEL': 'Salt',
-        'POIVRE': 'Pepper',
-        'SUCRE': 'Sugar',
-        'FARINE': 'Flour',
-        'CAFE': 'Coffee',
-        'THE': 'Tea',
-        'JUS': 'Juice',
-        'EAU': 'Water',
-        'GLACE': 'Ice Cream',
-        'CHOCOLAT': 'Chocolate',
-        'BISCUIT': 'Cookie',
-        'BISCUITS': 'Cookies',
-        'GATEAU': 'Cake',
-        'VIANDE': 'Meat',
-        'POISSON': 'Fish',
-        'FRUITS': 'Fruits',
-        'FRUIT': 'Fruit',
-        'LEGUMES': 'Vegetables',
-        'LEGUME': 'Vegetable',
-        'SURGELE': 'Frozen',
-        'FRAIS': 'Fresh',
-        'BIO': 'Organic',
-        'SANS': 'Without',
-        'AVEC': 'With',
-        'ROUGE': 'Red',
-        'BLANC': 'White',
-        'VERT': 'Green',
-        'JAUNE': 'Yellow',
-        'NOIR': 'Black',
-        'TOFU': 'Tofu',
-        'ET': 'And',
-        'M-ET': 'And',
-        'EXT': 'Extra',
-        'FE': 'Iron',
-        'CITRON': 'LEMON',
-        'OIGNON VERT': 'GREEN ONION',
-        'HERBE': 'HERB'
-    };
-
-    // Apply word-by-word translations
-    const words = result.split(' ');
-    const translatedWords = words.map(word => {
-        const upperWord = word.toUpperCase();
-        return translations[upperWord] || word;
-    });
-
-    result = translatedWords.join(' ');
-
-    // Capitalize first letter of each word
-    result = result.replace(/\b\w/g, l => l.toUpperCase());
-
-    return result;
-}
-
-// Service functions for translation mappings
+// Translation functions
 export async function getAllTranslations(): Promise<ITranslationMapping[]> {
-    return TranslationMapping.find().sort({ usageCount: -1, original: 1 });
+    return await TranslationMapping.find({});
 }
 
-export async function addTranslation(
-    original: string,
-    translation: string,
-    userId?: string
-): Promise<ITranslationMapping> {
-    const existing = await TranslationMapping.findOne({ original });
-    if (existing) {
-        existing.translation = translation;
-        if (userId) existing.userId = userId;
-        return existing.save();
-    }
-
-    return TranslationMapping.create({
-        original,
-        translation,
-        userId,
-        usageCount: 0
+export async function addTranslation(originalText: string, translatedText: string): Promise<ITranslationMapping> {
+    const translation = new TranslationMapping({
+        originalText: originalText.trim(),
+        translatedText: translatedText.trim()
     });
+    return await translation.save();
 }
 
 export async function updateTranslation(
     id: string,
-    translation: string
+    originalText: string,
+    translatedText: string
 ): Promise<ITranslationMapping | null> {
-    return TranslationMapping.findByIdAndUpdate(
+    return await TranslationMapping.findByIdAndUpdate(
         id,
-        { translation },
-        { new: true }
+        {
+            originalText: originalText.trim(),
+            translatedText: translatedText.trim()
+        },
+        { new: true, runValidators: true }
     );
 }
 
-export async function deleteTranslation(id: string): Promise<boolean> {
-    const result = await TranslationMapping.findByIdAndDelete(id);
-    return !!result;
+export async function deleteTranslation(id: string): Promise<void> {
+    await TranslationMapping.findByIdAndDelete(id);
 }
 
-export async function getTranslation(text: string): Promise<ITranslationMapping | null> {
-    const mapping = await TranslationMapping.findOne({ original: text });
-    if (mapping) {
-        await mapping.incrementUsage();
-        return mapping;
-    }
-    return null;
+export async function getTranslation(text: string): Promise<string> {
+    const mapping = await TranslationMapping.findOne({ originalText: text.trim() });
+    return mapping?.translation || text;
 }
 
-// Service functions for receipts
+export async function translateText(text: string): Promise<string> {
+    return await getTranslation(text);
+}
+
+// Receipt saving functions
 export async function saveReceipt(
-    items: IReceiptItem[],
-    userId?: string,
-    store?: string
+    items: ReceiptItem[],
+    userId: string,
+    store?: string,
+    date?: string
 ): Promise<IReceipt> {
     const receipt = new Receipt({
-        items,
         userId,
+        items: items.map(item => ({
+            ...item,
+            isSplit: false
+        })),
         store,
-        total: 0,
-        date: new Date()
+        date: date ? new Date(date) : new Date()
     });
 
     receipt.calculateTotal();
-    return receipt.save();
+    return await receipt.save();
 }
 
+// New function to save receipt with splits
+export async function saveReceiptWithSplits(
+    items: ReceiptItem[],
+    store?: string,
+    date?: string
+): Promise<IReceipt> {
+    const receipt = new Receipt({
+        items,
+        store,
+        date: date ? new Date(date) : new Date()
+    });
+
+    receipt.calculateTotal();
+    return await receipt.save();
+}
+
+// Apply splits to specific items in a receipt
+export async function applyItemSplits(
+    receiptId: string,
+    itemIndices: number[],
+    splitConfig: SplitConfig
+): Promise<IReceipt | null> {
+    const receipt = await Receipt.findById(receiptId);
+    if (!receipt) {
+        throw new Error('Receipt not found');
+    }
+
+    // Apply splits to specified items
+    itemIndices.forEach(index => {
+        if (index >= 0 && index < receipt.items.length) {
+            const item = receipt.items[index];
+            const userSplits = [];
+
+            if (splitConfig.type === 'equal') {
+                // Equal split among users
+                const amountPerUser = item.price / splitConfig.userIds.length;
+                const percentagePerUser = 100 / splitConfig.userIds.length;
+
+                for (const userId of splitConfig.userIds) {
+                    userSplits.push({
+                        userId,
+                        amount: amountPerUser,
+                        percentage: percentagePerUser
+                    });
+                }
+            } else if (splitConfig.type === 'percentage' && splitConfig.percentages) {
+                // Percentage-based split
+                for (const userId of splitConfig.userIds) {
+                    const percentage = splitConfig.percentages[userId] || 0;
+                    userSplits.push({
+                        userId,
+                        amount: (item.price * percentage) / 100,
+                        percentage
+                    });
+                }
+            } else if (splitConfig.type === 'custom' && splitConfig.amounts) {
+                // Custom amount split
+                let totalAssigned = 0;
+                for (const userId of splitConfig.userIds) {
+                    const amount = splitConfig.amounts[userId] || 0;
+                    totalAssigned += amount;
+                    userSplits.push({
+                        userId,
+                        amount,
+                        percentage: (amount / item.price) * 100
+                    });
+                }
+
+                // Validate that total assigned equals item price
+                if (Math.abs(totalAssigned - item.price) > 0.01) {
+                    throw new Error(`Total split amount (${totalAssigned}) does not match item price (${item.price})`);
+                }
+            }
+
+            item.userSplits = userSplits;
+            item.isSplit = true;
+        }
+    });
+
+    return await receipt.save();
+}
+
+// Get receipts for a specific user (including split receipts)
 export async function getReceiptsByUser(userId: string): Promise<IReceipt[]> {
-    return Receipt.findByUser(userId);
+    return await Receipt.findByUser(userId);
 }
 
+// Get receipt by ID
 export async function getReceiptById(id: string): Promise<IReceipt | null> {
-    return Receipt.findById(id);
+    return await Receipt.findById(id).populate('userId').populate('userIds');
 }
 
-export async function deleteReceipt(id: string): Promise<boolean> {
-    const result = await Receipt.findByIdAndDelete(id);
-    return !!result;
+// Get receipt with user totals calculated
+export async function getReceiptWithUserTotals(id: string): Promise<ReceiptWithUserTotals | null> {
+    const receipt = await Receipt.findById(id).populate('userId').populate('userIds');
+    if (!receipt) {
+        return null;
+    }
+
+    const userTotals = receipt.getUserSummary();
+
+    return {
+        _id: receipt.id,
+        items: receipt.items,
+        total: receipt.total,
+        store: receipt.store,
+        date: receipt.date,
+        userTotals,
+        userIds: receipt.userIds?.map(id => id.toString()) || []
+    };
+}
+
+// Delete receipt
+export async function deleteReceipt(id: string): Promise<void> {
+    await Receipt.findByIdAndDelete(id);
+}
+
+// Get user's total from all receipts
+export async function getUserTotalFromAllReceipts(userId: string): Promise<number> {
+    const receipts = await getReceiptsByUser(userId);
+    return receipts.reduce((total, receipt) => {
+        return total + receipt.calculateUserTotal(userId);
+    }, 0);
+}
+
+// Get summary of all receipts by user
+export async function getReceiptsSummaryByUser(): Promise<{ [userId: string]: number }> {
+    const allReceipts = await Receipt.find({}).populate('userId').populate('userIds');
+    const summary: { [userId: string]: number } = {};
+
+    allReceipts.forEach(receipt => {
+        const userSummary = receipt.getUserSummary();
+        Object.entries(userSummary).forEach(([userId, amount]) => {
+            summary[userId] = (summary[userId] || 0) + amount;
+        });
+    });
+
+    return summary;
 }
