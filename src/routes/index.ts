@@ -3,6 +3,7 @@ import userRoutes from './userRoutes';
 import categoryListRoutes from './categoryListRoutes';
 import transactionRoutes from './transactionRoutes';
 import receiptRoutes from './receiptRoutes';
+import savedReportRoutes from './savedReport.routes'; // Add this
 
 const router = Router();
 
@@ -23,6 +24,7 @@ router.use('/users', userRoutes);
 router.use('/category-lists', categoryListRoutes);
 router.use('/transactions', transactionRoutes);
 router.use('/receipts', receiptRoutes);
+router.use('/saved-reports', savedReportRoutes); // Add this
 
 // Legacy endpoints redirect (for backward compatibility)
 router.get('/categories', (req: Request, res: Response) => {

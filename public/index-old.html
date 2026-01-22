@@ -1,0 +1,2106 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0" />
+    <title>Transaction Categorizer v2.0</title>
+    <link rel="stylesheet"
+          href="styles.css" />
+    <style>
+        /* Transaction specific styles */
+        .file-upload-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .file-upload-card {
+            background: white;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: var(--shadow-sm);
+            transition: all 0.3s;
+        }
+
+        .file-upload-card:hover {
+            box-shadow: var(--shadow-md);
+            transform: translateY(-2px);
+        }
+
+        .file-upload-card h4 {
+            margin-bottom: 1rem;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .file-icon {
+            font-size: 1.5rem;
+        }
+
+        .file-input-wrapper {
+            position: relative;
+            overflow: hidden;
+            display: inline-block;
+            width: 100%;
+        }
+
+        .file-input-wrapper input[type=file] {
+            position: absolute;
+            left: -9999px;
+        }
+
+        .file-input-label {
+            display: block;
+            padding: 1rem;
+            border: 2px dashed var(--primary-color);
+            border-radius: 6px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: rgba(76, 175, 80, 0.05);
+        }
+
+        .file-input-label:hover {
+            background: rgba(76, 175, 80, 0.1);
+            border-color: var(--primary-hover);
+        }
+
+        .file-selected {
+            background: rgba(76, 175, 80, 0.15);
+            border-style: solid;
+        }
+
+        .file-name {
+            margin-top: 0.5rem;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            margin-top: 1.5rem;
+        }
+
+        .results-tabs {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            border-bottom: 2px solid var(--border-color);
+        }
+
+        .tab-button {
+            padding: 1rem 1.5rem;
+            background: none;
+            border: none;
+            border-bottom: 3px solid transparent;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+            transition: all 0.3s;
+        }
+
+        .tab-button:hover {
+            color: var(--primary-color);
+        }
+
+        .tab-button.active {
+            color: var(--primary-color);
+            border-bottom-color: var(--primary-color);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+            animation: fadeIn 0.3s;
+        }
+
+        .quick-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .quick-stat {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 1rem;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .quick-stat-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+
+        .quick-stat-label {
+            font-size: 0.85rem;
+            opacity: 0.9;
+        }
+
+        .filters-section {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin-bottom: 1.5rem;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .filter-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+        }
+
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            animation: fadeIn 0.3s;
+        }
+
+        .modal.active {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background-color: white;
+            padding: 2rem;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 800px;
+            max-height: 80vh;
+            overflow-y: auto;
+            animation: slideIn 0.3s;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .modal-title {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--text-primary);
+        }
+
+        .modal-close {
+            font-size: 2rem;
+            cursor: pointer;
+            color: var(--text-secondary);
+            background: none;
+            border: none;
+            padding: 0;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: all 0.2s;
+        }
+
+        .modal-close:hover {
+            background: var(--bg-primary);
+            color: var(--danger-color);
+        }
+
+        .modal-body {
+            margin-bottom: 1.5rem;
+        }
+
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 1rem;
+        }
+
+        /* Category Editor Styles */
+        .category-editor {
+            display: grid;
+            gap: 1rem;
+        }
+
+        .category-group {
+            background: var(--bg-primary);
+            padding: 1rem;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+        }
+
+        .category-group-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
+
+        .category-group-title {
+            font-weight: bold;
+            color: var(--text-primary);
+        }
+
+        .subcategory-list {
+            margin-left: 1rem;
+        }
+
+        .subcategory-item {
+            background: white;
+            padding: 0.75rem;
+            margin: 0.5rem 0;
+            border-radius: 6px;
+            border: 1px solid var(--border-color);
+        }
+
+        .subcategory-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
+
+        .subcategory-name {
+            font-weight: 500;
+            color: var(--text-primary);
+        }
+
+        .keyword-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 0.5rem;
+        }
+
+        .keyword-chip {
+            background: var(--bg-primary);
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .keyword-remove {
+            cursor: pointer;
+            color: var(--danger-color);
+        }
+
+        .add-keyword-form {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 0.5rem;
+        }
+
+        .add-keyword-input {
+            flex: 1;
+            padding: 0.5rem;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+        }
+
+        /* Transaction Table Styles with Edit Buttons */
+        .transaction-row {
+            position: relative;
+        }
+
+        .transaction-row:hover .row-actions {
+            opacity: 1;
+        }
+
+        .row-actions {
+            opacity: 0;
+            transition: opacity 0.2s;
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .row-action-btn {
+            padding: 0.25rem 0.5rem;
+            font-size: 0.85rem;
+            cursor: pointer;
+            border: none;
+            border-radius: 4px;
+            transition: all 0.2s;
+        }
+
+        .categorize-btn {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .categorize-btn:hover {
+            background: var(--primary-hover);
+        }
+
+        .edit-category-btn {
+            background: var(--secondary-color);
+            color: white;
+        }
+
+        .edit-category-btn:hover {
+            background: var(--secondary-hover);
+        }
+
+        /* Unmatched Transaction Alert */
+        .unmatched-alert {
+            background: rgba(255, 193, 7, 0.1);
+            border: 2px solid #FFC107;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .unmatched-icon {
+            font-size: 2rem;
+        }
+
+        .unmatched-content {
+            flex: 1;
+        }
+
+        .unmatched-title {
+            font-weight: bold;
+            color: var(--text-primary);
+            margin-bottom: 0.25rem;
+        }
+
+        .unmatched-description {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        .unmatched-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        /* Categorize Transaction Modal */
+        .categorize-form {
+            display: grid;
+            gap: 1rem;
+        }
+
+        .transaction-detail {
+            background: var(--bg-primary);
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+        }
+
+        .transaction-detail-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.5rem;
+        }
+
+        .transaction-detail-label {
+            font-weight: 500;
+            color: var(--text-secondary);
+        }
+
+        .transaction-detail-value {
+            color: var(--text-primary);
+        }
+
+        .category-selector {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        .suggested-categories {
+            background: rgba(76, 175, 80, 0.1);
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+        }
+
+        .suggested-title {
+            font-weight: bold;
+            color: var(--primary-color);
+            margin-bottom: 0.5rem;
+        }
+
+        .suggested-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        .suggested-item {
+            background: white;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: all 0.2s;
+        }
+
+        .suggested-item:hover {
+            border-color: var(--primary-color);
+            transform: translateY(-2px);
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .file-upload-section {
+                grid-template-columns: 1fr;
+            }
+
+            .category-selector {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-brand">
+                <h1>Transaction Categorizer v2.0</h1>
+            </div>
+            <ul class="nav-menu">
+                <li class="nav-item active">
+                    <a href="index.html"
+                       class="nav-link">
+                        <span class="nav-icon">📊</span>
+                        Transactions
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="receipts.html"
+                       class="nav-link">
+                        <span class="nav-icon">🧾</span>
+                        Receipts
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="categories.html"
+                       class="nav-link">
+                        <span class="nav-icon">📂</span>
+                        Categories
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="users.html"
+                       class="nav-link">
+                        <span class="nav-icon">👥</span>
+                        Users
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="container">
+        <!-- Page Header -->
+        <div class="page-header">
+            <h2>Transaction Processing</h2>
+        </div>
+
+        <!-- Quick Stats -->
+        <div class="quick-stats">
+            <div class="quick-stat">
+                <div class="quick-stat-value"
+                     id="totalProcessed">0</div>
+                <div class="quick-stat-label">Processed Today</div>
+            </div>
+            <div class="quick-stat">
+                <div class="quick-stat-value"
+                     id="categorizedCount">0</div>
+                <div class="quick-stat-label">Categorized</div>
+            </div>
+            <div class="quick-stat">
+                <div class="quick-stat-value"
+                     id="uncategorizedCount">0</div>
+                <div class="quick-stat-label">Uncategorized</div>
+            </div>
+            <div class="quick-stat">
+                <div class="quick-stat-value"
+                     id="accuracyRate">0%</div>
+                <div class="quick-stat-label">Accuracy</div>
+            </div>
+        </div>
+
+        <!-- Status Messages -->
+        <div id="status"
+             class="status"></div>
+
+        <!-- Unmatched Transactions Alert -->
+        <div id="unmatchedAlert"
+             class="unmatched-alert hidden">
+            <span class="unmatched-icon">⚠️</span>
+            <div class="unmatched-content">
+                <div class="unmatched-title">Uncategorized Transactions Found</div>
+                <div class="unmatched-description">
+                    <span id="unmatchedCount">0</span> transaction(s) couldn't be automatically categorized.
+                </div>
+            </div>
+            <div class="unmatched-actions">
+                <button id="reviewUnmatchedBtn"
+                        class="button button-primary">
+                    Review & Categorize
+                </button>
+            </div>
+        </div>
+
+        <!-- Configuration Section -->
+        <div class="filters-section">
+            <h3 class="section-header">Configuration</h3>
+            <div class="filter-grid">
+                <div class="form-group">
+                    <label for="categoryList">Category List:</label>
+                    <select id="categoryList"
+                            class="form-control">
+                        <option value="">Use default categories</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="userSelect">User (Optional):</label>
+                    <select id="userSelect"
+                            class="form-control">
+                        <option value="">Select user...</option>
+                    </select>
+                </div>
+                <div class="form-group"
+                     style="display: flex; align-items: flex-end; gap: 0.5rem;">
+                    <button id="refreshConfigBtn"
+                            class="button button-secondary">
+                        <span class="button-icon">🔄</span>
+                        Refresh
+                    </button>
+                    <button id="editCategoriesBtn"
+                            class="button button-secondary">
+                        <span class="button-icon">✏️</span>
+                        Edit Categories
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- File Upload Section -->
+        <div class="section">
+            <h3 class="section-header">Upload CSV Files</h3>
+            <div class="file-upload-section">
+                <div class="file-upload-card">
+                    <h4>
+                        <span class="file-icon">📄</span>
+                        Transaction File
+                    </h4>
+                    <div class="file-input-wrapper">
+                        <input type="file"
+                               id="transactionFile"
+                               accept=".csv" />
+                        <label for="transactionFile"
+                               class="file-input-label"
+                               id="transactionLabel">
+                            Click to select or drag & drop
+                            <br>
+                            <small>Required - Main transaction CSV</small>
+                        </label>
+                    </div>
+                    <div class="file-name"
+                         id="transactionFileName"></div>
+                </div>
+
+                <div class="file-upload-card">
+                    <h4>
+                        <span class="file-icon">📋</span>
+                        Shared Transaction File
+                    </h4>
+                    <div class="file-input-wrapper">
+                        <input type="file"
+                               id="sharedFile"
+                               accept=".csv" />
+                        <label for="sharedFile"
+                               class="file-input-label"
+                               id="sharedLabel">
+                            Click to select or drag & drop
+                            <br>
+                            <small>Optional - Shared transactions CSV</small>
+                        </label>
+                    </div>
+                    <div class="file-name"
+                         id="sharedFileName"></div>
+                </div>
+            </div>
+
+            <div class="action-buttons">
+                <button id="parseBtn"
+                        class="button button-primary">
+                    <span class="button-icon">🔍</span>
+                    Parse CSV Only
+                </button>
+                <button id="categorizeBtn"
+                        class="button button-primary">
+                    <span class="button-icon">🏷️</span>
+                    Categorize Transactions
+                </button>
+                <button id="downloadBtn"
+                        class="button button-secondary">
+                    <span class="button-icon">⬇️</span>
+                    Download Results
+                </button>
+                <button id="clearBtn"
+                        class="button button-secondary">
+                    <span class="button-icon">🗑️</span>
+                    Clear
+                </button>
+            </div>
+        </div>
+
+        <!-- Results Section -->
+        <div id="resultsSection"
+             class="section hidden">
+            <h3 class="section-header">Results</h3>
+
+            <div class="results-tabs">
+                <button class="tab-button active"
+                        data-tab="parsed">Parsed Data</button>
+                <button class="tab-button"
+                        data-tab="categorized">Categorized Data</button>
+                <button class="tab-button"
+                        data-tab="summary">Summary</button>
+            </div>
+
+            <div id="parsed"
+                 class="tab-content active">
+                <div class="table-container">
+                    <table id="parsedTable"></table>
+                </div>
+            </div>
+
+            <div id="categorized"
+                 class="tab-content">
+                <div class="table-container">
+                    <table id="categorizedTable"></table>
+                </div>
+            </div>
+
+            <div id="summary"
+                 class="tab-content">
+                <div id="summaryContent">
+                    <!-- Summary will be generated here -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Loader -->
+        <div id="loader"
+             class="loader"></div>
+    </div>
+
+    <!-- Category Editor Modal -->
+    <div id="categoryEditorModal"
+         class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Edit Categories</h3>
+                <button class="modal-close"
+                        id="close-edit-categories-btn">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div id="categoryEditorContent"
+                     class="category-editor">
+                    <!-- Categories will be loaded here -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="button button-secondary"
+                        id="cancel-edit-categories-btn">Cancel</button>
+                <button class="button button-primary"
+                        id="save-category-changes-btn">
+                    <span class="button-icon">💾</span>
+                    Save Changes
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Categorize Transaction Modal -->
+    <div id="categorizeTransactionModal"
+         class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Categorize Transaction</h3>
+                <button class="modal-close"
+                        id="close-categorize-model-btn">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div id="transactionDetail"
+                     class="transaction-detail">
+                    <!-- Transaction details will be shown here -->
+                </div>
+
+                <div id="suggestedCategories"
+                     class="suggested-categories hidden">
+                    <div class="suggested-title">Suggested Categories</div>
+                    <div id="suggestedList"
+                         class="suggested-list">
+                        <!-- Suggested categories will be listed here -->
+                    </div>
+                </div>
+
+                <div class="categorize-form">
+                    <div class="category-selector">
+                        <div class="form-group">
+                            <label for="mainCategorySelect">Main Category</label>
+                            <select id="mainCategorySelect"
+                                    class="form-control">
+                                <option value="">Select main category...</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="subCategorySelect">Sub Category</label>
+                            <select id="subCategorySelect"
+                                    class="form-control">
+                                <option value="">Select sub category...</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Add Keyword Section -->
+                    <div class="form-group"
+                         style="margin-top: 1rem; padding: 1rem; background: rgba(76, 175, 80, 0.1); border-radius: 8px;">
+                        <label style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
+                            <input type="checkbox"
+                                   id="addKeywordCheck"
+                                   style="width: auto;">
+                            <span>Add keyword to improve future categorization</span>
+                        </label>
+                        <div id="keywordInputSection"
+                             style="display: none; margin-top: 0.5rem;">
+                            <label for="keywordInput"
+                                   style="font-size: 0.9rem; color: var(--text-secondary);">
+                                Enter keyword to match (will be extracted from description):
+                            </label>
+                            <input type="text"
+                                   id="keywordInput"
+                                   class="form-control"
+                                   placeholder="e.g., 'walmart', 'gas', 'restaurant name'">
+                            <small style="color: var(--text-secondary); font-size: 0.85rem;">
+                                Tip: Use a distinctive word from the description that will match similar transactions
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="button button-secondary"
+                        id="skip-transaction-btn">Skip</button>
+                <button class="button button-primary"
+                        id="apply-category-btn">
+                    <span class="button-icon">✓</span>
+                    Apply Category
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global variables
+        let parsedData = null;
+        let categorizedData = null;
+        let activeTab = 'parsed';
+        let currentCategories = null;
+        let currentCategoryList = null;
+        let currentTransactionIndex = null;
+        let unmatchedTransactions = [];
+
+        // DOM elements
+        const transactionFile = document.getElementById('transactionFile');
+        const sharedFile = document.getElementById('sharedFile');
+        const transactionLabel = document.getElementById('transactionLabel');
+        const sharedLabel = document.getElementById('sharedLabel');
+        const transactionFileName = document.getElementById('transactionFileName');
+        const sharedFileName = document.getElementById('sharedFileName');
+        const categoryList = document.getElementById('categoryList');
+        const userSelect = document.getElementById('userSelect');
+        const parseBtn = document.getElementById('parseBtn');
+        const categorizeBtn = document.getElementById('categorizeBtn');
+        const downloadBtn = document.getElementById('downloadBtn');
+        const clearBtn = document.getElementById('clearBtn');
+        const closeEditCategoriesBtn = document.getElementById('close-edit-categories-btn');
+        const cancelEditCategoriesBtn = document.getElementById('cancel-edit-categories-btn');
+        const saveCategoriesChangesBtn = document.getElementById('save-category-changes-btn');
+        const closeCategorizeModalBtn = document.getElementById('close-categorize-model-btn');
+        const skipTransactionBtn = document.getElementById('skip-transaction-btn');
+        const applyCategoryBtn = document.getElementById('apply-category-btn');
+        const refreshConfigBtn = document.getElementById('refreshConfigBtn');
+        const editCategoriesBtn = document.getElementById('editCategoriesBtn');
+        const reviewUnmatchedBtn = document.getElementById('reviewUnmatchedBtn');
+        const resultsSection = document.getElementById('resultsSection');
+        const parsedTable = document.getElementById('parsedTable');
+        const categorizedTable = document.getElementById('categorizedTable');
+        const summaryContent = document.getElementById('summaryContent');
+        const loader = document.getElementById('loader');
+        const status = document.getElementById('status');
+        const unmatchedAlert = document.getElementById('unmatchedAlert');
+        const categoryEditorModal = document.getElementById('categoryEditorModal');
+        const categorizeTransactionModal = document.getElementById('categorizeTransactionModal');
+        let categorizedHeaderIndex = null;
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function () {
+            loadConfiguration();
+            setupEventListeners();
+            updateQuickStats();
+        });
+
+        const isHeader = rowIndex === 0;
+        const isCategoryCol = cellIndex === row.length - 1 && !isHeader;
+        const uncategorized = isCategoryCol && isUncategorizedCategory(cell);
+        const cellEl = document.createElement(isHeader ? 'th' : 'td');
+
+        const span = document.createElement('span');
+        span.innerHTML = escapeHtml(cell === undefined || cell === null ? '' : String(cell));
+
+        if (!isHeader) {
+            // compute parsed index for this categorized row via ID
+            let parsedIdxForRow = null;
+            if (categorizedHeaderIndex) {
+                const id = stableIdFromArrayRow(row, categorizedHeaderIndex);
+                const pi = parsedIndexById.get(id);
+                if (pi !== undefined) parsedIdxForRow = pi;
+            }
+
+            if (isCategoryCol && !uncategorized) {
+                const btn = document.createElement('button');
+                btn.className = 'row-action-btn edit-category-btn';
+                btn.textContent = '✏️';
+                btn.onclick = () => {
+                    if (parsedIdxForRow !== null) editCategoryForTransaction(parsedIdxForRow);
+                    else showStatus('Could not map this row back to the original transaction.', 'warning');
+                };
+                cellEl.appendChild(span);
+                cellEl.appendChild(document.createTextNode(' '));
+                cellEl.appendChild(btn);
+            } else if (uncategorized) {
+                span.style.color = 'var(--danger-color)';
+                span.textContent = `⚠️ ${String(cell || 'Uncategorized')}`;
+
+                const btn = document.createElement('button');
+                btn.className = 'row-action-btn categorize-btn';
+                btn.textContent = 'Categorize';
+                btn.onclick = () => {
+                    if (parsedIdxForRow !== null) categorizeTransaction(parsedIdxForRow);
+                    else showStatus('Could not map this row back to the original transaction.', 'warning');
+                };
+                cellEl.appendChild(span);
+                cellEl.appendChild(document.createTextNode(' '));
+                cellEl.appendChild(btn);
+            } else {
+                cellEl.appendChild(span);
+            }
+        } else {
+            cellEl.appendChild(span);
+        }
+        tr.appendChild(cellEl);
+
+        // Setup event listeners
+        function setupEventListeners() {
+            // File inputs
+            transactionFile.addEventListener('change', () => handleFileSelect('transaction'));
+            sharedFile.addEventListener('change', () => handleFileSelect('shared'));
+
+            // Drag and drop
+            setupDragAndDrop(transactionLabel, transactionFile);
+            setupDragAndDrop(sharedLabel, sharedFile);
+
+            // Buttons
+            parseBtn.addEventListener('click', parseFiles);
+            categorizeBtn.addEventListener('click', categorizeFiles);
+            downloadBtn.addEventListener('click', downloadResults);
+            clearBtn.addEventListener('click', clearAll);
+            refreshConfigBtn.addEventListener('click', loadConfiguration);
+            editCategoriesBtn.addEventListener('click', openCategoryEditor);
+            reviewUnmatchedBtn.addEventListener('click', reviewUnmatchedTransactions);
+            closeEditCategoriesBtn.addEventListener('click', closeCategoryEditor);
+            cancelEditCategoriesBtn.addEventListener('click', closeCategoryEditor);
+            saveCategoriesChangesBtn.addEventListener('click', saveCategoryChanges);
+            closeCategorizeModalBtn.addEventListener('click', closeCategorizeModal);
+            skipTransactionBtn.addEventListener('click', skipTransaction);
+            applyCategoryBtn.addEventListener('click', applyCategory);
+
+            categoryList.addEventListener('change', async function () {
+                const selectedId = this.value;
+
+                try {
+                    showLoader();
+
+                    if (!selectedId) {
+                        // Load default
+                        const response = await fetch('/api/category-lists/default');
+                        const result = await response.json();
+                        if (result.success) {
+                            currentCategoryList = result.data;
+                            currentCategories = result.data.categories;
+                            showStatus('Using default category list', 'info');
+                        }
+                    } else {
+                        // Load selected list
+                        const response = await fetch(`/api/category-lists/${selectedId}`);
+                        const result = await response.json();
+                        if (result.success) {
+                            currentCategoryList = result.data;
+                            currentCategories = result.data.categories;
+                            showStatus(`Category list "${result.data.name}" loaded`, 'info');
+                        }
+                    }
+                } catch (error) {
+                    showStatus('Error loading category list: ' + error.message, 'error');
+                } finally {
+                    hideLoader();
+                }
+            });
+
+            // Tabs
+            document.querySelectorAll('.tab-button').forEach(button => {
+                button.addEventListener('click', () => {
+                    const tab = button.dataset.tab;
+                    switchResultTab(tab);
+                });
+            });
+
+            // Main category select change
+            document.getElementById('mainCategorySelect').addEventListener('change', (e) => {
+                updateSubCategories(e.target.value);
+            });
+
+            // Add keyword checkbox toggle
+            document.getElementById('addKeywordCheck').addEventListener('change', (e) => {
+                const keywordSection = document.getElementById('keywordInputSection');
+                if (e.target.checked) {
+                    keywordSection.style.display = 'block';
+                } else {
+                    keywordSection.style.display = 'none';
+                }
+            });
+        }
+
+        // Setup drag and drop
+        function setupDragAndDrop(label, input) {
+            label.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                label.classList.add('file-selected');
+            });
+
+            label.addEventListener('dragleave', () => {
+                label.classList.remove('file-selected');
+            });
+
+            label.addEventListener('drop', (e) => {
+                e.preventDefault();
+                label.classList.remove('file-selected');
+                if (e.dataTransfer.files.length > 0) {
+                    input.files = e.dataTransfer.files;
+                    input.dispatchEvent(new Event('change'));
+                }
+            });
+        }
+
+        // Handle file selection
+        function handleFileSelect(type) {
+            if (type === 'transaction' && transactionFile.files.length > 0) {
+                const file = transactionFile.files[0];
+                transactionFileName.textContent = `📄 ${file.name} (${formatFileSize(file.size)})`;
+                transactionLabel.classList.add('file-selected');
+            } else if (type === 'shared' && sharedFile.files.length > 0) {
+                const file = sharedFile.files[0];
+                sharedFileName.textContent = `📋 ${file.name} (${formatFileSize(file.size)})`;
+                sharedLabel.classList.add('file-selected');
+            }
+        }
+
+        // Load configuration
+        async function loadConfiguration() {
+            try {
+                // Load category lists
+                const categoryResponse = await fetch('/api/category-lists');
+                const categoryResult = await categoryResponse.json();
+
+                if (categoryResult.success) {
+                    categoryList.innerHTML = '<option value="">Use default categories</option>';
+                    categoryResult.data.forEach(list => {
+                        const option = document.createElement('option');
+                        option.value = list._id || list.id;
+                        option.textContent = list.name + (list.isDefault ? ' (Default)' : '');
+                        categoryList.appendChild(option);
+                    });
+
+                    // Load the default or first category list
+                    const defaultList = categoryResult.data.find(list => list.isDefault) || categoryResult.data[0];
+                    if (defaultList) {
+                        currentCategoryList = defaultList;
+                        currentCategories = defaultList.categories;
+
+                        // Select it in the dropdown
+                        if (defaultList._id) {
+                            categoryList.value = defaultList._id;
+                        }
+                    }
+                }
+
+                // Load users
+                const userResponse = await fetch('/api/users');
+                const userResult = await userResponse.json();
+
+                if (userResult.success) {
+                    userSelect.innerHTML = '<option value="">Select user...</option>';
+                    userResult.data.forEach(user => {
+                        const option = document.createElement('option');
+                        option.value = user._id || user.id;
+                        option.textContent = user.name;
+                        userSelect.appendChild(option);
+                    });
+                }
+            } catch (error) {
+                showStatus('Error loading configuration: ' + error.message, 'error');
+                console.error('Configuration load error:', error);
+            }
+        }
+
+        // Parse files
+        async function parseFiles() {
+            if (!transactionFile.files.length) {
+                showStatus('Please select a transaction file', 'warning');
+                return;
+            }
+
+            try {
+                showLoader();
+                const formData = new FormData();
+                formData.append('transactions', transactionFile.files[0]);
+
+                if (sharedFile.files.length) {
+                    formData.append('shared', sharedFile.files[0]);
+                }
+
+                const response = await fetch('/api/transactions/parse-csv', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    parsedData = result.data.transactions;
+
+                    let parsedIndexById = new Map();
+
+                    function rebuildParsedIndexMap() {
+                        parsedIndexById = new Map();
+                        if (!parsedData) return;
+                        parsedData.forEach((row, idx) => {
+                            const id = stableIdFromObj(row);
+                            parsedIndexById.set(id, idx);
+                        });
+                    }
+
+                    displayParsedData(parsedData);
+                    rebuildParsedIndexMap();
+                    resultsSection.classList.remove('hidden');
+                    switchResultTab('parsed');
+                    updateQuickStats();
+                    showStatus(`Parsed ${parsedData.length} transactions successfully`, 'success');
+                } else {
+                    showStatus('Error parsing files: ' + result.error, 'error');
+                }
+            } catch (error) {
+                showStatus('Error parsing files: ' + error.message, 'error');
+            } finally {
+                hideLoader();
+            }
+        }
+
+        // Categorize files
+        async function categorizeFiles() {
+            if (!transactionFile.files.length) {
+                showStatus('Please select a transaction file', 'warning');
+                return;
+            }
+
+            try {
+                showLoader();
+                const formData = new FormData();
+                formData.append('transactions', transactionFile.files[0]);
+
+                if (sharedFile.files.length) {
+                    formData.append('shared', sharedFile.files[0]);
+                }
+
+                if (categoryList.value) {
+                    formData.append('categoryListId', categoryList.value);
+                }
+
+                // Parse first to get raw data
+                const parseResponse = await fetch('/api/transactions/parse-csv', {
+                    method: 'POST',
+                    body: formData
+                });
+                const parseResult = await parseResponse.json();
+
+                // Then categorize
+                const categorizeResponse = await fetch('/api/transactions/categorize-csv', {
+                    method: 'POST',
+                    body: formData
+                });
+                const categorizeResult = await categorizeResponse.json();
+
+                if (parseResult.success && categorizeResult.success) {
+                    parsedData = parseResult.data.transactions;
+                    categorizedData = categorizeResult.data;
+
+                    if (Array.isArray(categorizedData) && categorizedData.length > 0) {
+                        categorizedHeaderIndex = computeCategorizedHeaderIndex(categorizedData[0]);
+                    }
+
+                    displayParsedData(parsedData);
+                    displayCategorizedData(categorizedData);
+                    displaySummary();
+
+                    resultsSection.classList.remove('hidden');
+                    switchResultTab('categorized');
+                    updateQuickStats();
+
+                    // Check for unmatched transactions
+                    checkUnmatchedTransactions();
+
+                    showStatus('Transactions categorized successfully', 'success');
+                } else {
+                    showStatus('Error categorizing transactions', 'error');
+                }
+            } catch (error) {
+                showStatus('Error categorizing transactions: ' + error.message, 'error');
+            } finally {
+                hideLoader();
+            }
+        }
+
+        // Check for unmatched transactions
+        function checkUnmatchedTransactions() {
+            if (!categorizedData || categorizedData.length <= 1 || !categorizedHeaderIndex) return;
+
+            const idx = categorizedHeaderIndex;
+            const seen = new Set();
+            unmatchedTransactions = [];
+
+            for (let i = 1; i < categorizedData.length; i++) {
+                const row = categorizedData[i];
+                const categoryCell = idx.category >= 0 ? row[idx.category] : row[row.length - 1];
+                if (isUncategorizedCategory(categoryCell)) {
+                    const id = stableIdFromArrayRow(row, idx);
+                    const parsedIdx = parsedIndexById.get(id);
+                    if (parsedIdx !== undefined && !seen.has(parsedIdx)) {
+                        seen.add(parsedIdx);
+                        unmatchedTransactions.push(parsedIdx); // push PARSED index, not i-1
+                    }
+                }
+            }
+
+            if (unmatchedTransactions.length > 0) {
+                document.getElementById('unmatchedCount').textContent = unmatchedTransactions.length;
+                unmatchedAlert.classList.remove('hidden');
+            } else {
+                unmatchedAlert.classList.add('hidden');
+            }
+        }
+
+        // Review unmatched transactions
+        function reviewUnmatchedTransactions() {
+            if (unmatchedTransactions.length === 0) {
+                showStatus('No unmatched transactions to review', 'info');
+                return;
+            }
+
+            // Start categorizing unmatched transactions one by one
+            categorizeTransaction(unmatchedTransactions[0]);
+        }
+
+        // Open category editor
+        async function openCategoryEditor() {
+            categoryEditorModal.classList.add('active');
+            await loadCategoriesForEdit();
+        }
+
+        // Close category editor
+        function closeCategoryEditor() {
+            categoryEditorModal.classList.remove('active');
+        }
+
+        // Load categories for editing
+        async function loadCategoriesForEdit() {
+            if (!currentCategories) {
+                showStatus('No categories loaded', 'warning');
+                return;
+            }
+
+            const editorContent = document.getElementById('categoryEditorContent');
+            editorContent.innerHTML = ''; // Clear existing content
+
+            for (const mainCat in currentCategories) {
+                const groupDiv = document.createElement('div');
+                groupDiv.className = 'category-group';
+                groupDiv.dataset.main = mainCat;
+
+                // Group header
+                const headerDiv = document.createElement('div');
+                headerDiv.className = 'category-group-header';
+
+                const titleDiv = document.createElement('div');
+                titleDiv.className = 'category-group-title';
+                titleDiv.textContent = mainCat;
+
+                const removeMainBtn = document.createElement('button');
+                removeMainBtn.className = 'button button-sm button-danger';
+                removeMainBtn.textContent = 'Remove';
+                removeMainBtn.onclick = () => removeMainCategory(mainCat);
+
+                headerDiv.appendChild(titleDiv);
+                headerDiv.appendChild(removeMainBtn);
+                groupDiv.appendChild(headerDiv);
+
+                // Subcategory list
+                const subListDiv = document.createElement('div');
+                subListDiv.className = 'subcategory-list';
+
+                for (const subCat in currentCategories[mainCat]) {
+                    const subItemDiv = document.createElement('div');
+                    subItemDiv.className = 'subcategory-item';
+                    subItemDiv.dataset.sub = subCat;
+
+                    const subHeaderDiv = document.createElement('div');
+                    subHeaderDiv.className = 'subcategory-header';
+
+                    const subNameDiv = document.createElement('div');
+                    subNameDiv.className = 'subcategory-name';
+                    subNameDiv.textContent = subCat;
+
+                    const removeSubBtn = document.createElement('button');
+                    removeSubBtn.className = 'button button-sm button-danger';
+                    removeSubBtn.textContent = 'Remove';
+                    removeSubBtn.onclick = () => removeSubCategory(mainCat, subCat);
+
+                    subHeaderDiv.appendChild(subNameDiv);
+                    subHeaderDiv.appendChild(removeSubBtn);
+                    subItemDiv.appendChild(subHeaderDiv);
+
+                    // Keyword list
+                    const keywordListDiv = document.createElement('div');
+                    keywordListDiv.className = 'keyword-list';
+
+                    currentCategories[mainCat][subCat].forEach(keyword => {
+                        const chip = document.createElement('div');
+                        chip.className = 'keyword-chip';
+                        chip.textContent = keyword;
+
+                        const removeIcon = document.createElement('span');
+                        removeIcon.className = 'keyword-remove';
+                        removeIcon.innerHTML = '&times;';
+                        removeIcon.onclick = () => removeKeyword(mainCat, subCat, keyword);
+
+                        chip.appendChild(removeIcon);
+                        keywordListDiv.appendChild(chip);
+                    });
+
+                    subItemDiv.appendChild(keywordListDiv);
+
+                    // Add keyword form
+                    const keywordForm = document.createElement('div');
+                    keywordForm.className = 'add-keyword-form';
+
+                    const keywordInput = document.createElement('input');
+                    keywordInput.type = 'text';
+                    keywordInput.className = 'add-keyword-input';
+                    keywordInput.placeholder = 'Add keyword...';
+                    keywordInput.id = `keyword-${mainCat}-${subCat}`;
+
+                    const addBtn = document.createElement('button');
+                    addBtn.className = 'button button-sm button-primary';
+                    addBtn.textContent = 'Add';
+                    addBtn.onclick = () => addKeyword(mainCat, subCat);
+
+                    keywordForm.appendChild(keywordInput);
+                    keywordForm.appendChild(addBtn);
+                    subItemDiv.appendChild(keywordForm);
+
+                    subListDiv.appendChild(subItemDiv);
+                }
+
+                groupDiv.appendChild(subListDiv);
+                editorContent.appendChild(groupDiv);
+            }
+        }
+        // Add keyword
+        function addKeyword(mainCat, subCat) {
+            const input = document.getElementById(`keyword-${mainCat}-${subCat}`);
+            const keyword = input.value.trim();
+
+            if (keyword) {
+                if (!currentCategories[mainCat][subCat].includes(keyword)) {
+                    currentCategories[mainCat][subCat].push(keyword);
+                    loadCategoriesForEdit();
+                    showStatus('Keyword added', 'success');
+                } else {
+                    showStatus('Keyword already exists', 'warning');
+                }
+            }
+        }
+
+        // Remove keyword
+        function removeKeyword(mainCat, subCat, keyword) {
+            const index = currentCategories[mainCat][subCat].indexOf(keyword);
+            if (index > -1) {
+                currentCategories[mainCat][subCat].splice(index, 1);
+                loadCategoriesForEdit();
+                showStatus('Keyword removed', 'info');
+            }
+        }
+
+        // Save category changes
+        async function saveCategoryChanges() {
+            try {
+                showLoader();
+
+                const categoryListId = categoryList.value || 'default';
+                const response = await fetch(`/api/category-lists/${categoryListId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        categories: currentCategories
+                    })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    showStatus('Categories saved successfully', 'success');
+                    closeCategoryEditor();
+
+                    // Re-categorize if we have data
+                    if (parsedData) {
+                        categorizeFiles();
+                    }
+                } else {
+                    showStatus('Error saving categories: ' + result.error, 'error');
+                }
+            } catch (error) {
+                showStatus('Error saving categories: ' + error.message, 'error');
+            } finally {
+                hideLoader();
+            }
+        }
+
+        // Categorize a specific transaction
+        function categorizeTransaction(transactionIndex) {
+            if (!parsedData || transactionIndex >= parsedData.length) {
+                showStatus('Invalid transaction', 'error');
+                return;
+            }
+
+            currentTransactionIndex = transactionIndex;
+            const transaction = parsedData[transactionIndex];
+
+            const transactionDetail = document.getElementById('transactionDetail');
+            transactionDetail.innerHTML = '';
+            transactionDetail.appendChild(createRow('Date', transaction.date));
+            transactionDetail.appendChild(createRow('Subdescription', transaction.subDescription));
+            transactionDetail.appendChild(createRow('Amount', `$${(transaction.amount || 0).toFixed(2)}`));
+            transactionDetail.appendChild(createRow('Type', transaction.type));
+
+            // Populate main categories
+            const mainCategorySelect = document.getElementById('mainCategorySelect');
+            mainCategorySelect.innerHTML = '<option value="">Select main category...</option>';
+            for (const mainCat in currentCategories) {
+                const option = document.createElement('option');
+                option.value = mainCat;
+                option.textContent = mainCat;
+                mainCategorySelect.appendChild(option);
+            }
+
+            // Reset keyword section
+            document.getElementById('addKeywordCheck').checked = false;
+            document.getElementById('keywordInputSection').style.display = 'none';
+            document.getElementById('keywordInput').value = '';
+
+            // Pre-populate keyword input with subdescription for user to edit
+            const subDesc = transaction.subDescription || '';
+            // Try to extract a meaningful keyword (first significant word)
+            const words = subDesc.split(/[\s,-]+/).filter(w => w.length > 3);
+            if (words.length > 0) {
+                document.getElementById('keywordInput').value = words[0].toLowerCase();
+            }
+
+            // Show suggested categories based on description
+            showSuggestedCategories(transaction.subDescription);
+
+            // Open modal
+            categorizeTransactionModal.classList.add('active');
+        }
+
+        function createRow(label, value) {
+            const row = document.createElement('div');
+            row.className = 'transaction-detail-row';
+
+            const labelSpan = document.createElement('span');
+            labelSpan.className = 'transaction-detail-label';
+            labelSpan.textContent = `${label}:`;
+
+            const valueSpan = document.createElement('span');
+            valueSpan.className = 'transaction-detail-value';
+            valueSpan.textContent = escapeHtml(value || '');
+            valueSpan.id = label;
+
+            row.appendChild(labelSpan);
+            row.appendChild(valueSpan);
+            return row;
+        };
+
+
+        // Show suggested categories
+        function showSuggestedCategories(subDescription) {
+            const suggestions = findMatchingCategories(subDescription);
+
+            if (suggestions.length > 0) {
+                const suggestedList = document.getElementById('suggestedList');
+                suggestedList.innerHTML = '';
+
+                suggestions.forEach(suggestion => {
+                    const item = document.createElement('div');
+                    item.className = 'suggested-item';
+                    item.textContent = `${suggestion.main} > ${suggestion.sub}`;
+                    item.onclick = () => {
+                        document.getElementById('mainCategorySelect').value = suggestion.main;
+                        updateSubCategories(suggestion.main);
+                        document.getElementById('subCategorySelect').value = suggestion.sub;
+                    };
+                    suggestedList.appendChild(item);
+                });
+
+                document.getElementById('suggestedCategories').classList.remove('hidden');
+            } else {
+                document.getElementById('suggestedCategories').classList.add('hidden');
+            }
+        }
+
+        // Find matching categories based on description
+        function findMatchingCategories(subDescription) {
+            const matches = [];
+            const descLower = subDescription.toLowerCase();
+
+            for (const mainCat in currentCategories) {
+                for (const subCat in currentCategories[mainCat]) {
+                    for (const keyword of currentCategories[mainCat][subCat]) {
+                        if (descLower.includes(keyword.toLowerCase())) {
+                            matches.push({ main: mainCat, sub: subCat, keyword });
+                            break;
+                        }
+                    }
+                }
+            }
+
+            return matches;
+        }
+
+        // Update sub categories based on main category selection
+        function updateSubCategories(mainCat) {
+            const subCategorySelect = document.getElementById('subCategorySelect');
+            subCategorySelect.innerHTML = '<option value="">Select sub category...</option>';
+
+            if (mainCat && currentCategories[mainCat]) {
+                for (const subCat in currentCategories[mainCat]) {
+                    const option = document.createElement('option');
+                    option.value = subCat;
+                    option.textContent = subCat;
+                    subCategorySelect.appendChild(option);
+                }
+            }
+        }
+
+        // Close categorize modal
+        function closeCategorizeModal() {
+            categorizeTransactionModal.classList.remove('active');
+            currentTransactionIndex = null;
+        }
+
+        // Skip transaction
+        function skipTransaction() {
+            closeCategorizeModal();
+
+            // Move to next unmatched transaction if any
+            const currentIdx = unmatchedTransactions.indexOf(currentTransactionIndex);
+            if (currentIdx !== -1 && currentIdx < unmatchedTransactions.length - 1) {
+                categorizeTransaction(unmatchedTransactions[currentIdx + 1]);
+            }
+        }
+
+        // Apply category to transaction
+        async function applyCategory() {
+            const mainCat = document.getElementById('mainCategorySelect').value;
+            const subCat = document.getElementById('subCategorySelect').value;
+            const shouldAddKeyword = document.getElementById('addKeywordCheck').checked;
+            const newKeyword = document.getElementById('keywordInput').value.trim().toLowerCase();
+
+            if (!mainCat || !subCat) {
+                showStatus('Please select both main and sub category', 'warning');
+                return;
+            }
+            if (shouldAddKeyword && !newKeyword) {
+                showStatus('Please enter a keyword or uncheck "Add keyword"', 'warning');
+                return;
+            }
+
+            try {
+                let categoriesUpdated = false;
+
+                // 1) Add new keyword (if requested) and persist to server
+                if (shouldAddKeyword && newKeyword) {
+                    if (!currentCategories?.[mainCat]?.[subCat]) {
+                        showStatus(`Category not found: ${mainCat} > ${subCat}`, 'error');
+                        return;
+                    }
+
+                    const keywords = currentCategories[mainCat][subCat];
+                    if (!keywords.includes(newKeyword)) {
+                        keywords.push(newKeyword);
+
+                        showLoader();
+                        const categoryListId = categoryList.value || currentCategoryList._id || 'default';
+                        const resp = await fetch(`/api/category-lists/${categoryListId}`, {
+                            method: 'PUT',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                name: currentCategoryList?.name,
+                                categories: currentCategories
+                            })
+                        });
+                        const resJson = await resp.json();
+                        hideLoader();
+
+                        if (!resJson.success) {
+                            // rollback local change on failure
+                            const idx = keywords.indexOf(newKeyword);
+                            if (idx > -1) keywords.splice(idx, 1);
+                            showStatus('Error updating categories: ' + resJson.error, 'error');
+                            return;
+                        }
+
+                        categoriesUpdated = true;
+                        await reloadCurrentCategories(); // keep in sync with server
+                        showStatus(`Keyword "${newKeyword}" added to ${mainCat} > ${subCat}`, 'success');
+                    } else {
+                        showStatus(`Keyword "${newKeyword}" already exists in this category`, 'info');
+                    }
+                }
+
+                // 2) Update the selected transaction's category immediately in the table
+                if (categorizedData && currentTransactionIndex !== null) {
+                    const categoryString = `${mainCat} > ${subCat}`;
+                    const categorizedDataIndex = currentTransactionIndex + 1; // +1 for header row
+
+                    if (categorizedData[categorizedDataIndex]) {
+                        const lastColIndex = categorizedData[categorizedDataIndex].length - 1;
+                        categorizedData[categorizedDataIndex][lastColIndex] = categoryString;
+                    }
+
+                    // Refresh UI instantly
+                    displayCategorizedData(categorizedData);
+                    displaySummary();
+                    updateQuickStats();
+
+                    // Remove from unmatched list (if present) and update alert
+                    const idx = unmatchedTransactions.indexOf(currentTransactionIndex);
+                    if (idx > -1) unmatchedTransactions.splice(idx, 1);
+                    checkUnmatchedTransactions();
+                }
+
+                // Close modal before potentially heavier refresh
+                closeCategorizeModal();
+
+                // 3) If we added a new keyword, re-run full categorization so ALL rows update
+                if (categoriesUpdated) {
+                    showLoader();
+                    await categorizeFiles();              // re-parses + re-categorizes via your existing API
+                    hideLoader();
+                    switchResultTab('categorized');
+                    showStatus('Categories updated and table refreshed with new matches.', 'success');
+                    return; // stop the unmatched-advance logic; the table just refreshed globally
+                }
+
+                // 4) Otherwise, keep working through unmatched items smoothly
+                if (unmatchedTransactions.length > 0) {
+                    setTimeout(() => categorizeTransaction(unmatchedTransactions[0]), 300);
+                } else {
+                    showStatus('All transactions categorized! 🎉', 'success');
+                }
+            } catch (error) {
+                hideLoader();
+                showStatus('Error applying category: ' + error.message, 'error');
+                console.error('Error in applyCategory:', error);
+            }
+        }
+
+        async function reloadCurrentCategories() {
+            try {
+                const categoryListId = categoryList.value || currentCategoryList._id || 'default';
+
+                let response;
+                if (categoryListId === 'default') {
+                    response = await fetch('/api/category-lists/default');
+                } else {
+                    response = await fetch(`/api/category-lists/${categoryListId}`);
+                }
+
+                const result = await response.json();
+
+                if (result.success && result.data) {
+                    currentCategoryList = result.data;
+                    currentCategories = result.data.categories;
+                    console.log('Categories reloaded from server');
+                } else {
+                    console.error('Failed to reload categories:', result.error);
+                }
+            } catch (error) {
+                console.error('Error reloading categories:', error);
+            }
+        }
+
+        // Display parsed data with action buttons
+        function displayParsedData(data) {
+            if (!data || data.length === 0) {
+                parsedTable.innerHTML = '<tr><td>No parsed data available</td></tr>';
+                return;
+            }
+            parsedTable.innerHTML = '';
+
+            const headers = Object.keys(data[0]);
+            const thead = document.createElement('thead');
+            const headerRow = document.createElement('tr');
+
+            headers.forEach(header => {
+                const th = document.createElement('th');
+                th.textContent = escapeHtml(header);
+                headerRow.appendChild(th);
+            });
+
+            const actionTh = document.createElement('th');
+            actionTh.textContent = 'Actions';
+            headerRow.appendChild(actionTh);
+
+            thead.appendChild(headerRow);
+            parsedTable.appendChild(thead);
+
+            const tbody = document.createElement('tbody');
+
+            data.forEach((row, index) => {
+                const tr = document.createElement('tr');
+                tr.className = 'transaction-row';
+
+                headers.forEach(header => {
+                    const td = document.createElement('td');
+                    let value = row[header];
+
+                    if (typeof value === 'number' && (header.toLowerCase() === 'amount' || header.toLowerCase() === 'balance')) {
+                        value = `$${value.toFixed(2)}`;
+                    }
+
+                    td.textContent = value !== undefined ? escapeHtml(String(value)) : '';
+                    tr.appendChild(td);
+                });
+
+                // Actions column
+                const actionTd = document.createElement('td');
+                const actionDiv = document.createElement('div');
+                actionDiv.className = 'row-actions';
+
+                const actionBtn = document.createElement('button');
+                actionBtn.className = 'row-action-btn categorize-btn';
+                actionBtn.textContent = 'Categorize';
+                actionBtn.onclick = () => categorizeTransaction(index);
+
+                actionDiv.appendChild(actionBtn);
+                actionTd.appendChild(actionDiv);
+                tr.appendChild(actionTd);
+
+                tbody.appendChild(tr);
+            });
+
+            parsedTable.appendChild(tbody);
+        }
+
+        function displayCategorizedData(data) {
+            const categorizedTable = document.getElementById('categorizedTable');
+            categorizedTable.innerHTML = '';
+
+            if (!data || data.length === 0) {
+                const emptyRow = document.createElement('tr');
+                const emptyCell = document.createElement('td');
+                emptyCell.textContent = 'No categorized data available';
+                emptyRow.appendChild(emptyCell);
+                categorizedTable.appendChild(emptyRow);
+                return;
+            }
+
+            data.forEach((row, rowIndex) => {
+                const tr = document.createElement('tr');
+
+                row.forEach((cell, cellIndex) => {
+                    const isHeader = rowIndex === 0;
+                    const isCategoryCol = cellIndex === row.length - 1 && !isHeader;
+                    const uncategorized = isCategoryCol && isUncategorizedCategory(cell);
+
+                    const cellTag = isHeader ? 'th' : 'td';
+                    const cellEl = document.createElement(cellTag);
+
+                    const span = document.createElement('span');
+                    span.innerHTML = escapeHtml(cell === undefined || cell === null ? '' : String(cell));
+
+                    if (isCategoryCol && !uncategorized) {
+                        // add inline edit
+                        const btn = document.createElement('button');
+                        btn.className = 'row-action-btn edit-category-btn';
+                        btn.textContent = '✏️';
+                        btn.onclick = () => editCategoryForTransaction(rowIndex - 1);
+
+                        cellEl.appendChild(span);
+                        cellEl.appendChild(document.createTextNode(' '));
+                        cellEl.appendChild(btn);
+                    } else if (uncategorized) {
+                        // show warning + categorize button
+                        span.style.color = 'var(--danger-color)';
+                        span.textContent = `⚠️ ${String(cell || 'Uncategorized')}`;
+
+                        const btn = document.createElement('button');
+                        btn.className = 'row-action-btn categorize-btn';
+                        btn.textContent = 'Categorize';
+                        btn.onclick = () => categorizeTransaction(rowIndex - 1);
+
+                        cellEl.appendChild(span);
+                        cellEl.appendChild(document.createTextNode(' '));
+                        cellEl.appendChild(btn);
+                    } else {
+                        cellEl.appendChild(span);
+                    }
+
+                    tr.appendChild(cellEl);
+                });
+
+                categorizedTable.appendChild(tr);
+            });
+        }
+
+        // Edit category for a specific transaction
+        function editCategoryForTransaction(index) {
+            categorizeTransaction(index);
+        }
+
+        // Display summary
+        function displaySummary() {
+            if (!categorizedData || categorizedData.length <= 1) {
+                summaryContent.innerHTML = '<p>No summary available</p>';
+                return;
+            }
+
+            // Calculate category statistics
+            const categories = {};
+            let uncategorizedCount = 0;
+
+            for (let i = 1; i < categorizedData.length; i++) {
+                const category = categorizedData[i][categorizedData[i].length - 1];
+                if (category === 'Uncategorized' || category === '' || !category) {
+                    uncategorizedCount++;
+                } else {
+                    categories[category] = (categories[category] || 0) + 1;
+                }
+            }
+
+            let summaryHTML = `
+                <div class="summary-grid">
+                    <div class="summary-card">
+                        <h4>Category Distribution</h4>
+                        <div class="category-list">
+            `;
+
+            // Add uncategorized count if any
+            if (uncategorizedCount > 0) {
+                const percentage = ((uncategorizedCount / (categorizedData.length - 1)) * 100).toFixed(1);
+                summaryHTML += `
+                    <div class="category-row" style="background: rgba(255, 0, 0, 0.1);">
+                        <span class="category-name" style="color: var(--danger-color);">⚠️ Uncategorized</span>
+                        <div class="category-bar">
+                            <div class="category-bar-fill" style="width: ${percentage}%; background: var(--danger-color);"></div>
+                        </div>
+                        <span class="category-count">${uncategorizedCount} (${percentage}%)</span>
+                    </div>
+                `;
+            }
+
+            Object.entries(categories)
+                .sort((a, b) => b[1] - a[1])
+                .forEach(([category, count]) => {
+                    const percentage = ((count / (categorizedData.length - 1)) * 100).toFixed(1);
+                    summaryHTML += `
+                        <div class="category-row">
+                            <span class="category-name">${escapeHtml(category)}</span>
+                            <div class="category-bar">
+                                <div class="category-bar-fill" style="width: ${percentage}%"></div>
+                            </div>
+                            <span class="category-count">${count} (${percentage}%)</span>
+                        </div>
+                    `;
+                });
+
+            summaryHTML += `
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            summaryContent.innerHTML = summaryHTML;
+        }
+
+        // Switch result tab
+        function switchResultTab(tab) {
+            document.querySelectorAll('.tab-button').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+
+            document.querySelector(`[data-tab="${tab}"]`).classList.add('active');
+            document.getElementById(tab).classList.add('active');
+            activeTab = tab;
+        }
+
+        // Download results
+        async function downloadResults() {
+            if (!categorizedData) {
+                showStatus('No categorized data to download', 'warning');
+                return;
+            }
+
+            const csvData = categorizedData.map(row =>
+                row.map(cell =>
+                    typeof cell === 'string' && cell.includes(',')
+                        ? `"${cell}"`
+                        : cell
+                ).join(',')
+            ).join('\n');
+
+            const blob = new Blob([csvData], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `categorized_transactions_${new Date().toISOString().split('T')[0]}.csv`;
+            document.body.appendChild(a);
+            a.click();
+            setTimeout(() => {
+                document.body.removeChild(a);
+                window.URL.revokeObjectURL(url);
+            }, 0);
+
+            showStatus('Results downloaded successfully', 'success');
+        }
+
+        // Clear all
+        function clearAll() {
+            transactionFile.value = '';
+            sharedFile.value = '';
+            transactionFileName.textContent = '';
+            sharedFileName.textContent = '';
+            transactionLabel.classList.remove('file-selected');
+            sharedLabel.classList.remove('file-selected');
+            parsedData = null;
+            categorizedData = null;
+            unmatchedTransactions = [];
+            resultsSection.classList.add('hidden');
+            unmatchedAlert.classList.add('hidden');
+            showStatus('All data cleared', 'info');
+        }
+
+        // Update quick stats
+        function updateQuickStats() {
+            if (parsedData) {
+                document.getElementById('totalProcessed').textContent = parsedData.length;
+            }
+
+            if (categorizedData && categorizedData.length > 1) {
+                const total = categorizedData.length - 1; // Exclude header
+                const uncategorized = categorizedData.filter((row, idx) =>
+                    idx > 0 && (row[row.length - 1] === 'Uncategorized' ||
+                        row[row.length - 1] === '' || !row[row.length - 1])
+                ).length;
+                const categorized = total - uncategorized;
+
+                document.getElementById('categorizedCount').textContent = categorized;
+                document.getElementById('uncategorizedCount').textContent = uncategorized;
+
+                const accuracy = total > 0 ? ((categorized / total) * 100).toFixed(0) : 0;
+                document.getElementById('accuracyRate').textContent = `${accuracy}%`;
+            }
+        }
+
+        // Utility functions
+        function showLoader() {
+            loader.style.display = 'block';
+        }
+
+        function hideLoader() {
+            loader.style.display = 'none';
+        }
+
+        function showStatus(message, type) {
+            status.textContent = message;
+            status.className = 'status ' + type;
+            status.style.display = 'block';
+
+            if (type === 'success' || type === 'info') {
+                setTimeout(() => {
+                    status.style.display = 'none';
+                }, 5000);
+            }
+        }
+
+        function escapeHtml(unsafe) {
+            return unsafe
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
+        }
+
+        function normalizeCategory(val) {
+            if (val === null || val === undefined) return '';
+            return String(val).trim().toLowerCase();
+        }
+
+        function isUncategorizedCategory(val) {
+            const v = normalizeCategory(val);
+            // cover common variants and blanks
+            return v === '' ||
+                v === 'uncategorized' ||
+                v === 'unclassified' ||
+                v === 'unknown' ||
+                v === 'n/a' ||
+                v === 'na';
+        }
+
+        function normalizeStr(s) {
+            if (s === null || s === undefined) return '';
+            return String(s).trim().toLowerCase().replace(/\s+/g, ' ');
+        }
+        function normalizeAmount(a) {
+            if (a === null || a === undefined || a === '') return '0.00';
+            const n = Number(String(a).replace(/[^0-9.-]/g, '')) || 0;
+            return n.toFixed(2);
+        }
+        // Build ID from an object row (parsedData entries)
+        function stableIdFromObj(row) {
+            return [
+                normalizeStr(row.date),
+                normalizeStr(row.subDescription || row.subdescription),
+                normalizeStr(row.type || row['type'] || row['Type']),
+                normalizeAmount(row.amount)
+            ].join('|');
+        }
+        // Build ID from an array row (categorizedData rows)
+        function stableIdFromArrayRow(row, idx) {
+            return [
+                normalizeStr(row[idx.date]),
+                normalizeStr(row[idx.subDescription]),
+                normalizeStr(row[idx.type]),
+                normalizeAmount(row[idx.amount])
+            ].join('|');
+        }
+        // Single source of truth for "uncategorized"
+        function normalizeCategory(val) {
+            if (val === null || val === undefined) return '';
+            return String(val).trim().toLowerCase();
+        }
+        function isUncategorizedCategory(val) {
+            const v = normalizeCategory(val);
+            return v === '' || v === 'uncategorized' || v === 'unclassified' || v === 'unknown' || v === 'n/a' || v === 'na';
+        }
+
+        function computeCategorizedHeaderIndex(headerRow) {
+            // Try multiple header name variants
+            const findIdx = (...candidates) => {
+                for (const name of candidates) {
+                    const i = headerRow.findIndex(h => normalizeStr(h) === normalizeStr(name));
+                    if (i !== -1) return i;
+                }
+                return -1;
+            };
+            return {
+                date: findIdx('Date'),
+                subDescription: findIdx('Sub-description', 'Subdescription', 'Sub Description', 'Description 2'),
+                type: findIdx('Type of Transaction', 'Type'),
+                amount: findIdx('Amount'),
+                category: findIdx('Category')
+            };
+        }
+    </script>
+</body>
+
+</html>

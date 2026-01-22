@@ -21,10 +21,41 @@ export async function parseReceiptLines(lines: string[]): Promise<ReceiptItem[]>
     const items: ReceiptItem[] = [];
     let i = 0;
 
+    // Common section headers in grocery receipts (add more as needed)
+    const sectionHeaders = [
+        'EPICERIE', 'FRUIT/LEGUME', 'FROMAGE', 'PRODUIT LAIT',
+        'BOUL COMMERC', 'POISSON CON.', 'VIANDE', 'CHARCUTERIE',
+        'BOULANGERIE', 'PRET A MANGER', 'SURGELE', 'SOUS-TOTAL', 'TOTAL'
+    ];
+
+    const isSectionHeader = (line: string): boolean => {
+        const upperLine = line.toUpperCase().trim();
+        return sectionHeaders.some(header => upperLine === header || upperLine.startsWith(header));
+    };
+
+    const isSubtotalOrTotal = (line: string): boolean => {
+        const upperLine = line.toUpperCase().trim();
+        return upperLine.startsWith('SOUS-TOTAL') || upperLine.startsWith('TOTAL');
+    };
+
     while (i < lines.length) {
         const line = lines[i].trim();
 
         if (!line) {
+            i++;
+            continue;
+        }
+
+        // Skip section headers and totals
+        if (isSectionHeader(line)) {
+            // Check if this might be a subtotal/total line with a price
+            if (isSubtotalOrTotal(line)) {
+                const totalMatch = line.match(/^(.+?)\s+(-?\d+\.\d{2})$/);
+                if (totalMatch) {
+                    // You might want to store totals separately or just skip them
+                    console.log(`Skipping total line: ${line}`);
+                }
+            }
             i++;
             continue;
         }
@@ -37,8 +68,19 @@ export async function parseReceiptLines(lines: string[]): Promise<ReceiptItem[]>
             let itemName = "";
             let lookBack = i - 1;
 
-            while (lookBack >= 0 && lines[lookBack].trim()) {
+            while (lookBack >= 0) {
                 const prevLine = lines[lookBack].trim();
+                if (!prevLine) {
+                    lookBack--;
+                    continue;
+                }
+
+                // Skip section headers when looking back
+                if (isSectionHeader(prevLine)) {
+                    lookBack--;
+                    continue;
+                }
+
                 // Check if previous line is NOT a price line
                 if (!prevLine.match(/\d+\.\d{2}$/) && !prevLine.match(/^(\d+)\s*@/)) {
                     itemName = prevLine;
@@ -49,7 +91,6 @@ export async function parseReceiptLines(lines: string[]): Promise<ReceiptItem[]>
 
             if (itemName) {
                 const [, quantity, unitPrice, totalPrice] = priceOnlyMatch;
-
                 const price = parseFloat(totalPrice);
 
                 const fullText = `${itemName} ${line}`;
@@ -69,29 +110,37 @@ export async function parseReceiptLines(lines: string[]): Promise<ReceiptItem[]>
         const lineWithPriceMatch = line.match(/^(.+?)\s+(-?\d+\.\d{2})$/);
         if (lineWithPriceMatch) {
             const [, rawDescription, priceStr] = lineWithPriceMatch;
-
             const price = parseFloat(priceStr);
 
             // Check if this is a discount line
             const isDiscount = rawDescription.toUpperCase().includes('RABAIS') ||
                 rawDescription.toUpperCase().includes('DISCOUNT') ||
+                rawDescription.match(/^\(.+@.+%\)/) || // Pattern like (1.49@30.00%)
                 price < 0;
 
             if (isDiscount && items.length > 0) {
                 // Apply discount to the previous item
                 const lastItem = items[items.length - 1];
+                const discountAmount = Math.abs(price);
+
                 if (price < 0) {
                     // Price is negative for discount
-                    lastItem.price += price; // price is negative for discounts
+                    lastItem.price += price; // price is already negative
                 } else {
-                    // Price is positive for discount
-                    lastItem.price -= price; // price is negative for discounts
+                    // Price is positive for discount (like "Rabais 0.80")
+                    lastItem.price -= price;
                 }
-                lastItem.readableDescription += ` (Discount: $${Math.abs(price)})`;
+
+                // Add discount info to description
+                if (rawDescription.match(/^\(.+@.+%\)/)) {
+                    lastItem.readableDescription += ` ${rawDescription}`;
+                } else {
+                    lastItem.readableDescription += ` (Discount: $${discountAmount.toFixed(2)})`;
+                }
                 lastItem.suffixText = line;
             } else {
                 // Regular item with price
-                const readableDescription = await translateText(line);
+                const readableDescription = await translateText(rawDescription);
                 items.push({
                     originalText: line,
                     readableDescription,
@@ -106,12 +155,17 @@ export async function parseReceiptLines(lines: string[]): Promise<ReceiptItem[]>
         if (i + 1 < lines.length) {
             const nextLine = lines[i + 1].trim();
 
+            // Skip if next line is a section header
+            if (isSectionHeader(nextLine)) {
+                i++;
+                continue;
+            }
+
             // Check if next line is a quantity @ price line
             const quantityPriceMatch = nextLine.match(/^(\d+)\s*@\s*\$?(\d+\.\d{2})\s+(-?\d+\.\d{2})$/);
             if (quantityPriceMatch) {
                 const [, quantity, unitPrice, totalPrice] = quantityPriceMatch;
                 const price = parseFloat(totalPrice);
-                console.log(`Quantity Price Match: ${price}`);
                 const readableDescription = await translateText(line) + ` (${quantity} @ $${unitPrice})`;
 
                 items.push({
@@ -124,14 +178,28 @@ export async function parseReceiptLines(lines: string[]): Promise<ReceiptItem[]>
                 continue;
             }
 
-            // // Check if next line ends with a price
-            const nextLineWithPrice = nextLine.match(/^(.+?)\s+(-?\d+\.\d{2})$/);
-            if (nextLineWithPrice) {
-                const [, , priceStr] = nextLineWithPrice;
-
-                const price = parseFloat(priceStr);
-                console.log(`Line: ${line} Next Line: ${nextLine}`);
+            // Check if next line is a simple price
+            const simplePriceMatch = nextLine.match(/^(-?\d+\.\d{2})$/);
+            if (simplePriceMatch) {
+                const price = parseFloat(simplePriceMatch[1]);
                 const readableDescription = await translateText(line);
+
+                items.push({
+                    originalText: line,
+                    suffixText: nextLine,
+                    readableDescription,
+                    price,
+                });
+                i += 2; // Skip both lines
+                continue;
+            }
+
+            // Check if next line is a weight-based price (e.g., "0.295 kg @ $6.59/kg 1.94")
+            const weightPriceMatch = nextLine.match(/^([\d.]+)\s*(kg|lb)\s*@\s*\$?([\d.]+)\/(kg|lb)\s+([\d.]+)$/);
+            if (weightPriceMatch) {
+                const [, weight, unit, unitPrice, , totalPrice] = weightPriceMatch;
+                const price = parseFloat(totalPrice);
+                const readableDescription = await translateText(line) + ` (${weight} ${unit} @ $${unitPrice}/${unit})`;
 
                 items.push({
                     originalText: line,
@@ -144,7 +212,8 @@ export async function parseReceiptLines(lines: string[]): Promise<ReceiptItem[]>
             }
         }
 
-        // Line doesn't have associated price information, skip it
+        // If we get here and the line isn't a section header, it might be an item name
+        // waiting for a price on the next line, but we'll skip it for now
         i++;
     }
 

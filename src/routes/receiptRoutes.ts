@@ -12,7 +12,7 @@ import {
     createTranslation,
     editTranslation,
     removeTranslation,
-    translateText
+    translateText,
 } from '../controllers/receipt.controller';
 
 const router = Router();
@@ -33,5 +33,6 @@ router.post('/translations', createTranslation);
 router.put('/translations/:id', editTranslation);
 router.delete('/translations/:id', removeTranslation);
 router.get('/translate', translateText);
+
 
 export default router;

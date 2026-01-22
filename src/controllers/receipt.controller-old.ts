@@ -16,7 +16,6 @@ import {
     getReceiptWithUserTotals
 } from "../services/receiptService";
 import { SaveReceiptRequest, ApplySplitRequest } from "../types";
-import Receipt, { IReceipt, IReceiptItem, ReceiptItem } from '../models/Receipt.model';
 
 export const parseReceipt = async (req: Request, res: Response): Promise<void> => {
     try {
@@ -366,26 +365,6 @@ export const translateText = async (req: Request, res: Response): Promise<void> 
         res.status(500).json({
             success: false,
             error: error instanceof Error ? error.message : 'Failed to translate text'
-        });
-    }
-};
-
-export const getAllReceipts = async (req: Request, res: Response): Promise<void> => {
-    try {
-        const receipts = await Receipt.find()
-            .populate('userId')
-            .sort({ createdAt: -1 }) // Most recent first
-            .limit(50); // Limit to recent 50 receipts
-
-        res.json({
-            success: true,
-            data: receipts
-        });
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({
-            success: false,
-            error: error instanceof Error ? error.message : 'Failed to get receipts'
         });
     }
 };

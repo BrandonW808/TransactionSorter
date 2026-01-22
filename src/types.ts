@@ -146,3 +146,102 @@ export interface ApplySplitRequest {
   itemIndices: number[]; // Which items to split
   splitConfig: SplitConfig;
 }
+
+// Saved Report Types
+export interface ISavedReport {
+  userId: Types.ObjectId;
+  name: string;
+  description?: string;
+  data: (string | number)[][];
+  originalFileName?: string;
+  categoryListId?: Types.ObjectId;
+  metadata?: {
+    totalTransactions: number;
+    categorizedCount: number;
+    uncategorizedCount: number;
+    totalAmount?: number;
+  };
+}
+
+export interface ISavedReportDocument extends ISavedReport, Document {
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface CreateSavedReportRequest {
+  userId: string;
+  name: string;
+  description?: string;
+  data: (string | number)[][];
+  originalFileName?: string;
+  categoryListId?: string;
+  metadata?: {
+    totalTransactions: number;
+    categorizedCount: number;
+    uncategorizedCount: number;
+    totalAmount?: number;
+  };
+}
+
+export interface UpdateSavedReportRequest {
+  name?: string;
+  description?: string;
+  data?: (string | number)[][];
+  metadata?: {
+    totalTransactions: number;
+    categorizedCount: number;
+    uncategorizedCount: number;
+    totalAmount?: number;
+  };
+}
+
+export interface ReceiptMatch {
+  receiptId: string;
+  matchType: 'amount' | 'date' | 'combined' | 'manual';
+  confidence: number; // 0-1
+  receipt?: {
+    _id: string;
+    total: number;
+    date: Date;
+    store?: string;
+    items: any[];
+    userSplits?: {
+      userId: string;
+      userName?: string;
+      amount: number;
+      percentage?: number;
+    }[];
+  };
+}
+
+export interface TransactionWithReceipt extends Transaction {
+  matchedReceipt?: ReceiptMatch;
+  adjustedAmount?: number; // Amount after applying user's split
+  originalAmount?: number; // Keep track of original
+}
+
+export interface MatchReceiptsRequest {
+  transactions: Transaction[];
+  userId: string;
+  dateRange?: {
+    start: string;
+    end: string;
+  };
+}
+
+export interface MatchReceiptsResponse {
+  transactions: TransactionWithReceipt[];
+  matchedCount: number;
+  unmatchedCount: number;
+  matches: {
+    transactionIndex: number;
+    receiptId: string;
+    confidence: number;
+  }[];
+}
+
+export interface ManualMatchRequest {
+  transactionIndex: number;
+  receiptId: string;
+  userId: string;
+}

@@ -760,7 +760,8 @@
 
             if (list) {
                 document.getElementById('categoriesModalTitle').textContent = `Edit Categories - ${list.name}`;
-                currentEditCategories = list.categories;
+                // Make a deep copy of the categories to avoid direct mutation
+                currentEditCategories = JSON.parse(JSON.stringify(list.categories || {}));
 
                 displayCategories();
                 categoriesModal.classList.add('active');
@@ -846,6 +847,8 @@
 
             currentEditCategories[mainCatName][subCatName] = keywords;
 
+            console.log('Categories after adding:', JSON.parse(JSON.stringify(currentEditCategories))); // Debug log
+
             displayCategories();
 
             document.getElementById('newCategoryName').value = '';
@@ -856,23 +859,30 @@
 
         // Remove category
         window.removeCategory = function (mainCat, subCat) {
-            if (!subCat) {
-                delete currentEditCategories[mainCat];
-            }
             if (currentEditCategories[mainCat]) {
                 delete currentEditCategories[mainCat][subCat];
+
+                // If the main category is now empty, remove it entirely
+                if (Object.keys(currentEditCategories[mainCat]).length === 0) {
+                    delete currentEditCategories[mainCat];
+                }
             }
+
+            console.log('Categories after removing:', JSON.parse(JSON.stringify(currentEditCategories))); // Debug log
             displayCategories();
         };
-
         // Save categories
         window.saveCategories = async function () {
             try {
                 showLoader();
+                console.log('Saving categories:', currentEditCategories); // Debug log
+
                 const response = await fetch(`/api/category-lists/${currentEditListId}`, {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ ...currentEditCategories })
+                    body: JSON.stringify({
+                        categories: currentEditCategories  // Send as { categories: {...} }
+                    })
                 });
 
                 const result = await response.json();

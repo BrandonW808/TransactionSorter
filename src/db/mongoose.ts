@@ -9,7 +9,7 @@ export async function connectToDatabase(): Promise<void> {
   }
 
   try {
-    const uri = process.env.MONGODB_URI || 'mongodb://localhost:27017';
+    const uri = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017';
     const dbName = process.env.MONGODB_DB_NAME || 'transaction_categorizer';
 
     // Mongoose connection options
@@ -20,7 +20,7 @@ export async function connectToDatabase(): Promise<void> {
     };
 
     await mongoose.connect(uri, options);
-    
+
     isConnected = true;
     console.log(`Connected to MongoDB database: ${dbName}`);
 

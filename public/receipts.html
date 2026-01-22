@@ -415,6 +415,67 @@
             margin-top: 20px;
             justify-content: center;
         }
+
+        /* Modal styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 2rem;
+            border-radius: 8px;
+            max-width: 800px;
+            max-height: 80vh;
+            overflow-y: auto;
+            position: relative;
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+
+        .user-total {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.5rem 0;
+        }
+
+        .summary-row {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid #ccc;
+            font-weight: bold;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
     </style>
 </head>
 
@@ -517,7 +578,7 @@
                     </select>
                 </div>
 
-                <div id="receiptItems"
+                <div id="receiptItemsSection"
                      class="receipt-items"
                      style="display: none;">
                     <h2>Receipt Items</h2>
@@ -654,51 +715,153 @@
         let selectedItems = new Set();
         let currentSplitType = 'equal';
 
-        // DOM elements
-        const receiptFile = document.getElementById('receiptFile');
-        const uploadArea = document.getElementById('uploadArea');
-        const fileInfo = document.getElementById('fileInfo');
-        const fileName = document.getElementById('fileName');
-        const saveReceiptBtn = document.getElementById('save-receipt-button');
-        const downloadReceiptBtn = document.getElementById('downloadReceiptBtn');
-        const receiptDisplaySection = document.getElementById('receiptDisplaySection');
-        const receiptItems = document.getElementById('receiptItems');
-        const receiptTotal = document.getElementById('receiptTotal');
-        const addMappingBtn = document.getElementById('addMappingBtn');
-        const mappingsList = document.getElementById('mappingsList');
-        const receiptHistory = document.getElementById('receiptHistory');
-        const loader = document.getElementById('loader');
-        const status = document.getElementById('status');
-        const receiptChooseFileBtn = document.getElementById('receiptChooseFileBtn');
+        // DOM elements cache
+        const elements = {
+            receiptFile: document.getElementById('receiptFile'),
+            uploadArea: document.getElementById('uploadArea'),
+            fileInfo: document.getElementById('fileInfo'),
+            fileName: document.getElementById('fileName'),
+            saveReceiptBtn: document.getElementById('save-receipt-button'),
+            downloadReceiptBtn: document.getElementById('downloadReceiptBtn'),
+            receiptDisplaySection: document.getElementById('receiptDisplaySection'),
+            receiptItems: document.getElementById('receiptItems'),
+            receiptTotal: document.getElementById('receiptTotal'),
+            addMappingBtn: document.getElementById('addMappingBtn'),
+            mappingsList: document.getElementById('mappingsList'),
+            receiptHistory: document.getElementById('receiptHistory'),
+            loader: document.getElementById('loader'),
+            status: document.getElementById('status'),
+            receiptChooseFileBtn: document.getElementById('receiptChooseFileBtn'),
+            equalSplitBtn: document.getElementById('equal-split-button'),
+            percentageSplitBtn: document.getElementById('percentage-split-button'),
+            customSplitBtn: document.getElementById('custom-split-button'),
+            applySplitBtn: document.getElementById('apply-split-button'),
+            clearSplitBtn: document.getElementById('clear-split-button'),
+            resetFormBtn: document.getElementById('reset-form-button'),
+            toggleSelectAllBtn: document.getElementById('toggle-select-all-button'),
+            primaryUser: document.getElementById('primaryUser'),
+            receiptItemsSection: document.getElementById('receiptItemsSection'),
+            itemsList: document.getElementById('itemsList'),
+            splitControls: document.getElementById('splitControls'),
+            userSplitList: document.getElementById('userSplitList'),
+            receiptSummary: document.getElementById('receiptSummary'),
+            summaryContent: document.getElementById('summaryContent'),
+            actionButtons: document.getElementById('actionButtons'),
+            message: document.getElementById('message'),
+            newOriginal: document.getElementById('newOriginal'),
+            newTranslation: document.getElementById('newTranslation')
+        };
 
-        const equalSplitBtn = document.getElementById('equal-split-button');
-        const percentageSplitBtn = document.getElementById('percentage-split-button');
-        const customSplitBtn = document.getElementById('custom-split-button');
-        const applySplitBtn = document.getElementById('apply-split-button');
-        const clearSplitBtn = document.getElementById('clear-split-button');
-        const resetFormBtn = document.getElementById('reset-form-button');
-        const toggleSelectAllBtn = document.getElementById('toggle-select-all-button');
-
-        receiptChooseFileBtn.addEventListener('click', () => {
-            document.getElementById('receiptFile').click()
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function () {
+            setupEventListeners();
+            loadTranslationMappings();
+            loadReceiptHistory();
+            loadUsers();
         });
 
-        function populateUserSelects() {
-            const primarySelect = document.getElementById('primaryUser');
-            primarySelect.innerHTML = '<option value="">Select a user...</option>';
+        // Setup event listeners
+        function setupEventListeners() {
+            // Tab switching
+            document.querySelectorAll('.tab-button').forEach(button => {
+                button.addEventListener('click', (e) => {
+                    const tab = e.target.dataset.tab;
+                    switchTab(tab);
+                });
+            });
 
+            // File upload
+            elements.uploadArea.addEventListener('dragover', handleDragOver);
+            elements.uploadArea.addEventListener('dragleave', handleDragLeave);
+            elements.uploadArea.addEventListener('drop', handleDrop);
+            elements.uploadArea.addEventListener('click', () => elements.receiptFile.click());
+            elements.receiptFile.addEventListener('change', handleFileSelect);
+            elements.receiptChooseFileBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                elements.receiptFile.click();
+            });
+
+            // Buttons
+            elements.saveReceiptBtn.addEventListener('click', saveReceipt);
+            elements.downloadReceiptBtn.addEventListener('click', downloadReceiptCSV);
+            elements.addMappingBtn.addEventListener('click', addTranslationMapping);
+            elements.equalSplitBtn.addEventListener('click', () => setSplitType('equal'));
+            elements.percentageSplitBtn.addEventListener('click', () => setSplitType('percentage'));
+            elements.customSplitBtn.addEventListener('click', () => setSplitType('custom'));
+            elements.applySplitBtn.addEventListener('click', applySplit);
+            elements.clearSplitBtn.addEventListener('click', clearSplit);
+            elements.resetFormBtn.addEventListener('click', resetForm);
+            elements.toggleSelectAllBtn.addEventListener('click', toggleSelectAll);
+
+            // Enter key for translation inputs
+            elements.newOriginal.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') addTranslationMapping();
+            });
+            elements.newTranslation.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') addTranslationMapping();
+            });
+
+            // Primary user change
+            elements.primaryUser.addEventListener('change', () => {
+                if (activeTab === 'history') {
+                    loadReceiptHistory();
+                }
+                updateSummary();
+            });
+        }
+
+        // Load users
+        async function loadUsers() {
+            try {
+                const response = await fetch('/api/users');
+                const data = await response.json();
+                if (data.success) {
+                    users = data.data || [];
+                    populateUserSelects();
+                }
+            } catch (error) {
+                console.error('Error loading users:', error);
+                showMessage('Error loading users: ' + error.message, 'error');
+            }
+        }
+
+        function populateUserSelects() {
+            elements.primaryUser.innerHTML = '<option value="">Select a user...</option>';
             users.forEach(user => {
                 const option = document.createElement('option');
                 option.value = user._id;
                 option.textContent = user.name;
-                primarySelect.appendChild(option);
+                elements.primaryUser.appendChild(option);
             });
         }
 
-        // File upload handler
-        document.getElementById('receiptFile').addEventListener('change', async (e) => {
-            const file = e.target.files[0];
+        // File upload handlers
+        function handleDragOver(e) {
+            e.preventDefault();
+            elements.uploadArea.classList.add('drag-over');
+        }
+
+        function handleDragLeave(e) {
+            e.preventDefault();
+            elements.uploadArea.classList.remove('drag-over');
+        }
+
+        function handleDrop(e) {
+            e.preventDefault();
+            elements.uploadArea.classList.remove('drag-over');
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                elements.receiptFile.files = files;
+                handleFileSelect();
+            }
+        }
+
+        async function handleFileSelect() {
+            const file = elements.receiptFile.files[0];
             if (!file) return;
+
+            elements.fileName.textContent = file.name;
+            elements.fileInfo.style.display = 'block';
 
             const formData = new FormData();
             formData.append('receipt', file);
@@ -714,7 +877,7 @@
                 const data = await response.json();
 
                 if (data.success) {
-                    currentReceipt = data.data;
+                    currentReceipt = data.data || [];
                     displayReceipt();
                     showMessage('Receipt parsed successfully!', 'success');
                 } else {
@@ -723,11 +886,10 @@
             } catch (error) {
                 showMessage('Error uploading file: ' + error.message, 'error');
             }
-        });
+        }
 
         function displayReceipt() {
-            const itemsList = document.getElementById('itemsList');
-            itemsList.innerHTML = '';
+            elements.itemsList.innerHTML = '';
 
             currentReceipt.forEach((item, index) => {
                 if (!isTotals(item.readableDescription)) {
@@ -735,28 +897,39 @@
                     itemDiv.className = 'receipt-item';
                     itemDiv.dataset.index = index;
 
-                    itemDiv.innerHTML = `
-                    <input type="checkbox" class="item-checkbox" onchange="toggleItem(${index})">
-                    <div class="item-details">
-                        <div class="item-description">${item.readableDescription}</div>
-                        <div class="item-original">${item.originalText}</div>
-                        <div id="splits-${index}" class="item-splits"></div>
-                    </div>
-                    <div class="item-price">$${item.price.toFixed(2)}</div>
-                `;
+                    const checkbox = document.createElement('input');
+                    checkbox.type = 'checkbox';
+                    checkbox.className = 'item-checkbox';
+                    checkbox.addEventListener('change', () => toggleItem(index));
 
-                    itemsList.appendChild(itemDiv);
+                    const itemDetails = document.createElement('div');
+                    itemDetails.className = 'item-details';
+                    itemDetails.innerHTML = `
+                        <div class="item-description">${escapeHtml(item.readableDescription)}</div>
+                        <div class="item-original">${escapeHtml(item.originalText)}</div>
+                        <div id="splits-${index}" class="item-splits"></div>
+                    `;
+
+                    const itemPrice = document.createElement('div');
+                    itemPrice.className = 'item-price';
+                    itemPrice.textContent = `$${item.price.toFixed(2)}`;
+
+                    itemDiv.appendChild(checkbox);
+                    itemDiv.appendChild(itemDetails);
+                    itemDiv.appendChild(itemPrice);
+
+                    elements.itemsList.appendChild(itemDiv);
                 }
             });
 
-            document.getElementById('receiptItems').style.display = 'block';
-            document.getElementById('actionButtons').style.display = 'flex';
+            elements.receiptItemsSection.style.display = 'block';
+            elements.actionButtons.style.display = 'flex';
             updateSummary();
         }
 
         function toggleItem(index) {
-            const checkbox = document.querySelector(`[data-index="${index}"] .item-checkbox`);
             const itemDiv = document.querySelector(`[data-index="${index}"]`);
+            const checkbox = itemDiv.querySelector('.item-checkbox');
 
             if (checkbox.checked) {
                 selectedItems.add(index);
@@ -766,7 +939,7 @@
                 itemDiv.classList.remove('selected');
             }
 
-            document.getElementById('splitControls').classList.toggle('active', selectedItems.size > 0);
+            elements.splitControls.classList.toggle('active', selectedItems.size > 0);
 
             if (selectedItems.size > 0) {
                 updateSplitControls();
@@ -775,20 +948,21 @@
 
         function toggleSelectAll() {
             const allCheckboxes = document.querySelectorAll('.item-checkbox');
-            const allChecked = selectedItems.size === currentReceipt.length;
+            const allChecked = selectedItems.size === currentReceipt.filter(item => !isTotals(item.readableDescription)).length;
 
             allCheckboxes.forEach((checkbox, index) => {
+                const itemIndex = parseInt(checkbox.parentElement.dataset.index);
                 checkbox.checked = !allChecked;
                 if (!allChecked) {
-                    selectedItems.add(index);
+                    selectedItems.add(itemIndex);
                     checkbox.parentElement.classList.add('selected');
                 } else {
-                    selectedItems.delete(index);
+                    selectedItems.delete(itemIndex);
                     checkbox.parentElement.classList.remove('selected');
                 }
             });
 
-            document.getElementById('splitControls').classList.toggle('active', selectedItems.size > 0);
+            elements.splitControls.classList.toggle('active', selectedItems.size > 0);
 
             if (selectedItems.size > 0) {
                 updateSplitControls();
@@ -797,7 +971,6 @@
 
         function setSplitType(type) {
             currentSplitType = type;
-            console.log(`Split type: ${type}`);
             document.querySelectorAll('.split-type-button').forEach(button => {
                 button.classList.toggle('active', button.dataset.type === type);
             });
@@ -805,17 +978,16 @@
         }
 
         function updateSplitControls() {
-            const userSplitList = document.getElementById('userSplitList');
-            userSplitList.innerHTML = '';
+            elements.userSplitList.innerHTML = '';
 
             const selectedTotal = Array.from(selectedItems).reduce((sum, idx) => {
-                return sum + currentReceipt[idx].price;
+                return sum + (currentReceipt[idx]?.price || 0);
             }, 0);
 
             const info = document.createElement('div');
             info.style.marginBottom = '15px';
             info.innerHTML = `<strong>Selected items total: $${selectedTotal.toFixed(2)}</strong>`;
-            userSplitList.appendChild(info);
+            elements.userSplitList.appendChild(info);
 
             users.forEach(user => {
                 const row = document.createElement('div');
@@ -825,57 +997,55 @@
                     const amountPerUser = selectedTotal / users.length;
                     row.innerHTML = `
                         <input type="checkbox" id="user-${user._id}" checked>
-                        <label for="user-${user._id}">${user.name}</label>
+                        <label for="user-${user._id}">${escapeHtml(user.name)}</label>
                         <span>$${amountPerUser.toFixed(2)}</span>
                     `;
                 } else if (currentSplitType === 'percentage') {
                     row.innerHTML = `
                         <input type="checkbox" id="user-${user._id}" checked>
-                        <label for="user-${user._id}">${user.name}</label>
+                        <label for="user-${user._id}">${escapeHtml(user.name)}</label>
                         <input type="number" id="percent-${user._id}" value="${(100 / users.length).toFixed(0)}" min="0" max="100">%
                     `;
                 } else { // custom
                     row.innerHTML = `
                         <input type="checkbox" id="user-${user._id}">
-                        <label for="user-${user._id}">${user.name}</label>
+                        <label for="user-${user._id}">${escapeHtml(user.name)}</label>
                         $<input type="number" id="amount-${user._id}" value="0" min="0" step="0.01">
                     `;
                 }
 
-                userSplitList.appendChild(row);
+                elements.userSplitList.appendChild(row);
             });
         }
 
         function applySplit() {
-            const selectedTotal = Array.from(selectedItems).reduce((sum, idx) => {
-                return sum + currentReceipt[idx].price;
-            }, 0);
-
             Array.from(selectedItems).forEach(idx => {
                 const item = currentReceipt[idx];
+                if (!item) return;
+
                 item.isSplit = true;
                 item.userSplits = [];
 
                 users.forEach(user => {
                     const checkbox = document.getElementById(`user-${user._id}`);
-                    if (!checkbox.checked) return;
+                    if (!checkbox || !checkbox.checked) return;
 
                     let amount, percentage;
 
                     if (currentSplitType === 'equal') {
                         const activeUsers = users.filter(u =>
-                            document.getElementById(`user-${u._id}`).checked
+                            document.getElementById(`user-${u._id}`)?.checked
                         ).length;
-                        amount = item.price / activeUsers;
-                        percentage = 100 / activeUsers;
+                        amount = activeUsers > 0 ? item.price / activeUsers : 0;
+                        percentage = activeUsers > 0 ? 100 / activeUsers : 0;
                     } else if (currentSplitType === 'percentage') {
                         const percentInput = document.getElementById(`percent-${user._id}`);
-                        percentage = parseFloat(percentInput.value) || 0;
+                        percentage = parseFloat(percentInput?.value) || 0;
                         amount = (item.price * percentage) / 100;
                     } else { // custom
                         const amountInput = document.getElementById(`amount-${user._id}`);
-                        amount = parseFloat(amountInput.value) || 0;
-                        percentage = (amount / item.price) * 100;
+                        amount = parseFloat(amountInput?.value) || 0;
+                        percentage = item.price > 0 ? (amount / item.price) * 100 : 0;
                     }
 
                     if (amount > 0) {
@@ -898,9 +1068,11 @@
         function clearSplit() {
             Array.from(selectedItems).forEach(idx => {
                 const item = currentReceipt[idx];
-                delete item.isSplit;
-                delete item.userSplits;
-                updateItemSplitDisplay(idx);
+                if (item) {
+                    delete item.isSplit;
+                    delete item.userSplits;
+                    updateItemSplitDisplay(idx);
+                }
             });
 
             updateSummary();
@@ -909,32 +1081,34 @@
 
         function updateItemSplitDisplay(index) {
             const splitsDiv = document.getElementById(`splits-${index}`);
-            const item = currentReceipt[index];
+            if (!splitsDiv) return;
 
-            if (!item.isSplit || !item.userSplits || item.userSplits.length === 0) {
+            const item = currentReceipt[index];
+            if (!item || !item.isSplit || !item.userSplits || item.userSplits.length === 0) {
                 splitsDiv.innerHTML = '';
                 return;
             }
 
             const splitBadges = item.userSplits.map(split =>
-                `<span class="split-badge">${split.userName}: $${split.amount.toFixed(2)} (${split.percentage.toFixed(0)}%)</span>`
+                `<span class="split-badge">${escapeHtml(split.userName)}: $${split.amount.toFixed(2)} (${split.percentage.toFixed(0)}%)</span>`
             ).join('');
 
             splitsDiv.innerHTML = splitBadges;
         }
 
         function updateSummary() {
-            const summaryContent = document.getElementById('summaryContent');
             const userTotals = {};
-            const primaryUserId = document.getElementById('primaryUser').value;
+            const primaryUserId = elements.primaryUser.value;
 
             currentReceipt.forEach(item => {
-                if (!isTotals(item.readableDescription) && item.isSplit && item.userSplits) {
-                    item.userSplits.forEach(split => {
-                        userTotals[split.userId] = (userTotals[split.userId] || 0) + split.amount;
-                    });
-                } else if (!isTotals(item.readableDescription) && primaryUserId) {
-                    userTotals[primaryUserId] = (userTotals[primaryUserId] || 0) + item.price;
+                if (!isTotals(item.readableDescription)) {
+                    if (item.isSplit && item.userSplits) {
+                        item.userSplits.forEach(split => {
+                            userTotals[split.userId] = (userTotals[split.userId] || 0) + split.amount;
+                        });
+                    } else if (primaryUserId) {
+                        userTotals[primaryUserId] = (userTotals[primaryUserId] || 0) + item.price;
+                    }
                 }
             });
 
@@ -946,7 +1120,7 @@
                 if (user) {
                     summaryHTML += `
                         <div class="user-total">
-                            <span class="name">${user.name}</span>
+                            <span class="name">${escapeHtml(user.name)}</span>
                             <span class="amount">$${total.toFixed(2)}</span>
                         </div>
                     `;
@@ -961,376 +1135,15 @@
                 </div>
             `;
 
-            summaryContent.innerHTML = summaryHTML;
-            document.getElementById('receiptSummary').style.display = 'block';
+            elements.summaryContent.innerHTML = summaryHTML;
+            elements.receiptSummary.style.display = grandTotal > 0 ? 'block' : 'none';
         }
-
-        function resetForm() {
-            currentReceipt = [];
-            selectedItems.clear();
-            document.getElementById('receiptFile').value = '';
-            document.getElementById('primaryUser').value = '';
-            document.getElementById('receiptItems').style.display = 'none';
-            document.getElementById('splitControls').classList.remove('active');
-            document.getElementById('receiptSummary').style.display = 'none';
-            document.getElementById('actionButtons').style.display = 'none';
-            document.getElementById('message').innerHTML = '';
-        }
-
-        function showMessage(text, type) {
-            const messageDiv = document.getElementById('message');
-            messageDiv.className = type;
-            messageDiv.textContent = text;
-
-            if (type !== 'loading') {
-                setTimeout(() => {
-                    messageDiv.innerHTML = '';
-                }, 5000);
-            }
-        }
-
-        // Initialize
-        loadUsers();
-
-        // Initialize
-        document.addEventListener('DOMContentLoaded', function () {
-            loadTranslationMappings();
-            loadReceiptHistory();
-            setupEventListeners();
-            loadUsers();
-        });
-
-        // Load users on page load
-        async function loadUsers() {
-            try {
-                const response = await fetch('/api/users');
-                const data = await response.json();
-                if (data.success) {
-                    users = data.data;
-                    populateUserSelects();
-                }
-            } catch (error) {
-                console.error('Error loading users:', error);
-            }
-        }
-
-        // Setup event listeners
-        function setupEventListeners() {
-            // Tab switching
-            document.querySelectorAll('.tab-button').forEach(button => {
-                button.addEventListener('click', () => {
-                    const tab = button.dataset.tab;
-                    switchTab(tab);
-                });
-            });
-
-            // File upload
-            uploadArea.addEventListener('dragover', handleDragOver);
-            uploadArea.addEventListener('dragleave', handleDragLeave);
-            uploadArea.addEventListener('drop', handleDrop);
-            receiptFile.addEventListener('change', handleFileSelect);
-
-            // Buttons
-            saveReceiptBtn.addEventListener('click', saveReceipt);
-            downloadReceiptBtn.addEventListener('click', downloadReceiptCSV);
-            addMappingBtn.addEventListener('click', addTranslationMapping);
-
-            // Enter key for translation inputs
-            document.getElementById('newOriginal').addEventListener('keypress', (e) => {
-                if (e.key === 'Enter') addTranslationMapping();
-            });
-            document.getElementById('newTranslation').addEventListener('keypress', (e) => {
-                if (e.key === 'Enter') addTranslationMapping();
-            });
-
-            // Buttons
-            equalSplitBtn.addEventListener('click', () => setSplitType('equal'));
-            percentageSplitBtn.addEventListener('click', () => setSplitType('percentage'));
-            customSplitBtn.addEventListener('click', () => setSplitType('custom'));
-
-            applySplitBtn.addEventListener('click', applySplit);
-            clearSplitBtn.addEventListener('click', clearSplit);
-
-            saveReceiptBtn.addEventListener('click', saveReceipt);
-            resetFormBtn.addEventListener('click', resetForm);
-            toggleSelectAllBtn.addEventListener('click', toggleSelectAll);
-        }
-
-        // Tab switching
-        function switchTab(tab) {
-            document.querySelectorAll('.tab-button').forEach(button => {
-                button.classList.remove('active');
-            });
-            document.querySelectorAll('.tab-content').forEach(content => {
-                content.classList.remove('active');
-            });
-
-            document.querySelector(`[data-tab="${tab}"]`).classList.add('active');
-            document.getElementById(tab).classList.add('active');
-            activeTab = tab;
-
-            // Refresh data when switching tabs
-            if (tab === 'translations') {
-                loadTranslationMappings();
-            } else if (tab === 'history') {
-                loadReceiptHistory();
-            }
-        }
-
-        // Drag and drop handlers
-        function handleDragOver(e) {
-            e.preventDefault();
-            uploadArea.classList.add('drag-over');
-        }
-
-        function handleDragLeave(e) {
-            e.preventDefault();
-            uploadArea.classList.remove('drag-over');
-        }
-
-        function handleDrop(e) {
-            e.preventDefault();
-            uploadArea.classList.remove('drag-over');
-            const files = e.dataTransfer.files;
-            if (files.length > 0) {
-                receiptFile.files = files;
-                handleFileSelect();
-            }
-        }
-
-        function handleFileSelect() {
-            if (receiptFile.files.length > 0) {
-                const file = receiptFile.files[0];
-                fileName.textContent = file.name;
-                fileInfo.style.display = 'block';
-            }
-        }
-
-        async function loadTranslationMappings() {
-            try {
-                const response = await fetch('/api/receipts/translations');
-                const result = await response.json();
-
-                if (result.success) {
-                    translationMappings.clear();
-                    mappingsList.innerHTML = '';
-
-                    if (result.data.length === 0) {
-                        mappingsList.innerHTML = '<p class="text-center text-secondary">No translation mappings yet.</p>';
-                        return;
-                    }
-
-                    result.data.forEach(mapping => {
-                        translationMappings.set(mapping.original, mapping.translation);
-
-                        const mappingItem = document.createElement('div');
-                        mappingItem.className = 'mapping-item';
-
-                        const originalSpan = document.createElement('span');
-                        originalSpan.className = 'mapping-original';
-                        originalSpan.textContent = mapping.original;
-
-                        const arrowSpan = document.createElement('span');
-                        arrowSpan.className = 'mapping-arrow';
-                        arrowSpan.textContent = '→';
-
-                        const translationSpan = document.createElement('span');
-                        translationSpan.className = 'mapping-translation';
-                        translationSpan.textContent = mapping.translation;
-
-                        const deleteBtn = document.createElement('button');
-                        deleteBtn.className = 'button button-small button-danger';
-                        deleteBtn.innerHTML = '<span class="button-icon">🗑️</span> Delete';
-                        deleteBtn.addEventListener('click', () => {
-                            deleteTranslationMapping(mapping._id);
-                        });
-
-                        mappingItem.appendChild(originalSpan);
-                        mappingItem.appendChild(arrowSpan);
-                        mappingItem.appendChild(translationSpan);
-                        mappingItem.appendChild(deleteBtn);
-
-                        mappingsList.appendChild(mappingItem);
-                    });
-                }
-            } catch (error) {
-                showStatus('Error loading translation mappings: ' + error.message, 'error');
-            }
-        }
-
-        // Load receipt history
-        async function loadReceiptHistory() {
-            try {
-                // This would need a new API endpoint to get receipt history
-                // For now, showing placeholder
-                receiptHistory.innerHTML = `
-                    <div class="text-center text-secondary p-3">
-                        <p>Receipt history will appear here once you start saving receipts.</p>
-                    </div>
-                `;
-            } catch (error) {
-                showStatus('Error loading receipt history: ' + error.message, 'error');
-            }
-        }
-
-        function displayReceiptData(data) {
-            if (!data || !Array.isArray(data)) {
-                receiptItems.innerHTML = '<p>No receipt data available</p>';
-                return;
-            }
-
-            receiptItems.innerHTML = '';
-            let total = 0;
-
-            data.forEach((item, index) => {
-                const price = typeof item.price === 'number' ? item.price : 0;
-                if (item.readableDescription === 'TOTAL') {
-                    total = price;
-                }
-
-                const itemDiv = document.createElement('div');
-                itemDiv.className = 'receipt-item';
-
-                const originalHTML = `
-            <div class="receipt-original">
-                ${item.originalText || ''} ${item.suffixText || ''}
-            </div>
-        `;
-
-                const readableInput = document.createElement('input');
-                readableInput.type = 'text';
-                readableInput.id = `readable-${index}`;
-                readableInput.value = item.readableDescription || '';
-                readableInput.addEventListener('change', () => {
-                    updateReceiptItem(index, readableInput.value);
-                });
-
-                const readableDiv = document.createElement('div');
-                readableDiv.className = 'receipt-readable';
-                readableDiv.appendChild(readableInput);
-
-                const priceDiv = document.createElement('div');
-                priceDiv.className = 'receipt-price';
-                priceDiv.textContent = `$${price.toFixed(2)}`;
-
-                const button = document.createElement('button');
-                button.className = 'button button-small button-secondary';
-                button.textContent = 'Apply Translation';
-                button.addEventListener('click', () => {
-                    applyTranslation(index, item.originalText);
-                });
-
-                const actionsDiv = document.createElement('div');
-                actionsDiv.className = 'receipt-actions';
-                actionsDiv.appendChild(button);
-
-                itemDiv.innerHTML = originalHTML;
-                itemDiv.appendChild(readableDiv);
-                itemDiv.appendChild(priceDiv);
-                itemDiv.appendChild(actionsDiv);
-
-                receiptItems.appendChild(itemDiv);
-            });
-
-            receiptTotal.textContent = `$${total.toFixed(2)}`;
-        }
-
-        // Update receipt item
-        window.updateReceiptItem = function (index, newValue) {
-            if (currentReceiptData && currentReceiptData[index]) {
-                currentReceiptData[index].readableDescription = newValue;
-            }
-        };
-
-        // Apply translation to an item
-        window.applyTranslation = async function (index, originalText) {
-            const readable = document.getElementById(`readable-${index}`).value;
-
-            try {
-                const response = await fetch(`/api/receipts/translate?text=${encodeURIComponent(originalText)}`);
-                const result = await response.json();
-
-                if (result.success && result.translation) {
-                    document.getElementById(`readable-${index}`).value = result.translation.translation;
-                    updateReceiptItem(index, result.translation.translation);
-                    showStatus('Translation applied', 'success');
-                } else {
-                    // Create new translation if doesn't exist
-                    if (confirm(`No translation found. Would you like to save "${readable}" as the translation for "${originalText}"?`)) {
-                        await addNewTranslation(originalText, readable);
-                    }
-                }
-            } catch (error) {
-                showStatus('Error applying translation: ' + error.message, 'error');
-            }
-        };
-
-        // Add new translation
-        async function addNewTranslation(original, translation) {
-            try {
-                const response = await fetch('/api/receipts/translations', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ original, translation })
-                });
-
-                const result = await response.json();
-                if (result.success) {
-                    showStatus('Translation saved', 'success');
-                    loadTranslationMappings();
-                } else {
-                    showStatus('Error saving translation: ' + result.error, 'error');
-                }
-            } catch (error) {
-                showStatus('Error saving translation: ' + error.message, 'error');
-            }
-        }
-
-        // Add translation mapping
-        async function addTranslationMapping() {
-            const original = document.getElementById('newOriginal').value.trim();
-            const translation = document.getElementById('newTranslation').value.trim();
-
-            if (!original || !translation) {
-                showStatus('Please enter both original and translation text', 'warning');
-                return;
-            }
-
-            try {
-                showLoader();
-                await addNewTranslation(original, translation);
-                document.getElementById('newOriginal').value = '';
-                document.getElementById('newTranslation').value = '';
-            } finally {
-                hideLoader();
-            }
-        }
-
-        // Delete translation mapping
-        window.deleteTranslationMapping = async function (id) {
-            if (!confirm('Are you sure you want to delete this translation mapping?')) {
-                return;
-            }
-
-            try {
-                const response = await fetch(`/api/receipts/translations/${id}`, {
-                    method: 'DELETE'
-                });
-
-                if (response.ok) {
-                    showStatus('Translation mapping deleted', 'success');
-                    loadTranslationMappings();
-                } else {
-                    showStatus('Error deleting translation', 'error');
-                }
-            } catch (error) {
-                showStatus('Error deleting translation: ' + error.message, 'error');
-            }
-        };
 
         async function saveReceipt() {
-            const primaryUserId = document.getElementById('primaryUser').value;
-            const hasNonSplitItems = currentReceipt.some(item => !item.isSplit);
+            const primaryUserId = elements.primaryUser.value;
+            const hasNonSplitItems = currentReceipt.some(item =>
+                !isTotals(item.readableDescription) && !item.isSplit
+            );
 
             if (hasNonSplitItems && !primaryUserId) {
                 showMessage('Please select a primary user for non-split items', 'error');
@@ -1368,9 +1181,338 @@
             }
         }
 
-        // Download receipt as CSV
+        function resetForm() {
+            currentReceipt = [];
+            selectedItems.clear();
+            elements.receiptFile.value = '';
+            elements.primaryUser.value = '';
+            elements.receiptItemsSection.style.display = 'none';
+            elements.splitControls.classList.remove('active');
+            elements.receiptSummary.style.display = 'none';
+            elements.actionButtons.style.display = 'none';
+            elements.message.innerHTML = '';
+            elements.fileInfo.style.display = 'none';
+        }
+
+        // Tab switching
+        function switchTab(tab) {
+            document.querySelectorAll('.tab-button').forEach(button => {
+                button.classList.remove('active');
+            });
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+
+            document.querySelector(`[data-tab="${tab}"]`).classList.add('active');
+            document.getElementById(tab).classList.add('active');
+            activeTab = tab;
+
+            // Refresh data when switching tabs
+            if (tab === 'translations') {
+                loadTranslationMappings();
+            } else if (tab === 'history') {
+                loadReceiptHistory();
+            }
+        }
+
+        // Translation mappings
+        async function loadTranslationMappings() {
+            try {
+                const response = await fetch('/api/receipts/translations');
+                const result = await response.json();
+
+                if (result.success) {
+                    translationMappings.clear();
+                    elements.mappingsList.innerHTML = '';
+
+                    if (!result.data || result.data.length === 0) {
+                        elements.mappingsList.innerHTML = '<p class="text-center text-secondary">No translation mappings yet.</p>';
+                        return;
+                    }
+
+                    result.data.forEach(mapping => {
+                        translationMappings.set(mapping.original, mapping.translation);
+
+                        const mappingItem = document.createElement('div');
+                        mappingItem.className = 'mapping-item';
+
+                        mappingItem.innerHTML = `
+                            <span class="mapping-original">${escapeHtml(mapping.original)}</span>
+                            <span class="mapping-arrow">→</span>
+                            <span class="mapping-translation">${escapeHtml(mapping.translation)}</span>
+                        `;
+
+                        const deleteBtn = document.createElement('button');
+                        deleteBtn.className = 'button button-small button-danger';
+                        deleteBtn.innerHTML = '<span class="button-icon">🗑️</span> Delete';
+                        deleteBtn.addEventListener('click', () => deleteTranslationMapping(mapping._id));
+
+                        mappingItem.appendChild(deleteBtn);
+                        elements.mappingsList.appendChild(mappingItem);
+                    });
+                }
+            } catch (error) {
+                showStatus('Error loading translation mappings: ' + error.message, 'error');
+            }
+        }
+
+        async function addTranslationMapping() {
+            const original = elements.newOriginal.value.trim();
+            const translation = elements.newTranslation.value.trim();
+
+            if (!original || !translation) {
+                showStatus('Please enter both original and translation text', 'warning');
+                return;
+            }
+
+            try {
+                showLoader();
+                const response = await fetch('/api/receipts/translations', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ original, translation })
+                });
+
+                const result = await response.json();
+                if (result.success) {
+                    showStatus('Translation saved', 'success');
+                    elements.newOriginal.value = '';
+                    elements.newTranslation.value = '';
+                    loadTranslationMappings();
+                } else {
+                    showStatus('Error saving translation: ' + result.error, 'error');
+                }
+            } catch (error) {
+                showStatus('Error saving translation: ' + error.message, 'error');
+            } finally {
+                hideLoader();
+            }
+        }
+
+        async function deleteTranslationMapping(id) {
+            if (!confirm('Are you sure you want to delete this translation mapping?')) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/receipts/translations/${id}`, {
+                    method: 'DELETE'
+                });
+
+                if (response.ok) {
+                    showStatus('Translation mapping deleted', 'success');
+                    loadTranslationMappings();
+                } else {
+                    showStatus('Error deleting translation', 'error');
+                }
+            } catch (error) {
+                showStatus('Error deleting translation: ' + error.message, 'error');
+            }
+        }
+
+        // Receipt history
+        async function loadReceiptHistory() {
+            try {
+                const primaryUserId = elements.primaryUser.value;
+
+                if (!primaryUserId) {
+                    elements.receiptHistory.innerHTML = `
+                        <div class="text-center text-secondary p-3">
+                            <p>Please select a user to view their receipts.</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                showLoader();
+
+                const response = await fetch(`/api/receipts/user/${primaryUserId}`);
+                const result = await response.json();
+
+                if (result.success && result.data && result.data.length > 0) {
+                    elements.receiptHistory.innerHTML = '';
+
+                    result.data.forEach(receipt => {
+                        const receiptDate = new Date(receipt.date).toLocaleDateString();
+                        const itemCount = receipt.items.filter(item =>
+                            !item.readableDescription.toLowerCase().includes('total')
+                        ).length;
+
+                        const historyItem = document.createElement('div');
+                        historyItem.className = 'history-item';
+
+                        const detailsDiv = document.createElement('div');
+                        detailsDiv.innerHTML = `
+                            <div class="history-date">${receiptDate}</div>
+                            <div class="history-details">
+                                ${itemCount} items • Total: $${receipt.total.toFixed(2)}
+                                ${receipt.store ? ` • ${escapeHtml(receipt.store)}` : ''}
+                            </div>
+                        `;
+
+                        const actionsDiv = document.createElement('div');
+                        actionsDiv.className = 'history-actions';
+
+                        const viewBtn = document.createElement('button');
+                        viewBtn.className = 'button button-small button-primary';
+                        viewBtn.textContent = 'View';
+                        viewBtn.addEventListener('click', () => viewReceiptDetails(receipt._id));
+
+                        const deleteBtn = document.createElement('button');
+                        deleteBtn.className = 'button button-small button-danger';
+                        deleteBtn.textContent = 'Delete';
+                        deleteBtn.addEventListener('click', () => deleteReceiptConfirm(receipt._id));
+
+                        actionsDiv.appendChild(viewBtn);
+                        actionsDiv.appendChild(deleteBtn);
+
+                        historyItem.appendChild(detailsDiv);
+                        historyItem.appendChild(actionsDiv);
+
+                        elements.receiptHistory.appendChild(historyItem);
+                    });
+                } else {
+                    elements.receiptHistory.innerHTML = `
+                        <div class="text-center text-secondary p-3">
+                            <p>No receipts found for this user.</p>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                console.error('Error loading receipt history:', error);
+                elements.receiptHistory.innerHTML = `
+                    <div class="text-center text-danger p-3">
+                        <p>Error loading receipts: ${error.message}</p>
+                    </div>
+                `;
+            } finally {
+                hideLoader();
+            }
+        }
+
+        async function viewReceiptDetails(receiptId) {
+            try {
+                showLoader();
+                const response = await fetch(`/api/receipts/${receiptId}/with-totals`);
+                const result = await response.json();
+
+                if (result.success) {
+                    const receipt = result.data;
+
+                    const modalOverlay = document.createElement('div');
+                    modalOverlay.className = 'modal-overlay';
+
+                    const modalContent = document.createElement('div');
+                    modalContent.className = 'modal-content';
+
+                    const closeBtn = document.createElement('button');
+                    closeBtn.className = 'modal-close';
+                    closeBtn.innerHTML = '&times;';
+                    closeBtn.addEventListener('click', () => modalOverlay.remove());
+
+                    let itemsHTML = receipt.items
+                        .filter(item => !item.readableDescription.toLowerCase().includes('total'))
+                        .map(item => {
+                            let splitInfo = '';
+                            if (item.isSplit && item.userSplits) {
+                                splitInfo = `
+                                    <div class="item-splits">
+                                        ${item.userSplits.map(split =>
+                                    `<span class="split-badge">${escapeHtml(getUserNameById(split.userId))}: $${split.amount.toFixed(2)}</span>`
+                                ).join('')}
+                                    </div>
+                                `;
+                            }
+
+                            return `
+                                <div class="receipt-item">
+                                    <div class="item-details">
+                                        <div class="item-description">${escapeHtml(item.readableDescription)}</div>
+                                        <div class="item-original">${escapeHtml(item.originalText)}</div>
+                                        ${splitInfo}
+                                    </div>
+                                    <div class="item-price">$${item.price.toFixed(2)}</div>
+                                </div>
+                            `;
+                        }).join('');
+
+                    let userTotalsHTML = '';
+                    if (receipt.userTotals) {
+                        userTotalsHTML = `
+                            <div class="receipt-summary">
+                                <h4>User Totals</h4>
+                                ${Object.entries(receipt.userTotals).map(([userId, amount]) => `
+                                    <div class="user-total">
+                                        <span>${escapeHtml(getUserNameById(userId))}</span>
+                                        <span>$${amount.toFixed(2)}</span>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        `;
+                    }
+
+                    modalContent.innerHTML = `
+                        <h3>Receipt Details</h3>
+                        <p>Date: ${new Date(receipt.date).toLocaleDateString()}</p>
+                        ${receipt.store ? `<p>Store: ${escapeHtml(receipt.store)}</p>` : ''}
+                        <div class="receipt-items">
+                            ${itemsHTML}
+                        </div>
+                        ${userTotalsHTML}
+                        <div class="receipt-summary">
+                            <div class="total">
+                                <span>Total:</span>
+                                <span>$${receipt.total.toFixed(2)}</span>
+                            </div>
+                        </div>
+                    `;
+
+                    modalContent.insertBefore(closeBtn, modalContent.firstChild);
+                    modalOverlay.appendChild(modalContent);
+                    document.body.appendChild(modalOverlay);
+
+                    // Close modal when clicking outside
+                    modalOverlay.addEventListener('click', (e) => {
+                        if (e.target === modalOverlay) {
+                            modalOverlay.remove();
+                        }
+                    });
+                } else {
+                    showMessage('Error loading receipt details', 'error');
+                }
+            } catch (error) {
+                showMessage('Error: ' + error.message, 'error');
+            } finally {
+                hideLoader();
+            }
+        }
+
+        async function deleteReceiptConfirm(receiptId) {
+            if (!confirm('Are you sure you want to delete this receipt?')) {
+                return;
+            }
+
+            try {
+                showLoader();
+                const response = await fetch(`/api/receipts/${receiptId}`, {
+                    method: 'DELETE'
+                });
+
+                if (response.ok) {
+                    showMessage('Receipt deleted successfully', 'success');
+                    loadReceiptHistory();
+                } else {
+                    showMessage('Error deleting receipt', 'error');
+                }
+            } catch (error) {
+                showMessage('Error: ' + error.message, 'error');
+            } finally {
+                hideLoader();
+            }
+        }
+
         function downloadReceiptCSV() {
-            if (!currentReceiptData) {
+            if (!currentReceiptData || currentReceiptData.length === 0) {
                 showStatus('No receipt data to download', 'error');
                 return;
             }
@@ -1409,26 +1551,38 @@
 
         // Utility functions
         function showLoader() {
-            loader.style.display = 'block';
+            elements.loader.style.display = 'block';
         }
 
         function hideLoader() {
-            loader.style.display = 'none';
+            elements.loader.style.display = 'none';
         }
 
         function showStatus(message, type) {
-            status.textContent = message;
-            status.className = 'status ' + type;
-            status.style.display = 'block';
+            elements.status.textContent = message;
+            elements.status.className = 'status ' + type;
+            elements.status.style.display = 'block';
 
             if (type === 'success' || type === 'info') {
                 setTimeout(() => {
-                    status.style.display = 'none';
+                    elements.status.style.display = 'none';
+                }, 5000);
+            }
+        }
+
+        function showMessage(text, type) {
+            elements.message.className = type;
+            elements.message.textContent = text;
+
+            if (type !== 'loading') {
+                setTimeout(() => {
+                    elements.message.innerHTML = '';
                 }, 5000);
             }
         }
 
         function escapeHtml(unsafe) {
+            if (typeof unsafe !== 'string') return '';
             return unsafe
                 .replace(/&/g, "&amp;")
                 .replace(/</g, "&lt;")
@@ -1438,13 +1592,15 @@
         }
 
         function isTotals(description) {
-            return (description.toLowerCase().includes('sous-total') || description.toLowerCase().includes('total'))
+            if (!description) return false;
+            return description.toLowerCase().includes('sous-total') ||
+                description.toLowerCase().includes('total');
         }
-    </script>
-    <script>
-        // === BEGIN SPLIT FUNCTIONALITY ===
 
-// === END SPLIT FUNCTIONALITY ===
+        function getUserNameById(userId) {
+            const user = users.find(u => u._id === userId);
+            return user ? user.name : 'Unknown User';
+        }
     </script>
 </body>
 

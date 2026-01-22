@@ -1,0 +1,928 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0" />
+    <title>Saved Reports - Transaction Categorizer</title>
+    <link rel="stylesheet"
+          href="styles.css" />
+    <style>
+        .reports-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 1.5rem;
+            margin-top: 1.5rem;
+        }
+
+        .report-card {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: var(--shadow-sm);
+            transition: all 0.3s;
+            border: 2px solid transparent;
+        }
+
+        .report-card:hover {
+            box-shadow: var(--shadow-md);
+            transform: translateY(-3px);
+            border-color: var(--primary-color);
+        }
+
+        .report-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 1rem;
+        }
+
+        .report-title {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: var(--text-primary);
+            margin-bottom: 0.25rem;
+        }
+
+        .report-date {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+
+        .report-description {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            margin-bottom: 1rem;
+            line-height: 1.4;
+        }
+
+        .report-stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+            padding: 1rem;
+            background: var(--bg-primary);
+            border-radius: 8px;
+        }
+
+        .report-stat {
+            text-align: center;
+        }
+
+        .report-stat-value {
+            font-size: 1.25rem;
+            font-weight: bold;
+            color: var(--primary-color);
+        }
+
+        .report-stat-label {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+        }
+
+        .report-actions {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .report-actions .button {
+            flex: 1;
+            min-width: 80px;
+        }
+
+        .user-selector {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin-bottom: 1.5rem;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .user-selector-grid {
+            display: grid;
+            grid-template-columns: 1fr auto auto;
+            gap: 1rem;
+            align-items: end;
+        }
+
+        .search-bar {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .search-bar input {
+            flex: 1;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 4rem 2rem;
+            color: var(--text-secondary);
+        }
+
+        .empty-state-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+        }
+
+        .modal-large {
+            max-width: 1200px;
+            width: 95%;
+        }
+
+        .data-preview {
+            max-height: 400px;
+            overflow: auto;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+        }
+
+        .data-preview table {
+            width: 100%;
+            font-size: 0.85rem;
+        }
+
+        .data-preview th,
+        .data-preview td {
+            padding: 0.5rem;
+            text-align: left;
+            white-space: nowrap;
+        }
+
+        .edit-cell {
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .edit-cell:hover {
+            background: rgba(76, 175, 80, 0.1);
+        }
+
+        .edit-cell input {
+            width: 100%;
+            padding: 0.25rem;
+            border: 2px solid var(--primary-color);
+            border-radius: 4px;
+        }
+
+        .pagination {
+            display: flex;
+            justify-content: center;
+            gap: 0.5rem;
+            margin-top: 2rem;
+        }
+
+        .pagination button {
+            padding: 0.5rem 1rem;
+            border: 1px solid var(--border-color);
+            background: white;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .pagination button:hover:not(:disabled) {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .pagination button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .pagination button.active {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .file-info {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem;
+            background: var(--bg-primary);
+            border-radius: 4px;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            margin-bottom: 0.5rem;
+        }
+
+        .file-info-icon {
+            font-size: 1.2rem;
+        }
+
+        @media (max-width: 768px) {
+            .reports-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .user-selector-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .report-actions {
+                flex-direction: column;
+            }
+
+            .report-actions .button {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-brand">
+                <h1>Transaction Categorizer v2.0</h1>
+            </div>
+            <ul class="nav-menu">
+                <li class="nav-item">
+                    <a href="index.html"
+                       class="nav-link">
+                        <span class="nav-icon">📊</span>
+                        Transactions
+                    </a>
+                </li>
+                <li class="nav-item active">
+                    <a href="reports.html"
+                       class="nav-link">
+                        <span class="nav-icon">💾</span>
+                        Saved Reports
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="receipts.html"
+                       class="nav-link">
+                        <span class="nav-icon">🧾</span>
+                        Receipts
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="categories.html"
+                       class="nav-link">
+                        <span class="nav-icon">📂</span>
+                        Categories
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="users.html"
+                       class="nav-link">
+                        <span class="nav-icon">👥</span>
+                        Users
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="container">
+        <!-- Page Header -->
+        <div class="page-header">
+            <h2>Saved Reports</h2>
+        </div>
+
+        <!-- Status Messages -->
+        <div id="status"
+             class="status"></div>
+
+        <!-- User Selector -->
+        <div class="user-selector">
+            <h3 class="section-header">Select User</h3>
+            <div class="user-selector-grid">
+                <div class="form-group">
+                    <label for="userSelect">User Account</label>
+                    <select id="userSelect"
+                            class="form-control">
+                        <option value="">Select a user to view reports...</option>
+                    </select>
+                </div>
+                <button id="loadReportsBtn"
+                        class="button button-primary">
+                    <span class="button-icon">📂</span>
+                    Load Reports
+                </button>
+                <button id="refreshBtn"
+                        class="button button-secondary">
+                    <span class="button-icon">🔄</span>
+                    Refresh
+                </button>
+            </div>
+        </div>
+
+        <!-- Search Bar -->
+        <div id="searchSection"
+             class="search-bar hidden">
+            <input type="text"
+                   id="searchInput"
+                   class="form-control"
+                   placeholder="Search reports by name or description...">
+            <button id="searchBtn"
+                    class="button button-secondary">
+                <span class="button-icon">🔍</span>
+                Search
+            </button>
+            <button id="clearSearchBtn"
+                    class="button button-secondary">
+                <span class="button-icon">✖️</span>
+                Clear
+            </button>
+        </div>
+
+        <!-- Stats Overview -->
+        <div id="statsSection"
+             class="section hidden">
+            <h3 class="section-header">Overview</h3>
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-value"
+                         id="totalReports">0</div>
+                    <div class="stat-label">Total Reports</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value"
+                         id="totalTransactions">0</div>
+                    <div class="stat-label">Total Transactions</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value"
+                         id="lastUpdated">-</div>
+                    <div class="stat-label">Last Updated</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Reports Grid -->
+        <div class="section">
+            <h3 class="section-header">Your Reports</h3>
+            <div id="reportsContainer">
+                <div class="empty-state">
+                    <div class="empty-state-icon">📋</div>
+                    <h3>No User Selected</h3>
+                    <p>Select a user above to view their saved reports.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Loader -->
+        <div id="loader"
+             class="loader"></div>
+    </div>
+
+    <!-- View/Edit Report Modal -->
+    <div id="reportModal"
+         class="modal">
+        <div class="modal-content modal-large">
+            <div class="modal-header">
+                <h3 class="modal-title"
+                    id="reportModalTitle">View Report</h3>
+                <button class="close-btn"
+                        onclick="closeReportModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="editReportName">Report Name</label>
+                    <input type="text"
+                           id="editReportName"
+                           class="form-control">
+                </div>
+                <div class="form-group">
+                    <label for="editReportDescription">Description</label>
+                    <textarea id="editReportDescription"
+                              class="form-control"
+                              rows="2"></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Report Data</label>
+                    <div class="data-preview"
+                         id="dataPreview">
+                        <!-- Data table will be rendered here -->
+                    </div>
+                </div>
+            </div>
+            <div class="form-actions">
+                <button class="button button-secondary"
+                        onclick="closeReportModal()">Cancel</button>
+                <button class="button button-secondary"
+                        id="exportReportBtn">
+                    <span class="button-icon">⬇️</span>
+                    Export CSV
+                </button>
+                <button class="button button-primary"
+                        id="saveReportChangesBtn">
+                    <span class="button-icon">💾</span>
+                    Save Changes
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Delete Confirmation Modal -->
+    <div id="deleteModal"
+         class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Delete Report</h3>
+                <button class="close-btn"
+                        onclick="closeDeleteModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete "<strong id="deleteReportName"></strong>"?</p>
+                <p class="text-secondary">This action cannot be undone.</p>
+            </div>
+            <div class="form-actions">
+                <button class="button button-secondary"
+                        onclick="closeDeleteModal()">Cancel</button>
+                <button class="button button-danger"
+                        id="confirmDeleteBtn">
+                    <span class="button-icon">🗑️</span>
+                    Delete Report
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // State
+        let currentUserId = null;
+        let reports = [];
+        let currentEditReport = null;
+        let editedData = null;
+        let deleteReportId = null;
+
+        // DOM Elements
+        const els = {
+            userSelect: document.getElementById('userSelect'),
+            loadReportsBtn: document.getElementById('loadReportsBtn'),
+            refreshBtn: document.getElementById('refreshBtn'),
+            searchSection: document.getElementById('searchSection'),
+            searchInput: document.getElementById('searchInput'),
+            searchBtn: document.getElementById('searchBtn'),
+            clearSearchBtn: document.getElementById('clearSearchBtn'),
+            statsSection: document.getElementById('statsSection'),
+            reportsContainer: document.getElementById('reportsContainer'),
+            reportModal: document.getElementById('reportModal'),
+            deleteModal: document.getElementById('deleteModal'),
+            loader: document.getElementById('loader'),
+            status: document.getElementById('status')
+        };
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            loadUsers();
+            setupEventListeners();
+        });
+
+        function setupEventListeners() {
+            els.loadReportsBtn.addEventListener('click', loadReports);
+            els.refreshBtn.addEventListener('click', loadReports);
+            els.searchBtn.addEventListener('click', searchReports);
+            els.clearSearchBtn.addEventListener('click', clearSearch);
+            els.searchInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') searchReports();
+            });
+            document.getElementById('saveReportChangesBtn').addEventListener('click', saveReportChanges);
+            document.getElementById('exportReportBtn').addEventListener('click', exportReport);
+            document.getElementById('confirmDeleteBtn').addEventListener('click', confirmDelete);
+        }
+
+        // Load users for dropdown
+        async function loadUsers() {
+            try {
+                const response = await fetch('/api/users');
+                const result = await response.json();
+
+                if (result.success) {
+                    els.userSelect.innerHTML = '<option value="">Select a user to view reports...</option>';
+                    result.data.forEach(user => {
+                        const option = document.createElement('option');
+                        option.value = user._id || user.id;
+                        option.textContent = `${user.name} (${user.email})`;
+                        els.userSelect.appendChild(option);
+                    });
+                }
+            } catch (error) {
+                showStatus('Failed to load users: ' + error.message, 'error');
+            }
+        }
+
+        // Load reports for selected user
+        async function loadReports() {
+            const userId = els.userSelect.value;
+            if (!userId) {
+                showStatus('Please select a user first', 'warning');
+                return;
+            }
+
+            currentUserId = userId;
+
+            try {
+                showLoader();
+                const response = await fetch(`/api/saved-reports?userId=${userId}`);
+                const result = await response.json();
+
+                if (result.success) {
+                    reports = result.data;
+                    displayReports(reports);
+                    updateStats();
+                    els.searchSection.classList.remove('hidden');
+                    els.statsSection.classList.remove('hidden');
+                    showStatus(`Loaded ${reports.length} report(s)`, 'success');
+                } else {
+                    showStatus('Failed to load reports: ' + result.error, 'error');
+                }
+            } catch (error) {
+                showStatus('Error loading reports: ' + error.message, 'error');
+            } finally {
+                hideLoader();
+            }
+        }
+
+        // Search reports
+        async function searchReports() {
+            const query = els.searchInput.value.trim();
+            if (!query) {
+                displayReports(reports);
+                return;
+            }
+
+            try {
+                showLoader();
+                const response = await fetch(`/api/saved-reports/search?userId=${currentUserId}&q=${encodeURIComponent(query)}`);
+                const result = await response.json();
+
+                if (result.success) {
+                    displayReports(result.data);
+                    showStatus(`Found ${result.data.length} report(s)`, 'success');
+                }
+            } catch (error) {
+                showStatus('Search failed: ' + error.message, 'error');
+            } finally {
+                hideLoader();
+            }
+        }
+
+        function clearSearch() {
+            els.searchInput.value = '';
+            displayReports(reports);
+        }
+
+        // Display reports
+        function displayReports(reportsToShow) {
+            if (!reportsToShow || reportsToShow.length === 0) {
+                els.reportsContainer.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">📭</div>
+                        <h3>No Reports Found</h3>
+                        <p>This user hasn't saved any reports yet.</p>
+                        <p>Go to the <a href="index.html">Transactions page</a> to categorize and save reports.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            const grid = document.createElement('div');
+            grid.className = 'reports-grid';
+
+            reportsToShow.forEach(report => {
+                const card = createReportCard(report);
+                grid.appendChild(card);
+            });
+
+            els.reportsContainer.innerHTML = '';
+            els.reportsContainer.appendChild(grid);
+        }
+
+        function createReportCard(report) {
+            const card = document.createElement('div');
+            card.className = 'report-card';
+
+            const metadata = report.metadata || {};
+            const createdDate = new Date(report.createdAt).toLocaleDateString('en-US', {
+                year: 'numeric', month: 'short', day: 'numeric'
+            });
+            const updatedDate = new Date(report.updatedAt).toLocaleDateString('en-US', {
+                year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
+            });
+
+            card.innerHTML = `
+                <div class="report-header">
+                    <div>
+                        <div class="report-title">${escapeHtml(report.name)}</div>
+                        <div class="report-date">Created: ${createdDate}</div>
+                    </div>
+                </div>
+                ${report.originalFileName ? `
+                    <div class="file-info">
+                        <span class="file-info-icon">📄</span>
+                        <span>${escapeHtml(report.originalFileName)}</span>
+                    </div>
+                ` : ''}
+                ${report.description ? `
+                    <div class="report-description">${escapeHtml(report.description)}</div>
+                ` : ''}
+                <div class="report-stats">
+                    <div class="report-stat">
+                        <div class="report-stat-value">${metadata.totalTransactions || (report.data?.length - 1) || 0}</div>
+                        <div class="report-stat-label">Transactions</div>
+                    </div>
+                    <div class="report-stat">
+                        <div class="report-stat-value">${metadata.categorizedCount || '-'}</div>
+                        <div class="report-stat-label">Categorized</div>
+                    </div>
+                    <div class="report-stat">
+                        <div class="report-stat-value">${metadata.uncategorizedCount || '-'}</div>
+                        <div class="report-stat-label">Uncategorized</div>
+                    </div>
+                </div>
+                <div class="report-actions">
+                    <button class="button button-primary view-btn" data-id="${report._id || report.id}">
+                        <span class="button-icon">👁️</span> View
+                    </button>
+                    <button class="button button-secondary edit-btn" data-id="${report._id || report.id}">
+                        <span class="button-icon">✏️</span> Edit
+                    </button>
+                    <button class="button button-secondary duplicate-btn" data-id="${report._id || report.id}">
+                        <span class="button-icon">📋</span> Duplicate
+                    </button>
+                    <button class="button button-danger delete-btn" data-id="${report._id || report.id}" data-name="${escapeHtml(report.name)}">
+                        <span class="button-icon">🗑️</span>
+                    </button>
+                </div>
+            `;
+
+            // Add event listeners
+            card.querySelector('.view-btn').addEventListener('click', () => openReport(report._id || report.id, false));
+            card.querySelector('.edit-btn').addEventListener('click', () => openReport(report._id || report.id, true));
+            card.querySelector('.duplicate-btn').addEventListener('click', () => duplicateReport(report._id || report.id));
+            card.querySelector('.delete-btn').addEventListener('click', () => openDeleteModal(report._id || report.id, report.name));
+
+            return card;
+        }
+
+        // Update stats
+        function updateStats() {
+            document.getElementById('totalReports').textContent = reports.length;
+
+            const totalTrans = reports.reduce((sum, r) => {
+                return sum + (r.metadata?.totalTransactions || (r.data?.length - 1) || 0);
+            }, 0);
+            document.getElementById('totalTransactions').textContent = totalTrans;
+
+            if (reports.length > 0) {
+                const latest = reports.reduce((a, b) =>
+                    new Date(a.updatedAt) > new Date(b.updatedAt) ? a : b
+                );
+                document.getElementById('lastUpdated').textContent = new Date(latest.updatedAt).toLocaleDateString('en-US', {
+                    month: 'short', day: 'numeric'
+                });
+            }
+        }
+
+        // Open report modal
+        async function openReport(reportId, editMode = false) {
+            try {
+                showLoader();
+                const response = await fetch(`/api/saved-reports/${reportId}`);
+                const result = await response.json();
+
+                if (result.success) {
+                    currentEditReport = result.data;
+                    editedData = JSON.parse(JSON.stringify(result.data.data)); // Deep copy
+
+                    document.getElementById('reportModalTitle').textContent = editMode ? 'Edit Report' : 'View Report';
+                    document.getElementById('editReportName').value = currentEditReport.name;
+                    document.getElementById('editReportName').readOnly = !editMode;
+                    document.getElementById('editReportDescription').value = currentEditReport.description || '';
+                    document.getElementById('editReportDescription').readOnly = !editMode;
+
+                    renderDataPreview(editMode);
+
+                    document.getElementById('saveReportChangesBtn').style.display = editMode ? 'inline-flex' : 'none';
+
+                    els.reportModal.classList.add('active');
+                }
+            } catch (error) {
+                showStatus('Failed to load report: ' + error.message, 'error');
+            } finally {
+                hideLoader();
+            }
+        }
+
+        function renderDataPreview(editable = false) {
+            const container = document.getElementById('dataPreview');
+            if (!editedData || editedData.length === 0) {
+                container.innerHTML = '<p class="text-secondary">No data available</p>';
+                return;
+            }
+
+            const table = document.createElement('table');
+            const thead = document.createElement('thead');
+            const tbody = document.createElement('tbody');
+
+            // Header row
+            const headerRow = document.createElement('tr');
+            editedData[0].forEach(cell => {
+                const th = document.createElement('th');
+                th.textContent = cell;
+                headerRow.appendChild(th);
+            });
+            thead.appendChild(headerRow);
+
+            // Data rows
+            for (let i = 1; i < editedData.length; i++) {
+                const tr = document.createElement('tr');
+                editedData[i].forEach((cell, j) => {
+                    const td = document.createElement('td');
+                    if (editable) {
+                        td.className = 'edit-cell';
+                        td.textContent = cell;
+                        td.addEventListener('click', () => makeEditable(td, i, j));
+                    } else {
+                        td.textContent = cell;
+                    }
+                    tr.appendChild(td);
+                });
+                tbody.appendChild(tr);
+            }
+
+            table.appendChild(thead);
+            table.appendChild(tbody);
+            container.innerHTML = '';
+            container.appendChild(table);
+        }
+
+        function makeEditable(td, row, col) {
+            if (td.querySelector('input')) return; // Already editing
+
+            const currentValue = td.textContent;
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.value = currentValue;
+
+            input.addEventListener('blur', () => {
+                editedData[row][col] = input.value;
+                td.textContent = input.value;
+            });
+
+            input.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    input.blur();
+                }
+            });
+
+            td.textContent = '';
+            td.appendChild(input);
+            input.focus();
+            input.select();
+        }
+
+        function closeReportModal() {
+            els.reportModal.classList.remove('active');
+            currentEditReport = null;
+            editedData = null;
+        }
+
+        // Save report changes
+        async function saveReportChanges() {
+            if (!currentEditReport) return;
+
+            const name = document.getElementById('editReportName').value.trim();
+            const description = document.getElementById('editReportDescription').value.trim();
+
+            if (!name) {
+                showStatus('Report name is required', 'warning');
+                return;
+            }
+
+            try {
+                showLoader();
+                const response = await fetch(`/api/saved-reports/${currentEditReport._id || currentEditReport.id}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        name,
+                        description,
+                        data: editedData,
+                        metadata: {
+                            totalTransactions: editedData.length - 1,
+                            categorizedCount: currentEditReport.metadata?.categorizedCount,
+                            uncategorizedCount: currentEditReport.metadata?.uncategorizedCount
+                        }
+                    })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    showStatus('Report saved successfully', 'success');
+                    closeReportModal();
+                    loadReports();
+                } else {
+                    showStatus('Failed to save report: ' + result.error, 'error');
+                }
+            } catch (error) {
+                showStatus('Error saving report: ' + error.message, 'error');
+            } finally {
+                hideLoader();
+            }
+        }
+
+        // Export report
+        function exportReport() {
+            if (!currentEditReport) return;
+            window.location.href = `/api/saved-reports/${currentEditReport._id || currentEditReport.id}/export`;
+        }
+
+        // Duplicate report
+        async function duplicateReport(reportId) {
+            try {
+                showLoader();
+                const response = await fetch(`/api/saved-reports/${reportId}/duplicate`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    showStatus('Report duplicated successfully', 'success');
+                    loadReports();
+                } else {
+                    showStatus('Failed to duplicate report: ' + result.error, 'error');
+                }
+            } catch (error) {
+                showStatus('Error duplicating report: ' + error.message, 'error');
+            } finally {
+                hideLoader();
+            }
+        }
+
+        // Delete modal
+        function openDeleteModal(reportId, reportName) {
+            deleteReportId = reportId;
+            document.getElementById('deleteReportName').textContent = reportName;
+            els.deleteModal.classList.add('active');
+        }
+
+        function closeDeleteModal() {
+            els.deleteModal.classList.remove('active');
+            deleteReportId = null;
+        }
+
+        async function confirmDelete() {
+            if (!deleteReportId) return;
+
+            try {
+                showLoader();
+                const response = await fetch(`/api/saved-reports/${deleteReportId}`, {
+                    method: 'DELETE'
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    showStatus('Report deleted successfully', 'success');
+                    closeDeleteModal();
+                    loadReports();
+                } else {
+                    showStatus('Failed to delete report: ' + result.error, 'error');
+                }
+            } catch (error) {
+                showStatus('Error deleting report: ' + error.message, 'error');
+            } finally {
+                hideLoader();
+            }
+        }
+
+        // Utility functions
+        function showLoader() { els.loader.style.display = 'block'; }
+        function hideLoader() { els.loader.style.display = 'none'; }
+
+        function showStatus(message, type) {
+            els.status.textContent = message;
+            els.status.className = 'status ' + type;
+            els.status.style.display = 'block';
+            if (type === 'success' || type === 'info') {
+                setTimeout(() => { els.status.style.display = 'none'; }, 4000);
+            }
+        }
+
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+    </script>
+</body>
+
+</html>
