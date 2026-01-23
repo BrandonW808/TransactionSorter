@@ -1,4 +1,5 @@
 import { Document, Types } from 'mongoose';
+import { ISplitEntry } from './models/TransactionSplit.model';
 
 export interface Transaction {
   date: string;
@@ -7,6 +8,8 @@ export interface Transaction {
   type: string; // e.g., "Debit" or "Credit"
   amount: number;
   balance?: number;
+  hasSplit?: boolean;
+  splits?: ISplitEntry[];
 }
 
 export interface Categories {

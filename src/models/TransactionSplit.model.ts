@@ -1,64 +1,50 @@
 // src/models/TransactionSplit.model.ts
-import { Schema, model } from 'mongoose';
+import mongoose, { Document, Schema } from 'mongoose';
 
-export interface ITransactionSplit {
-    transactionId: string; // Unique identifier for the transaction
+export interface ISplitEntry {
+    userId?: string;
+    userName?: string;
+    mainCategory?: string;
+    subCategory?: string;
+    amount: number;
+    percentage: number;
+    description?: string; // Override description for this split
+}
+
+export interface ITransactionSplit extends Document {
+    transactionId: string;
     originalDescription: string;
     originalAmount: number;
     date: Date;
-    splits: Array<{
-        userId: Schema.Types.ObjectId;
-        userName?: string;
-        amount: number;
-        percentage: number;
-    }>;
-    createdBy?: Schema.Types.ObjectId;
+    splitType: 'user' | 'category' | 'combined';
+    splits: ISplitEntry[];
+    createdBy?: string;
+    createdAt: Date;
+    updatedAt: Date;
 }
 
-const transactionSplitSchema = new Schema<ITransactionSplit>(
-    {
-        transactionId: {
-            type: String,
-            required: true,
-            unique: true,
-            index: true
-        },
-        originalDescription: {
-            type: String,
-            required: true
-        },
-        originalAmount: {
-            type: Number,
-            required: true
-        },
-        date: {
-            type: Date,
-            required: true
-        },
-        splits: [{
-            userId: {
-                type: Schema.Types.ObjectId,
-                ref: 'User',
-                required: true
-            },
-            userName: String,
-            amount: {
-                type: Number,
-                required: true
-            },
-            percentage: {
-                type: Number,
-                required: true
-            }
-        }],
-        createdBy: {
-            type: Schema.Types.ObjectId,
-            ref: 'User'
-        }
-    },
-    {
-        timestamps: true
-    }
-);
+const SplitEntrySchema = new Schema({
+    userId: { type: String },
+    userName: { type: String },
+    mainCategory: { type: String },
+    subCategory: { type: String },
+    amount: { type: Number, required: true },
+    percentage: { type: Number, required: true },
+    description: { type: String }
+}, { _id: false });
 
-export const TransactionSplitModel = model<ITransactionSplit>('TransactionSplit', transactionSplitSchema);
+const TransactionSplitSchema = new Schema({
+    transactionId: { type: String, required: true, unique: true, index: true },
+    originalDescription: { type: String, required: true },
+    originalAmount: { type: Number, required: true },
+    date: { type: Date, required: true },
+    splitType: {
+        type: String,
+        enum: ['user', 'category', 'combined'],
+        default: 'user'
+    },
+    splits: [SplitEntrySchema],
+    createdBy: { type: String }
+}, { timestamps: true });
+
+export const TransactionSplitModel = mongoose.model<ITransactionSplit>('TransactionSplit', TransactionSplitSchema);

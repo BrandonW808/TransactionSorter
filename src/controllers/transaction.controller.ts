@@ -1,10 +1,19 @@
 import { Request, Response } from 'express';
 import { parseTransactionCSV, parseSharedCsv } from '../parser';
-import { categorizeTransactions, categorizeTransactionsWithReceipts, categorizeTransactionsWithSplits, OutputRow, processSharedTransactions } from '../transactions';
+import {
+  categorizeTransactions,
+  categorizeTransactionsWithReceipts,
+  categorizeTransactionsWithSplits,
+  categorizeTransactionsForUser,
+  categorizeTransactionsAdvanced,
+  processSharedTransactions,
+  OutputRow
+} from '../transactions';
 import * as categoryListService from '../services/categoryListService';
 import * as matchingService from '../services/matchingService';
 import * as transactionSplitService from '../services/transactionSplitService';
 import { CategorizeRequest, Categories, TransactionWithReceipt } from '../types';
+
 
 export const categorize = async (req: Request, res: Response): Promise<void> => {
   try {
@@ -190,10 +199,14 @@ export const getPotentialMatches = async (req: Request, res: Response): Promise<
 
 export const splitTransaction = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { transaction, splits, createdBy } = req.body;
-    if (!transaction || !splits || !Array.isArray(splits)) { res.status(400).json({ success: false, error: 'Transaction and splits array required' }); return; }
+    const { transaction, splits, splitType = 'user', createdBy } = req.body;
 
-    // Validate splits sum to original amount (using absolute values)
+    if (!transaction || !splits || !Array.isArray(splits)) {
+      res.status(400).json({ success: false, error: 'Transaction and splits array required' });
+      return;
+    }
+
+    // Validate splits sum to original amount
     const totalSplit = splits.reduce((sum: number, split: any) => sum + Math.abs(Number(split.amount) || 0), 0);
     const transactionAmount = Math.abs(Number(transaction.amount) || 0);
 
@@ -210,11 +223,33 @@ export const splitTransaction = async (req: Request, res: Response): Promise<voi
       return;
     }
 
-    const result = await transactionSplitService.saveTransactionSplit(transaction, splits, createdBy);
+    // Validate category splits have categories
+    if (splitType === 'category' || splitType === 'combined') {
+      const invalidSplits = splits.filter((s: any) => !s.mainCategory || !s.subCategory);
+      if (invalidSplits.length > 0) {
+        res.status(400).json({
+          success: false,
+          error: 'All category splits must have mainCategory and subCategory'
+        });
+        return;
+      }
+    }
+
+    const result = await transactionSplitService.saveTransactionSplit(
+      transaction,
+      splits,
+      splitType,
+      createdBy
+    );
+
     res.json({ success: true, data: result });
   } catch (error) {
     console.error('splitTransaction error:', error);
-    res.status(500).json({ success: false, error: 'Failed to split transaction', details: error instanceof Error ? error.message : 'Unknown error' });
+    res.status(500).json({
+      success: false,
+      error: 'Failed to split transaction',
+      details: error instanceof Error ? error.message : 'Unknown error'
+    });
   }
 };
 
@@ -274,6 +309,111 @@ export const categorizeWithSplits = async (req: Request, res: Response): Promise
   } catch (error) {
     console.error('categorizeWithSplits error:', error);
     res.status(500).json({ success: false, error: 'Failed to categorize with splits', details: error instanceof Error ? error.message : 'Unknown error' });
+  }
+};
+
+export const categorizeForUser = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const files = req.files as { [fieldname: string]: Express.Multer.File[] };
+    if (!files || !files.transactions || files.transactions.length === 0) {
+      res.status(400).json({ success: false, error: 'No transactions CSV uploaded' });
+      return;
+    }
+
+    const { categoryListId, userId, matchReceipts: shouldMatchReceipts } = req.body;
+
+    if (!userId) {
+      res.status(400).json({ success: false, error: 'User ID is required for user-specific categorization' });
+      return;
+    }
+
+    const transactionsCsv = files.transactions[0].buffer.toString('utf-8');
+    const sharedCsv = files.shared && files.shared[0] ? files.shared[0].buffer.toString('utf-8') : null;
+    let transactions = parseTransactionCSV(transactionsCsv);
+    const sharedTransactions = sharedCsv ? parseSharedCsv(sharedCsv) : [];
+
+    const categoriesToUse = await resolveCategoriesFromBody(req.body);
+    if (!categoriesToUse) {
+      res.status(500).json({ success: false, error: 'No category list found' });
+      return;
+    }
+
+    // Get all splits for these transactions
+    const splits = await transactionSplitService.getTransactionSplits(transactions);
+
+    // Enhance transactions with split data
+    const enhancedTransactions = transactions.map(transaction => {
+      const transactionId = transactionSplitService.generateTransactionId(transaction);
+      const split = splits.get(transactionId);
+
+      if (split) {
+        return {
+          ...transaction,
+          transactionId,
+          hasSplit: true,
+          splitType: split.splitType,
+          splits: split.splits,
+          originalAmount: transaction.amount
+        };
+      }
+      return { ...transaction, transactionId };
+    });
+
+    // Match receipts if enabled
+    let matchingStats = { matched: 0, unmatched: transactions.length };
+    if (shouldMatchReceipts === 'true') {
+      try {
+        const matchResult = await matchingService.matchTransactionsToReceipts(enhancedTransactions, userId);
+        Object.assign(enhancedTransactions, matchResult.transactions);
+        matchingStats = matchResult.stats;
+      } catch (matchError) {
+        console.error('Receipt matching failed:', matchError);
+      }
+    }
+
+    // Categorize with user-specific filtering
+    let output = categorizeTransactionsForUser(enhancedTransactions, categoriesToUse, userId);
+
+    if (sharedTransactions.length > 0) {
+      output = processSharedTransactions(output, sharedTransactions);
+    }
+
+    // Calculate stats
+    const splitStats = {
+      total: transactions.length,
+      withSplits: enhancedTransactions.filter(t => t.hasSplit).length,
+      userPortion: enhancedTransactions.filter(t =>
+        t.hasSplit && t.splits?.some((s: any) => s.userId === userId)
+      ).length
+    };
+
+    res.json({
+      success: true,
+      data: output,
+      matching: { enabled: shouldMatchReceipts === 'true', ...matchingStats },
+      splits: splitStats,
+      userId
+    });
+  } catch (error) {
+    console.error('categorizeForUser error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to categorize for user',
+      details: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+};
+
+export const getAllSplits = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const splits = await transactionSplitService.getAllTransactionSplits();
+    res.json({ success: true, data: splits });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: 'Failed to get all splits',
+      details: error instanceof Error ? error.message : 'Unknown error'
+    });
   }
 };
 
