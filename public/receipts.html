@@ -533,6 +533,9 @@
                     data-tab="translations">Translation Mappings</button>
             <button class="tab-button"
                     data-tab="history">Receipt History</button>
+            <button class="tab-button"
+                    data-tab="photo">📸 Photo Upload</button>
+
         </div>
 
         <!-- Status Messages -->
@@ -688,6 +691,101 @@
             </div>
         </div>
 
+        <div id="photo"
+             class="tab-content">
+            <div class="section">
+                <h3 class="section-header">Upload Receipt Photo</h3>
+                <p class="text-secondary mb-3">
+                    Upload a photo of your receipt. We'll extract the text and convert it to a structured format.
+                </p>
+
+                <!-- Photo Upload Area -->
+                <div class="upload-area"
+                     id="photoUploadArea">
+                    <div class="upload-icon">📷</div>
+                    <div class="upload-text">
+                        Drag and drop a receipt photo here or click to browse
+                    </div>
+                    <input type="file"
+                           id="photoFile"
+                           accept="image/*"
+                           style="display: none;" />
+                    <button id="photoChooseFileBtn"
+                            class="button button-primary">
+                        Choose Photo
+                    </button>
+                </div>
+
+                <!-- Photo Preview -->
+                <div id="photoPreview"
+                     class="hidden"
+                     style="margin-top: 2rem;">
+                    <h4>Preview</h4>
+                    <img id="photoPreviewImage"
+                         style="max-width: 100%; max-height: 400px; border-radius: 8px;" />
+                    <div style="margin-top: 1rem; display: flex; gap: 1rem;">
+                        <button id="processPhotoBtn"
+                                class="button button-primary">
+                            <span class="button-icon">🔍</span>
+                            Process Receipt
+                        </button>
+                        <button id="clearPhotoBtn"
+                                class="button button-secondary">
+                            <span class="button-icon">✖️</span>
+                            Clear
+                        </button>
+                    </div>
+                </div>
+
+                <!-- OCR Results -->
+                <div id="ocrResults"
+                     class="section hidden"
+                     style="margin-top: 2rem;">
+                    <h4>Extracted Text</h4>
+                    <div style="background: #f5f5f5; padding: 1rem; border-radius: 8px; margin-bottom: 1rem;">
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Confidence:</strong>
+                            <span id="ocrConfidence">0%</span>
+                            <span id="confidenceBadge"
+                                  class="badge"></span>
+                        </div>
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Items Found:</strong>
+                            <span id="itemsFound">0</span>
+                        </div>
+                    </div>
+
+                    <!-- Raw Text (collapsible) -->
+                    <details style="margin-bottom: 1rem;">
+                        <summary style="cursor: pointer; font-weight: 500; margin-bottom: 0.5rem;">
+                            View Raw OCR Text
+                        </summary>
+                        <pre id="rawOcrText"
+                             style="background: #f5f5f5; padding: 1rem; border-radius: 8px; overflow-x: auto; font-size: 0.9rem;"></pre>
+                    </details>
+
+                    <!-- Parsed Items Table -->
+                    <h4>Parsed Items</h4>
+                    <div id="parsedItemsContainer"
+                         style="margin-bottom: 1rem;"></div>
+
+                    <!-- Actions -->
+                    <div style="display: flex; gap: 1rem;">
+                        <button id="convertToCSVBtn"
+                                class="button button-primary">
+                            <span class="button-icon">📄</span>
+                            Convert to CSV & Continue
+                        </button>
+                        <button id="editItemsBtn"
+                                class="button button-secondary">
+                            <span class="button-icon">✏️</span>
+                            Edit Items
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- Receipt History Tab -->
         <div id="history"
              class="tab-content">
@@ -714,6 +812,8 @@
         let users = [];
         let selectedItems = new Set();
         let currentSplitType = 'equal';
+        let currentPhotoFile = null;
+        let currentOCRResult = null;
 
         // DOM elements cache
         const elements = {
@@ -808,6 +908,231 @@
                 }
                 updateSummary();
             });
+
+            setupPhotoListeners();
+        }
+
+        function setupPhotoListeners() {
+            const photoUploadArea = document.getElementById('photoUploadArea');
+            const photoFile = document.getElementById('photoFile');
+            const photoChooseFileBtn = document.getElementById('photoChooseFileBtn');
+            const photoPreview = document.getElementById('photoPreview');
+            const photoPreviewImage = document.getElementById('photoPreviewImage');
+            const clearPhotoBtn = document.getElementById('clearPhotoBtn');
+            const processPhotoBtn = document.getElementById('processPhotoBtn');
+            const convertToCSVBtn = document.getElementById('convertToCSVBtn');
+
+            // File selection
+            photoChooseFileBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                photoFile.click();
+            });
+
+            photoUploadArea.addEventListener('click', () => photoFile.click());
+
+            // Drag and drop
+            photoUploadArea.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                photoUploadArea.classList.add('drag-over');
+            });
+
+            photoUploadArea.addEventListener('dragleave', () => {
+                photoUploadArea.classList.remove('drag-over');
+            });
+
+            photoUploadArea.addEventListener('drop', (e) => {
+                e.preventDefault();
+                photoUploadArea.classList.remove('drag-over');
+                if (e.dataTransfer.files.length > 0) {
+                    handlePhotoSelect(e.dataTransfer.files[0]);
+                }
+            });
+
+            photoFile.addEventListener('change', (e) => {
+                if (e.target.files.length > 0) {
+                    handlePhotoSelect(e.target.files[0]);
+                }
+            });
+
+            clearPhotoBtn.addEventListener('click', clearPhoto);
+            processPhotoBtn.addEventListener('click', processPhoto);
+            convertToCSVBtn.addEventListener('click', convertPhotoToCSV);
+        }
+
+        function handlePhotoSelect(file) {
+            if (!file.type.startsWith('image/')) {
+                showMessage('Please select an image file', 'error');
+                return;
+            }
+
+            currentPhotoFile = file;
+
+            // Show preview
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const photoPreviewImage = document.getElementById('photoPreviewImage');
+                const photoPreview = document.getElementById('photoPreview');
+                photoPreviewImage.src = e.target.result;
+                photoPreview.classList.remove('hidden');
+                document.getElementById('ocrResults').classList.add('hidden');
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function clearPhoto() {
+            currentPhotoFile = null;
+            currentOCRResult = null;
+            document.getElementById('photoFile').value = '';
+            document.getElementById('photoPreview').classList.add('hidden');
+            document.getElementById('ocrResults').classList.add('hidden');
+        }
+
+        async function processPhoto() {
+            if (!currentPhotoFile) {
+                showMessage('Please select a photo first', 'warning');
+                return;
+            }
+
+            try {
+                showMessage('Processing receipt photo...', 'loading');
+                showLoader();
+
+                const formData = new FormData();
+                formData.append('photo', currentPhotoFile);
+
+                const response = await fetch('/api/receipts/upload-photo', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    currentOCRResult = result.data;
+                    displayOCRResults(result.data);
+                    showMessage('Receipt processed successfully!', 'success');
+                } else {
+                    showMessage(result.error || 'Failed to process receipt', 'error');
+                }
+            } catch (error) {
+                showMessage('Error processing photo: ' + error.message, 'error');
+            } finally {
+                hideLoader();
+            }
+        }
+
+        function displayOCRResults(data) {
+            const ocrResults = document.getElementById('ocrResults');
+            const rawOcrText = document.getElementById('rawOcrText');
+            const ocrConfidence = document.getElementById('ocrConfidence');
+            const confidenceBadge = document.getElementById('confidenceBadge');
+            const itemsFound = document.getElementById('itemsFound');
+            const parsedItemsContainer = document.getElementById('parsedItemsContainer');
+
+            // Display confidence
+            const confidence = Math.round(data.confidence);
+            ocrConfidence.textContent = `${confidence}%`;
+
+            confidenceBadge.className = 'badge ' + (
+                confidence >= 80 ? 'badge-success' :
+                    confidence >= 60 ? 'badge-warning' :
+                        'badge-danger'
+            );
+            confidenceBadge.textContent = (
+                confidence >= 80 ? 'Excellent' :
+                    confidence >= 60 ? 'Good' :
+                        'Poor'
+            );
+
+            // Display raw text
+            rawOcrText.textContent = data.rawText;
+
+            // Display item count
+            itemsFound.textContent = data.parsed.items.length;
+
+            // Display parsed items
+            parsedItemsContainer.innerHTML = '';
+
+            if (data.parsed.items.length === 0) {
+                parsedItemsContainer.innerHTML = '<p class="text-secondary">No items detected. Try a clearer photo or edit manually.</p>';
+            } else {
+                data.parsed.items.forEach(item => {
+                    const itemDiv = document.createElement('div');
+                    itemDiv.className = 'parsed-item';
+
+                    const qtyText = item.quantity ? `${item.quantity}x ` : '';
+
+                    itemDiv.innerHTML = `
+                <span class="item-description">${escapeHtml(item.description)}</span>
+                ${item.quantity ? `<span class="item-quantity">${qtyText}</span>` : ''}
+                <span class="item-price">$${item.price.toFixed(2)}</span>
+            `;
+
+                    parsedItemsContainer.appendChild(itemDiv);
+                });
+
+                // Show total if available
+                if (data.parsed.total) {
+                    const totalDiv = document.createElement('div');
+                    totalDiv.className = 'parsed-item';
+                    totalDiv.style.borderTop = '2px solid var(--primary-color)';
+                    totalDiv.style.fontWeight = 'bold';
+                    totalDiv.innerHTML = `
+                <span class="item-description">Total</span>
+                <span class="item-price">$${data.parsed.total.toFixed(2)}</span>
+            `;
+                    parsedItemsContainer.appendChild(totalDiv);
+                }
+            }
+
+            ocrResults.classList.remove('hidden');
+        }
+
+        async function convertPhotoToCSV() {
+            if (!currentPhotoFile) {
+                showMessage('Please select and process a photo first', 'warning');
+                return;
+            }
+
+            try {
+                showMessage('Converting to CSV format...', 'loading');
+                showLoader();
+
+                const formData = new FormData();
+                formData.append('photo', currentPhotoFile);
+
+                const response = await fetch('/api/receipts/photo-to-csv', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    // Convert CSV to receipt items format
+                    const items = result.data.parsed.items.map(item => ({
+                        originalText: item.description,
+                        readableDescription: item.description,
+                        price: item.price,
+                        quantity: item.quantity
+                    }));
+
+                    // Set as current receipt
+                    currentReceipt = items;
+
+                    // Switch to upload tab and display
+                    switchTab('upload');
+                    displayReceipt();
+
+                    showMessage('Receipt converted successfully! Review and save below.', 'success');
+                } else {
+                    showMessage(result.error || 'Failed to convert receipt', 'error');
+                }
+            } catch (error) {
+                showMessage('Error converting photo: ' + error.message, 'error');
+            } finally {
+                hideLoader();
+            }
         }
 
         // Load users

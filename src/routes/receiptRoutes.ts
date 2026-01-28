@@ -13,6 +13,8 @@ import {
     editTranslation,
     removeTranslation,
     translateText,
+    uploadReceiptPhoto,
+    convertPhotoToCSV,
 } from '../controllers/receipt.controller';
 
 const router = Router();
@@ -34,5 +36,8 @@ router.put('/translations/:id', editTranslation);
 router.delete('/translations/:id', removeTranslation);
 router.get('/translate', translateText);
 
+// Add these routes
+router.post('/upload-photo', upload.fields([{ name: 'photo', maxCount: 1 }]), uploadReceiptPhoto);
+router.post('/photo-to-csv', upload.fields([{ name: 'photo', maxCount: 1 }]), convertPhotoToCSV);
 
 export default router;

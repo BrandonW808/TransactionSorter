@@ -17,6 +17,7 @@ import {
 } from "../services/receiptService";
 import { SaveReceiptRequest, ApplySplitRequest } from "../types";
 import Receipt, { IReceipt, IReceiptItem, ReceiptItem } from '../models/Receipt.model';
+import { extractTextFromImage, parseReceiptText, receiptToCSV } from '../services/ocrService';
 
 export const parseReceipt = async (req: Request, res: Response): Promise<void> => {
     try {
@@ -386,6 +387,89 @@ export const getAllReceipts = async (req: Request, res: Response): Promise<void>
         res.status(500).json({
             success: false,
             error: error instanceof Error ? error.message : 'Failed to get receipts'
+        });
+    }
+};
+
+export const uploadReceiptPhoto = async (req: Request, res: Response): Promise<void> => {
+    try {
+        const files = req.files as { [fieldname: string]: Express.Multer.File[] };
+
+        if (!files || !files.photo || files.photo.length === 0) {
+            res.status(400).json({
+                success: false,
+                error: 'No receipt photo uploaded'
+            });
+            return;
+        }
+
+        const photoBuffer = files.photo[0].buffer;
+
+        // Extract text using OCR
+        const ocrResult = await extractTextFromImage(photoBuffer);
+
+        if (ocrResult.confidence < 50) {
+            res.status(400).json({
+                success: false,
+                error: 'Low OCR confidence. Please try a clearer photo.',
+                confidence: ocrResult.confidence
+            });
+            return;
+        }
+
+        // Parse the extracted text
+        const parsed = parseReceiptText(ocrResult.text);
+
+        res.json({
+            success: true,
+            data: {
+                rawText: ocrResult.text,
+                confidence: ocrResult.confidence,
+                parsed,
+                itemCount: parsed.items.length
+            }
+        });
+    } catch (error) {
+        console.error('OCR Error:', error);
+        res.status(500).json({
+            success: false,
+            error: error instanceof Error ? error.message : 'Failed to process receipt photo'
+        });
+    }
+};
+
+export const convertPhotoToCSV = async (req: Request, res: Response): Promise<void> => {
+    try {
+        const files = req.files as { [fieldname: string]: Express.Multer.File[] };
+
+        if (!files || !files.photo || files.photo.length === 0) {
+            res.status(400).json({
+                success: false,
+                error: 'No receipt photo uploaded'
+            });
+            return;
+        }
+
+        const photoBuffer = files.photo[0].buffer;
+
+        // Extract and parse
+        const ocrResult = await extractTextFromImage(photoBuffer);
+        const parsed = parseReceiptText(ocrResult.text);
+        const csv = receiptToCSV(parsed);
+
+        res.json({
+            success: true,
+            data: {
+                csv,
+                parsed,
+                confidence: ocrResult.confidence
+            }
+        });
+    } catch (error) {
+        console.error('Conversion Error:', error);
+        res.status(500).json({
+            success: false,
+            error: error instanceof Error ? error.message : 'Failed to convert photo to CSV'
         });
     }
 };
