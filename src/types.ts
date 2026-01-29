@@ -40,7 +40,7 @@ export interface CategorizeResponse {
 export interface ErrorResponse {
   success: false;
   error: string;
-  details?: any;
+  details?: unknown;
 }
 
 export interface SuccessResponse<T> {
@@ -207,7 +207,7 @@ export interface ReceiptMatch {
     total: number;
     date: Date;
     store?: string;
-    items: any[];
+    items: ReceiptItemWithSplit[];
     userSplits?: {
       userId: string;
       userName?: string;
@@ -247,4 +247,56 @@ export interface ManualMatchRequest {
   transactionIndex: number;
   receiptId: string;
   userId: string;
+}
+
+// ---------------------------------------------------------------------------
+// Receipt-format types
+// ---------------------------------------------------------------------------
+
+/**
+ * A single regex-based extraction rule for one line pattern.
+ * `captures` maps named-group names (from the regex) to the fields they fill.
+ */
+export interface LineRuleInput {
+  label: string;
+  pattern: string;
+  captures: Record<string, 'description' | 'price' | 'quantity' | 'unit'>;
+}
+
+/** Request body for creating a new receipt format. */
+export interface CreateReceiptFormatRequest {
+  name: string;
+  storeKeywords: string[];
+  sectionHeaders: string[];
+  totalKeywords: string[];
+  discountIndicators: string[];
+  lineRules: LineRuleInput[];
+}
+
+/** Request body for updating an existing receipt format (all fields optional). */
+export interface UpdateReceiptFormatRequest {
+  name?: string;
+  storeKeywords?: string[];
+  sectionHeaders?: string[];
+  totalKeywords?: string[];
+  discountIndicators?: string[];
+  lineRules?: LineRuleInput[];
+}
+
+/** Request body sent to the auto-detection endpoint. */
+export interface DetectFormatRequest {
+  rawText: string;
+}
+
+/**
+ * A single line successfully extracted by the format-aware parser.
+ * Returned inside `ParsedReceipt.items`.
+ */
+export interface ParsedReceiptLine {
+  description: string;
+  price: number;
+  quantity?: number;
+  unit?: string;
+  /** The raw line text before any transformation. */
+  originalLine: string;
 }

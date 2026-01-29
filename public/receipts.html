@@ -435,6 +435,7 @@
             padding: 2rem;
             border-radius: 8px;
             max-width: 800px;
+            width: 90%;
             max-height: 80vh;
             overflow-y: auto;
             position: relative;
@@ -463,6 +464,243 @@
             padding-top: 1rem;
             border-top: 1px solid #ccc;
             font-weight: bold;
+        }
+
+        /* OCR confidence bar */
+        .confidence-bar-track {
+            height: 8px;
+            background: #e0e0e0;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 0.5rem;
+        }
+
+        .confidence-bar-fill {
+            height: 100%;
+            border-radius: 4px;
+            transition: width 0.4s ease, background-color 0.4s ease;
+        }
+
+        /* Format detection info box */
+        .format-detection-info {
+            background: #f0f4f8;
+            border: 1px solid #d0d7de;
+            border-radius: 8px;
+            padding: 1rem 1.25rem;
+            margin: 1rem 0;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .format-detection-info .format-icon {
+            font-size: 1.5rem;
+            flex-shrink: 0;
+        }
+
+        .format-detection-info .format-text strong {
+            display: block;
+            margin-bottom: 0.15rem;
+            color: var(--text-primary);
+        }
+
+        .format-detection-info .format-text span {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+
+        /* Skipped lines collapsible */
+        .skipped-lines-detail {
+            font-family: 'Courier New', monospace;
+            font-size: 0.82rem;
+            color: #666;
+            background: #fdf6e3;
+            border: 1px solid #f5deb3;
+            border-radius: 6px;
+            padding: 0.75rem;
+            margin-top: 0.5rem;
+            max-height: 150px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+        }
+
+        /* Format CRUD tab */
+        .format-card {
+            background: white;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            overflow: hidden;
+            box-shadow: var(--shadow-sm);
+            transition: box-shadow 0.2s;
+        }
+
+        .format-card:hover {
+            box-shadow: var(--shadow-md);
+        }
+
+        .format-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 1.25rem;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .format-card-header .format-name {
+            font-weight: 600;
+            font-size: 1.05rem;
+            color: var(--text-primary);
+        }
+
+        .format-card-header .format-meta {
+            font-size: 0.82rem;
+            color: var(--text-secondary);
+            margin-top: 0.2rem;
+        }
+
+        .format-card-actions {
+            display: flex;
+            gap: 0.5rem;
+            flex-shrink: 0;
+        }
+
+        .format-card-body {
+            display: none;
+            padding: 0 1.25rem 1.25rem;
+            border-top: 1px solid #eee;
+        }
+
+        .format-card-body.open {
+            display: block;
+        }
+
+        .format-field-group {
+            margin-top: 1rem;
+        }
+
+        .format-field-group label {
+            display: block;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 0.35rem;
+        }
+
+        .format-tag-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.4rem;
+        }
+
+        .format-tag {
+            padding: 0.25rem 0.6rem;
+            background: #eef2ff;
+            color: #4338ca;
+            border-radius: 4px;
+            font-size: 0.82rem;
+            font-family: 'Courier New', monospace;
+        }
+
+        .format-tag.empty-hint {
+            color: #999;
+            font-style: italic;
+            background: transparent;
+            font-family: inherit;
+        }
+
+        .format-rule-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .format-rule-list li {
+            padding: 0.5rem 0.75rem;
+            background: #f9fafb;
+            border: 1px solid #e5e7eb;
+            border-radius: 6px;
+            margin-bottom: 0.4rem;
+            font-size: 0.82rem;
+        }
+
+        .format-rule-list li .rule-label {
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 0.2rem;
+        }
+
+        .format-rule-list li .rule-pattern {
+            font-family: 'Courier New', monospace;
+            color: #6b21a8;
+            word-break: break-all;
+        }
+
+        /* New-format modal form */
+        .format-form-row {
+            margin-bottom: 1rem;
+        }
+
+        .format-form-row label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 0.3rem;
+            font-size: 0.9rem;
+        }
+
+        .format-form-row input,
+        .format-form-row textarea {
+            width: 100%;
+            padding: 0.6rem 0.75rem;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            font-size: 0.9rem;
+            font-family: inherit;
+        }
+
+        .format-form-row input:focus,
+        .format-form-row textarea:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.1);
+        }
+
+        .format-form-row textarea {
+            min-height: 80px;
+            resize: vertical;
+            font-family: 'Courier New', monospace;
+            font-size: 0.82rem;
+        }
+
+        .format-form-hint {
+            font-size: 0.78rem;
+            color: var(--text-secondary);
+            margin-top: 0.25rem;
+        }
+
+        .format-form-actions {
+            display: flex;
+            gap: 0.75rem;
+            justify-content: flex-end;
+            margin-top: 1.5rem;
+        }
+
+        /* Raw-text preview inside modal */
+        .raw-text-preview {
+            font-family: 'Courier New', monospace;
+            font-size: 0.78rem;
+            color: #555;
+            background: #f5f5f5;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            padding: 0.6rem 0.75rem;
+            max-height: 120px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            margin-top: 0.4rem;
         }
 
         @keyframes fadeIn {
@@ -528,14 +766,15 @@
         <!-- Tabs -->
         <div class="tab-container">
             <button class="tab-button active"
-                    data-tab="upload">Upload & Parse</button>
+                    data-tab="upload">Upload &amp; Parse</button>
             <button class="tab-button"
                     data-tab="translations">Translation Mappings</button>
             <button class="tab-button"
                     data-tab="history">Receipt History</button>
             <button class="tab-button"
                     data-tab="photo">📸 Photo Upload</button>
-
+            <button class="tab-button"
+                    data-tab="formats">📋 Receipt Formats</button>
         </div>
 
         <!-- Status Messages -->
@@ -545,7 +784,6 @@
         <!-- Upload & Parse Tab -->
         <div id="upload"
              class="tab-content active">
-            <!-- User Selection -->
             <div class="container">
                 <h1>Receipt Management with Split Support</h1>
 
@@ -686,17 +924,17 @@
 
                 <div id="mappingsList"
                      class="mapping-grid mt-3">
-                    <!-- Mappings will be loaded here -->
                 </div>
             </div>
         </div>
 
+        <!-- Photo Upload Tab -->
         <div id="photo"
              class="tab-content">
             <div class="section">
                 <h3 class="section-header">Upload Receipt Photo</h3>
                 <p class="text-secondary mb-3">
-                    Upload a photo of your receipt. We'll extract the text and convert it to a structured format.
+                    Upload a photo of your receipt. The system will extract the text, auto-detect the best receipt format, and parse it into structured items.
                 </p>
 
                 <!-- Photo Upload Area -->
@@ -741,18 +979,45 @@
                 <div id="ocrResults"
                      class="section hidden"
                      style="margin-top: 2rem;">
-                    <h4>Extracted Text</h4>
-                    <div style="background: #f5f5f5; padding: 1rem; border-radius: 8px; margin-bottom: 1rem;">
-                        <div style="margin-bottom: 0.5rem;">
-                            <strong>Confidence:</strong>
-                            <span id="ocrConfidence">0%</span>
-                            <span id="confidenceBadge"
-                                  class="badge"></span>
+                    <h4>Extraction Results</h4>
+
+                    <!-- Confidence gauges -->
+                    <div style="display: flex; gap: 2rem; margin-bottom: 1rem; flex-wrap: wrap;">
+                        <div style="flex: 1; min-width: 180px;">
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <strong>OCR Confidence</strong>
+                                <span id="ocrConfidence">0%</span>
+                                <span id="ocrConfidenceBadge" class="badge"></span>
+                            </div>
+                            <div class="confidence-bar-track">
+                                <div id="ocrConfidenceBar" class="confidence-bar-fill" style="width: 0%;"></div>
+                            </div>
                         </div>
-                        <div style="margin-bottom: 0.5rem;">
-                            <strong>Items Found:</strong>
-                            <span id="itemsFound">0</span>
+                        <div style="flex: 1; min-width: 180px;">
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <strong>Parse Confidence</strong>
+                                <span id="parseConfidence">0%</span>
+                                <span id="parseConfidenceBadge" class="badge"></span>
+                            </div>
+                            <div class="confidence-bar-track">
+                                <div id="parseConfidenceBar" class="confidence-bar-fill" style="width: 0%;"></div>
+                            </div>
                         </div>
+                    </div>
+
+                    <!-- Detected format info -->
+                    <div id="detectedFormatInfo" class="format-detection-info hidden">
+                        <span class="format-icon">📋</span>
+                        <div class="format-text">
+                            <strong id="detectedFormatName">—</strong>
+                            <span id="detectedFormatScore">—</span>
+                        </div>
+                    </div>
+
+                    <!-- Item count summary -->
+                    <div style="margin-bottom: 0.75rem; font-size: 0.9rem; color: var(--text-secondary);">
+                        <span id="itemsFound">0</span> items parsed
+                        <span id="skippedCount" style="margin-left: 1rem;"></span>
                     </div>
 
                     <!-- Raw Text (collapsible) -->
@@ -764,22 +1029,30 @@
                              style="background: #f5f5f5; padding: 1rem; border-radius: 8px; overflow-x: auto; font-size: 0.9rem;"></pre>
                     </details>
 
+                    <!-- Skipped lines (collapsible) -->
+                    <details id="skippedLinesDetails" class="hidden" style="margin-bottom: 1rem;">
+                        <summary style="cursor: pointer; font-weight: 500; color: var(--warning-color);">
+                            ⚠️ View Skipped Lines
+                        </summary>
+                        <div id="skippedLinesContent" class="skipped-lines-detail"></div>
+                    </details>
+
                     <!-- Parsed Items Table -->
                     <h4>Parsed Items</h4>
                     <div id="parsedItemsContainer"
                          style="margin-bottom: 1rem;"></div>
 
                     <!-- Actions -->
-                    <div style="display: flex; gap: 1rem;">
+                    <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
                         <button id="convertToCSVBtn"
                                 class="button button-primary">
                             <span class="button-icon">📄</span>
-                            Convert to CSV & Continue
+                            Convert to CSV &amp; Continue
                         </button>
-                        <button id="editItemsBtn"
+                        <button id="saveAsFormatBtn"
                                 class="button button-secondary">
-                            <span class="button-icon">✏️</span>
-                            Edit Items
+                            <span class="button-icon">💾</span>
+                            Save as New Format
                         </button>
                     </div>
                 </div>
@@ -793,7 +1066,27 @@
                 <h3 class="section-header">Recent Receipts</h3>
                 <div class="receipt-history"
                      id="receiptHistory">
-                    <!-- History items will be loaded here -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Receipt Formats Tab -->
+        <div id="formats"
+             class="tab-content">
+            <div class="section">
+                <h3 class="section-header">Receipt Formats</h3>
+                <p class="text-secondary mb-3">
+                    Define parsing rules for different stores. The system auto-detects the best format when processing a photo.
+                </p>
+
+                <div style="margin-bottom: 1.5rem;">
+                    <button id="createFormatBtn" class="button button-primary">
+                        <span class="button-icon">➕</span>
+                        Create New Format
+                    </button>
+                </div>
+
+                <div id="formatsList">
                 </div>
             </div>
         </div>
@@ -804,7 +1097,9 @@
     </div>
 
     <script>
-        // Global variables
+        // ---------------------------------------------------------------------------
+        // Global state
+        // ---------------------------------------------------------------------------
         let currentReceiptData = null;
         let translationMappings = new Map();
         let activeTab = 'upload';
@@ -813,9 +1108,12 @@
         let selectedItems = new Set();
         let currentSplitType = 'equal';
         let currentPhotoFile = null;
-        let currentOCRResult = null;
+        let currentOCRResult = null;   // full response from /upload-photo
+        let receiptFormats = [];       // cached list from GET /formats
 
-        // DOM elements cache
+        // ---------------------------------------------------------------------------
+        // DOM element cache
+        // ---------------------------------------------------------------------------
         const elements = {
             receiptFile: document.getElementById('receiptFile'),
             uploadArea: document.getElementById('uploadArea'),
@@ -849,114 +1147,114 @@
             actionButtons: document.getElementById('actionButtons'),
             message: document.getElementById('message'),
             newOriginal: document.getElementById('newOriginal'),
-            newTranslation: document.getElementById('newTranslation')
+            newTranslation: document.getElementById('newTranslation'),
+            formatsList: document.getElementById('formatsList'),
+            createFormatBtn: document.getElementById('createFormatBtn')
         };
 
-        // Initialize
+        // ---------------------------------------------------------------------------
+        // Initialisation
+        // ---------------------------------------------------------------------------
         document.addEventListener('DOMContentLoaded', function () {
             setupEventListeners();
             loadTranslationMappings();
             loadReceiptHistory();
             loadUsers();
+            loadReceiptFormats();
         });
 
-        // Setup event listeners
+        // ---------------------------------------------------------------------------
+        // Event wiring
+        // ---------------------------------------------------------------------------
         function setupEventListeners() {
             // Tab switching
-            document.querySelectorAll('.tab-button').forEach(button => {
-                button.addEventListener('click', (e) => {
-                    const tab = e.target.dataset.tab;
-                    switchTab(tab);
+            document.querySelectorAll('.tab-button').forEach(function (button) {
+                button.addEventListener('click', function (e) {
+                    switchTab(e.target.dataset.tab);
                 });
             });
 
-            // File upload
+            // CSV file upload
             elements.uploadArea.addEventListener('dragover', handleDragOver);
             elements.uploadArea.addEventListener('dragleave', handleDragLeave);
             elements.uploadArea.addEventListener('drop', handleDrop);
-            elements.uploadArea.addEventListener('click', () => elements.receiptFile.click());
+            elements.uploadArea.addEventListener('click', function () { elements.receiptFile.click(); });
             elements.receiptFile.addEventListener('change', handleFileSelect);
-            elements.receiptChooseFileBtn.addEventListener('click', (e) => {
+            elements.receiptChooseFileBtn.addEventListener('click', function (e) {
                 e.stopPropagation();
                 elements.receiptFile.click();
             });
 
-            // Buttons
+            // Receipt action buttons
             elements.saveReceiptBtn.addEventListener('click', saveReceipt);
             elements.downloadReceiptBtn.addEventListener('click', downloadReceiptCSV);
             elements.addMappingBtn.addEventListener('click', addTranslationMapping);
-            elements.equalSplitBtn.addEventListener('click', () => setSplitType('equal'));
-            elements.percentageSplitBtn.addEventListener('click', () => setSplitType('percentage'));
-            elements.customSplitBtn.addEventListener('click', () => setSplitType('custom'));
+            elements.equalSplitBtn.addEventListener('click', function () { setSplitType('equal'); });
+            elements.percentageSplitBtn.addEventListener('click', function () { setSplitType('percentage'); });
+            elements.customSplitBtn.addEventListener('click', function () { setSplitType('custom'); });
             elements.applySplitBtn.addEventListener('click', applySplit);
             elements.clearSplitBtn.addEventListener('click', clearSplit);
             elements.resetFormBtn.addEventListener('click', resetForm);
             elements.toggleSelectAllBtn.addEventListener('click', toggleSelectAll);
 
-            // Enter key for translation inputs
-            elements.newOriginal.addEventListener('keypress', (e) => {
+            // Translation input Enter key
+            elements.newOriginal.addEventListener('keypress', function (e) {
                 if (e.key === 'Enter') addTranslationMapping();
             });
-            elements.newTranslation.addEventListener('keypress', (e) => {
+            elements.newTranslation.addEventListener('keypress', function (e) {
                 if (e.key === 'Enter') addTranslationMapping();
             });
 
-            // Primary user change
-            elements.primaryUser.addEventListener('change', () => {
-                if (activeTab === 'history') {
-                    loadReceiptHistory();
-                }
+            // Primary user change refreshes history and summary
+            elements.primaryUser.addEventListener('change', function () {
+                if (activeTab === 'history') loadReceiptHistory();
                 updateSummary();
             });
+
+            // Format tab button
+            elements.createFormatBtn.addEventListener('click', openCreateFormatModal);
 
             setupPhotoListeners();
         }
 
+        // ---------------------------------------------------------------------------
+        // Photo / OCR tab listeners
+        // ---------------------------------------------------------------------------
         function setupPhotoListeners() {
             const photoUploadArea = document.getElementById('photoUploadArea');
             const photoFile = document.getElementById('photoFile');
             const photoChooseFileBtn = document.getElementById('photoChooseFileBtn');
-            const photoPreview = document.getElementById('photoPreview');
-            const photoPreviewImage = document.getElementById('photoPreviewImage');
             const clearPhotoBtn = document.getElementById('clearPhotoBtn');
             const processPhotoBtn = document.getElementById('processPhotoBtn');
             const convertToCSVBtn = document.getElementById('convertToCSVBtn');
+            const saveAsFormatBtn = document.getElementById('saveAsFormatBtn');
 
-            // File selection
-            photoChooseFileBtn.addEventListener('click', (e) => {
+            photoChooseFileBtn.addEventListener('click', function (e) {
                 e.stopPropagation();
                 photoFile.click();
             });
+            photoUploadArea.addEventListener('click', function () { photoFile.click(); });
 
-            photoUploadArea.addEventListener('click', () => photoFile.click());
-
-            // Drag and drop
-            photoUploadArea.addEventListener('dragover', (e) => {
+            photoUploadArea.addEventListener('dragover', function (e) {
                 e.preventDefault();
                 photoUploadArea.classList.add('drag-over');
             });
-
-            photoUploadArea.addEventListener('dragleave', () => {
+            photoUploadArea.addEventListener('dragleave', function () {
                 photoUploadArea.classList.remove('drag-over');
             });
-
-            photoUploadArea.addEventListener('drop', (e) => {
+            photoUploadArea.addEventListener('drop', function (e) {
                 e.preventDefault();
                 photoUploadArea.classList.remove('drag-over');
-                if (e.dataTransfer.files.length > 0) {
-                    handlePhotoSelect(e.dataTransfer.files[0]);
-                }
+                if (e.dataTransfer.files.length > 0) handlePhotoSelect(e.dataTransfer.files[0]);
             });
-
-            photoFile.addEventListener('change', (e) => {
-                if (e.target.files.length > 0) {
-                    handlePhotoSelect(e.target.files[0]);
-                }
+            photoFile.addEventListener('change', function (e) {
+                if (e.target.files.length > 0) handlePhotoSelect(e.target.files[0]);
             });
 
             clearPhotoBtn.addEventListener('click', clearPhoto);
             processPhotoBtn.addEventListener('click', processPhoto);
             convertToCSVBtn.addEventListener('click', convertPhotoToCSV);
+            saveAsFormatBtn.addEventListener('click', openSaveFormatFromOCRModal);
         }
 
         function handlePhotoSelect(file) {
@@ -964,16 +1262,12 @@
                 showMessage('Please select an image file', 'error');
                 return;
             }
-
             currentPhotoFile = file;
 
-            // Show preview
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                const photoPreviewImage = document.getElementById('photoPreviewImage');
-                const photoPreview = document.getElementById('photoPreview');
-                photoPreviewImage.src = e.target.result;
-                photoPreview.classList.remove('hidden');
+            var reader = new FileReader();
+            reader.onload = function (e) {
+                document.getElementById('photoPreviewImage').src = e.target.result;
+                document.getElementById('photoPreview').classList.remove('hidden');
                 document.getElementById('ocrResults').classList.add('hidden');
             };
             reader.readAsDataURL(file);
@@ -987,6 +1281,11 @@
             document.getElementById('ocrResults').classList.add('hidden');
         }
 
+        // ---------------------------------------------------------------------------
+        // processPhoto – calls POST /api/receipts/upload-photo
+        // New response shape:
+        //   { rawText, ocrConfidence, parseConfidence, detectedFormat, items, total, skippedLines, itemCount }
+        // ---------------------------------------------------------------------------
         async function processPhoto() {
             if (!currentPhotoFile) {
                 showMessage('Please select a photo first', 'warning');
@@ -997,15 +1296,14 @@
                 showMessage('Processing receipt photo...', 'loading');
                 showLoader();
 
-                const formData = new FormData();
+                var formData = new FormData();
                 formData.append('photo', currentPhotoFile);
 
-                const response = await fetch('/api/receipts/upload-photo', {
+                var response = await fetch('/api/receipts/upload-photo', {
                     method: 'POST',
                     body: formData
                 });
-
-                const result = await response.json();
+                var result = await response.json();
 
                 if (result.success) {
                     currentOCRResult = result.data;
@@ -1021,73 +1319,98 @@
             }
         }
 
+        // ---------------------------------------------------------------------------
+        // displayOCRResults – renders the new response shape
+        // ---------------------------------------------------------------------------
         function displayOCRResults(data) {
-            const ocrResults = document.getElementById('ocrResults');
-            const rawOcrText = document.getElementById('rawOcrText');
-            const ocrConfidence = document.getElementById('ocrConfidence');
-            const confidenceBadge = document.getElementById('confidenceBadge');
-            const itemsFound = document.getElementById('itemsFound');
-            const parsedItemsContainer = document.getElementById('parsedItemsContainer');
+            var ocrResults = document.getElementById('ocrResults');
 
-            // Display confidence
-            const confidence = Math.round(data.confidence);
-            ocrConfidence.textContent = `${confidence}%`;
+            // --- OCR confidence gauge ---
+            var ocrPct = Math.round(data.ocrConfidence);
+            document.getElementById('ocrConfidence').textContent = ocrPct + '%';
+            setConfidenceBadge('ocrConfidenceBadge', ocrPct);
+            setConfidenceBar('ocrConfidenceBar', ocrPct);
 
-            confidenceBadge.className = 'badge ' + (
-                confidence >= 80 ? 'badge-success' :
-                    confidence >= 60 ? 'badge-warning' :
-                        'badge-danger'
-            );
-            confidenceBadge.textContent = (
-                confidence >= 80 ? 'Excellent' :
-                    confidence >= 60 ? 'Good' :
-                        'Poor'
-            );
+            // --- Parse confidence gauge ---
+            var parsePct = Math.round(data.parseConfidence * 100);
+            document.getElementById('parseConfidence').textContent = parsePct + '%';
+            setConfidenceBadge('parseConfidenceBadge', parsePct);
+            setConfidenceBar('parseConfidenceBar', parsePct);
 
-            // Display raw text
-            rawOcrText.textContent = data.rawText;
-
-            // Display item count
-            itemsFound.textContent = data.parsed.items.length;
-
-            // Display parsed items
-            parsedItemsContainer.innerHTML = '';
-
-            if (data.parsed.items.length === 0) {
-                parsedItemsContainer.innerHTML = '<p class="text-secondary">No items detected. Try a clearer photo or edit manually.</p>';
+            // --- Detected-format info box ---
+            var formatInfo = document.getElementById('detectedFormatInfo');
+            if (data.detectedFormat) {
+                document.getElementById('detectedFormatName').textContent = data.detectedFormat.name;
+                document.getElementById('detectedFormatScore').textContent =
+                    'Detection score: ' + data.detectedFormat.score + (data.detectedFormat.score === -1 ? ' (explicitly selected)' : '');
+                formatInfo.classList.remove('hidden');
             } else {
-                data.parsed.items.forEach(item => {
-                    const itemDiv = document.createElement('div');
-                    itemDiv.className = 'parsed-item';
+                formatInfo.classList.add('hidden');
+            }
 
-                    const qtyText = item.quantity ? `${item.quantity}x ` : '';
+            // --- Raw OCR text ---
+            document.getElementById('rawOcrText').textContent = data.rawText;
 
-                    itemDiv.innerHTML = `
-                <span class="item-description">${escapeHtml(item.description)}</span>
-                ${item.quantity ? `<span class="item-quantity">${qtyText}</span>` : ''}
-                <span class="item-price">$${item.price.toFixed(2)}</span>
-            `;
+            // --- Item count + skipped-lines count ---
+            document.getElementById('itemsFound').textContent = data.itemCount;
+            var skippedEl = document.getElementById('skippedCount');
+            var skippedArr = data.skippedLines || [];
+            skippedEl.textContent = skippedArr.length > 0 ? '• ' + skippedArr.length + ' lines skipped' : '';
 
-                    parsedItemsContainer.appendChild(itemDiv);
+            // --- Skipped-lines collapsible ---
+            var skippedDetails = document.getElementById('skippedLinesDetails');
+            if (skippedArr.length > 0) {
+                skippedDetails.classList.remove('hidden');
+                document.getElementById('skippedLinesContent').textContent = skippedArr.join('\n');
+            } else {
+                skippedDetails.classList.add('hidden');
+            }
+
+            // --- Parsed item cards ---
+            var container = document.getElementById('parsedItemsContainer');
+            container.innerHTML = '';
+
+            if (data.items.length === 0) {
+                container.innerHTML = '<p class="text-secondary">No items detected. Try a clearer photo or define a receipt format for this store.</p>';
+            } else {
+                data.items.forEach(function (item) {
+                    var div = document.createElement('div');
+                    div.className = 'parsed-item';
+
+                    var qtyHtml = '';
+                    if (item.quantity) {
+                        var label = item.unit ? item.quantity + ' ' + item.unit : item.quantity + 'x';
+                        qtyHtml = '<span class="item-quantity">' + escapeHtml(label) + '</span>';
+                    }
+
+                    div.innerHTML =
+                        '<span class="item-description">' + escapeHtml(item.description) + '</span>' +
+                        qtyHtml +
+                        '<span class="item-price">$' + item.price.toFixed(2) + '</span>';
+
+                    container.appendChild(div);
                 });
 
-                // Show total if available
-                if (data.parsed.total) {
-                    const totalDiv = document.createElement('div');
+                // Show detected total if available
+                if (data.total != null) {
+                    var totalDiv = document.createElement('div');
                     totalDiv.className = 'parsed-item';
                     totalDiv.style.borderTop = '2px solid var(--primary-color)';
                     totalDiv.style.fontWeight = 'bold';
-                    totalDiv.innerHTML = `
-                <span class="item-description">Total</span>
-                <span class="item-price">$${data.parsed.total.toFixed(2)}</span>
-            `;
-                    parsedItemsContainer.appendChild(totalDiv);
+                    totalDiv.innerHTML =
+                        '<span class="item-description">Total</span>' +
+                        '<span class="item-price">$' + data.total.toFixed(2) + '</span>';
+                    container.appendChild(totalDiv);
                 }
             }
 
             ocrResults.classList.remove('hidden');
         }
 
+        // ---------------------------------------------------------------------------
+        // convertPhotoToCSV – POST /api/receipts/photo-to-csv
+        // Response: { csv, parsed: { items, total, confidence, detectedFormat }, confidence }
+        // ---------------------------------------------------------------------------
         async function convertPhotoToCSV() {
             if (!currentPhotoFile) {
                 showMessage('Please select and process a photo first', 'warning');
@@ -1098,32 +1421,27 @@
                 showMessage('Converting to CSV format...', 'loading');
                 showLoader();
 
-                const formData = new FormData();
+                var formData = new FormData();
                 formData.append('photo', currentPhotoFile);
 
-                const response = await fetch('/api/receipts/photo-to-csv', {
+                var response = await fetch('/api/receipts/photo-to-csv', {
                     method: 'POST',
                     body: formData
                 });
-
-                const result = await response.json();
+                var result = await response.json();
 
                 if (result.success) {
-                    // Convert CSV to receipt items format
-                    const items = result.data.parsed.items.map(item => ({
-                        originalText: item.description,
-                        readableDescription: item.description,
-                        price: item.price,
-                        quantity: item.quantity
-                    }));
+                    // Map parsed items into the receipt-item shape the upload tab expects
+                    currentReceipt = result.data.parsed.items.map(function (item) {
+                        return {
+                            originalText: item.originalLine || item.description,
+                            readableDescription: item.description,
+                            price: item.price
+                        };
+                    });
 
-                    // Set as current receipt
-                    currentReceipt = items;
-
-                    // Switch to upload tab and display
                     switchTab('upload');
                     displayReceipt();
-
                     showMessage('Receipt converted successfully! Review and save below.', 'success');
                 } else {
                     showMessage(result.error || 'Failed to convert receipt', 'error');
@@ -1135,11 +1453,514 @@
             }
         }
 
-        // Load users
+        // ---------------------------------------------------------------------------
+        // "Save as New Format" modal – opens from the Photo tab after OCR results
+        // Pre-fills suggested values by scanning the raw OCR text heuristically:
+        //   • All-caps-only lines → sectionHeaders
+        //   • Lines starting with "total" / "sous-total" → totalKeywords
+        //   • Lines starting with "rabais" / "discount" → discountIndicators
+        //   • First two lines → storeKeywords candidates
+        // The user can edit everything before saving.
+        // ---------------------------------------------------------------------------
+        function openSaveFormatFromOCRModal() {
+            if (!currentOCRResult || !currentOCRResult.rawText) {
+                showMessage('Process a photo first to generate a format from its text.', 'warning');
+                return;
+            }
+
+            var raw = currentOCRResult.rawText;
+            var lines = raw.split('\n').map(function (l) { return l.trim(); }).filter(Boolean);
+
+            // Heuristic extraction
+            var sectionHeaders = [];
+            var totalKeywords = [];
+            var discountIndicators = [];
+            var storeKeywords = [];
+
+            lines.forEach(function (line, idx) {
+                var lower = line.toLowerCase();
+                // All-caps lines with no digits are likely section headers
+                if (/^[A-ZÀ-Ü\s\/\.\-]{2,}$/.test(line) && !/\d/.test(line)) {
+                    sectionHeaders.push(line.toUpperCase().trim());
+                }
+                // Total / subtotal prefixes
+                if (/^(total|sous-total|subtotal|amount due|balance)\b/i.test(line)) {
+                    var keyword = lower.match(/^[a-zé\-\s]+/);
+                    if (keyword) totalKeywords.push(keyword[0].trim());
+                }
+                // Discount prefixes
+                if (/^(rabais|discount|promo|coupon)\b/i.test(line)) {
+                    var disc = lower.match(/^[a-zé\-\s]+/);
+                    if (disc) discountIndicators.push(disc[0].trim());
+                }
+                // First two non-header lines as store keyword candidates
+                if (idx < 2 && sectionHeaders.indexOf(line.toUpperCase().trim()) === -1) {
+                    storeKeywords.push(line.trim());
+                }
+            });
+
+            // Deduplicate
+            sectionHeaders = [...new Set(sectionHeaders)];
+            totalKeywords = [...new Set(totalKeywords)];
+            discountIndicators = [...new Set(discountIndicators)];
+            storeKeywords = [...new Set(storeKeywords)];
+
+            // Build modal
+            var overlay = document.createElement('div');
+            overlay.className = 'modal-overlay';
+            overlay.id = 'saveFormatModal';
+
+            overlay.innerHTML =
+                '<div class="modal-content" style="max-width: 700px;">' +
+                '  <button class="modal-close" id="closeFormatModal">&times;</button>' +
+                '  <h3 style="margin-bottom: 1rem;">Save as New Receipt Format</h3>' +
+                '  <p class="text-secondary mb-3" style="font-size: 0.88rem;">Review the auto-detected values below, edit as needed, then save. You can always update the format later from the Formats tab.</p>' +
+
+                '  <div class="format-form-row">' +
+                '    <label>Format Name <span style="color:#e53e3e;">*</span></label>' +
+                '    <input type="text" id="formatNameInput" placeholder="e.g. Metro Quebec" />' +
+                '  </div>' +
+
+                '  <div class="format-form-row">' +
+                '    <label>Store Keywords</label>' +
+                '    <textarea id="formatStoreKeywords" rows="2">' + escapeHtml(storeKeywords.join('\n')) + '</textarea>' +
+                '    <div class="format-form-hint">One keyword per line. Found anywhere in receipt text to boost detection.</div>' +
+                '  </div>' +
+
+                '  <div class="format-form-row">' +
+                '    <label>Section Headers (lines to skip)</label>' +
+                '    <textarea id="formatSectionHeaders" rows="3">' + escapeHtml(sectionHeaders.join('\n')) + '</textarea>' +
+                '    <div class="format-form-hint">One header per line. Exact match (case-insensitive) skips the line.</div>' +
+                '  </div>' +
+
+                '  <div class="format-form-row">' +
+                '    <label>Total Keywords (line prefixes)</label>' +
+                '    <textarea id="formatTotalKeywords" rows="2">' + escapeHtml(totalKeywords.join('\n')) + '</textarea>' +
+                '    <div class="format-form-hint">One prefix per line. Lines starting with these are treated as totals.</div>' +
+                '  </div>' +
+
+                '  <div class="format-form-row">' +
+                '    <label>Discount Indicators (line prefixes)</label>' +
+                '    <textarea id="formatDiscountIndicators" rows="2">' + escapeHtml(discountIndicators.join('\n')) + '</textarea>' +
+                '    <div class="format-form-hint">One prefix per line. Discount lines adjust the previous item\'s price.</div>' +
+                '  </div>' +
+
+                '  <div class="format-form-row">' +
+                '    <label>Raw OCR Text (reference)</label>' +
+                '    <div class="raw-text-preview">' + escapeHtml(raw) + '</div>' +
+                '  </div>' +
+
+                '  <div class="format-form-actions">' +
+                '    <button id="cancelFormatModal" class="button button-secondary">Cancel</button>' +
+                '    <button id="submitFormatModal" class="button button-primary">Create Format</button>' +
+                '  </div>' +
+                '</div>';
+
+            document.body.appendChild(overlay);
+
+            // Close helpers
+            document.getElementById('closeFormatModal').addEventListener('click', function () { overlay.remove(); });
+            document.getElementById('cancelFormatModal').addEventListener('click', function () { overlay.remove(); });
+            overlay.addEventListener('click', function (e) { if (e.target === overlay) overlay.remove(); });
+
+            // Submit
+            document.getElementById('submitFormatModal').addEventListener('click', async function () {
+                var name = document.getElementById('formatNameInput').value.trim();
+                if (!name) {
+                    showMessage('Format name is required.', 'error');
+                    return;
+                }
+
+                var payload = {
+                    name: name,
+                    storeKeywords: textareaToArray('formatStoreKeywords'),
+                    sectionHeaders: textareaToArray('formatSectionHeaders'),
+                    totalKeywords: textareaToArray('formatTotalKeywords'),
+                    discountIndicators: textareaToArray('formatDiscountIndicators'),
+                    // A single generic line rule so the format is valid; the user
+                    // can add specific rules later from the Formats tab.
+                    lineRules: [
+                        {
+                            label: 'Item with inline price',
+                            pattern: '^(?<desc>.+?)\\s+(?<price>\\d+\\.\\d{2})\\s*$',
+                            captures: { desc: 'description', price: 'price' }
+                        }
+                    ]
+                };
+
+                try {
+                    showLoader();
+                    var response = await fetch('/api/receipts/formats', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+                    var result = await response.json();
+
+                    if (result.success) {
+                        overlay.remove();
+                        showMessage('Format "' + escapeHtml(name) + '" created! You can refine its line rules in the Formats tab.', 'success');
+                        receiptFormats.push(result.data);
+                        // Refresh the formats list if that tab is visible
+                        if (activeTab === 'formats') renderFormatCards();
+                    } else {
+                        showMessage(result.error || 'Failed to create format', 'error');
+                    }
+                } catch (error) {
+                    showMessage('Error: ' + error.message, 'error');
+                } finally {
+                    hideLoader();
+                }
+            });
+        }
+
+        // ---------------------------------------------------------------------------
+        // Receipt Formats tab – CRUD
+        // ---------------------------------------------------------------------------
+        async function loadReceiptFormats() {
+            try {
+                var response = await fetch('/api/receipts/formats');
+                var result = await response.json();
+                if (result.success) {
+                    receiptFormats = result.data || [];
+                    if (activeTab === 'formats') renderFormatCards();
+                }
+            } catch (error) {
+                console.error('Error loading receipt formats:', error);
+            }
+        }
+
+        function renderFormatCards() {
+            elements.formatsList.innerHTML = '';
+
+            if (receiptFormats.length === 0) {
+                elements.formatsList.innerHTML =
+                    '<p class="text-center text-secondary" style="padding: 2rem 0;">' +
+                    'No receipt formats defined yet. Process a photo and click "Save as New Format", or create one manually.' +
+                    '</p>';
+                return;
+            }
+
+            receiptFormats.forEach(function (fmt) {
+                var card = document.createElement('div');
+                card.className = 'format-card';
+                card.id = 'format-card-' + fmt._id;
+
+                // Header row
+                var ruleCount = (fmt.lineRules || []).length;
+                var headerHtml =
+                    '<div class="format-card-header" data-format-id="' + fmt._id + '">' +
+                    '  <div>' +
+                    '    <div class="format-name">' + escapeHtml(fmt.name) + '</div>' +
+                    '    <div class="format-meta">' + ruleCount + ' line rule' + (ruleCount !== 1 ? 's' : '') + ' • ' +
+                    (fmt.storeKeywords || []).length + ' store keywords</div>' +
+                    '  </div>' +
+                    '  <div class="format-card-actions">' +
+                    '    <button class="button button-small button-secondary format-edit-btn" data-format-id="' + fmt._id + '">Edit</button>' +
+                    '    <button class="button button-small button-danger format-delete-btn" data-format-id="' + fmt._id + '">Delete</button>' +
+                    '  </div>' +
+                    '</div>';
+
+                // Body (detail) row
+                var bodyHtml =
+                    '<div class="format-card-body" id="format-body-' + fmt._id + '">' +
+                    renderFormatFieldGroup('Store Keywords', fmt.storeKeywords) +
+                    renderFormatFieldGroup('Section Headers', fmt.sectionHeaders) +
+                    renderFormatFieldGroup('Total Keywords', fmt.totalKeywords) +
+                    renderFormatFieldGroup('Discount Indicators', fmt.discountIndicators) +
+                    renderFormatRules(fmt.lineRules) +
+                    '</div>';
+
+                card.innerHTML = headerHtml + bodyHtml;
+                elements.formatsList.appendChild(card);
+
+                // Toggle body on header click
+                card.querySelector('.format-card-header').addEventListener('click', function (e) {
+                    // Don't toggle if a button inside the header was clicked
+                    if (e.target.closest('button')) return;
+                    var body = document.getElementById('format-body-' + fmt._id);
+                    body.classList.toggle('open');
+                });
+
+                // Edit button opens a modal with editable fields
+                card.querySelector('.format-edit-btn').addEventListener('click', function () {
+                    openEditFormatModal(fmt);
+                });
+
+                // Delete button
+                card.querySelector('.format-delete-btn').addEventListener('click', async function () {
+                    if (!confirm('Delete the "' + fmt.name + '" format?')) return;
+                    try {
+                        showLoader();
+                        var resp = await fetch('/api/receipts/formats/' + fmt._id, { method: 'DELETE' });
+                        var res = await resp.json();
+                        if (res.success) {
+                            receiptFormats = receiptFormats.filter(function (f) { return f._id !== fmt._id; });
+                            renderFormatCards();
+                            showStatus('Format deleted.', 'success');
+                        } else {
+                            showStatus(res.error || 'Delete failed', 'error');
+                        }
+                    } catch (err) {
+                        showStatus('Error: ' + err.message, 'error');
+                    } finally {
+                        hideLoader();
+                    }
+                });
+            });
+        }
+
+        function renderFormatFieldGroup(label, values) {
+            var tags = (values || []).map(function (v) {
+                return '<span class="format-tag">' + escapeHtml(v) + '</span>';
+            }).join('');
+            if (!tags) tags = '<span class="format-tag empty-hint">none</span>';
+
+            return '<div class="format-field-group">' +
+                '<label>' + label + '</label>' +
+                '<div class="format-tag-list">' + tags + '</div>' +
+                '</div>';
+        }
+
+        function renderFormatRules(rules) {
+            var items = (rules || []).map(function (r) {
+                return '<li>' +
+                    '<div class="rule-label">' + escapeHtml(r.label) + '</div>' +
+                    '<div class="rule-pattern">' + escapeHtml(r.pattern) + '</div>' +
+                    '</li>';
+            }).join('');
+            if (!items) items = '<li style="color: #999; font-style: italic;">No rules defined.</li>';
+
+            return '<div class="format-field-group">' +
+                '<label>Line Rules</label>' +
+                '<ul class="format-rule-list">' + items + '</ul>' +
+                '</div>';
+        }
+
+        // ---------------------------------------------------------------------------
+        // Create-format modal (blank, from the Formats tab button)
+        // ---------------------------------------------------------------------------
+        function openCreateFormatModal() {
+            buildFormatModal(null, function (payload) {
+                return fetch('/api/receipts/formats', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+            }, function (result) {
+                receiptFormats.push(result.data);
+                renderFormatCards();
+                showStatus('Format created.', 'success');
+            });
+        }
+
+        // ---------------------------------------------------------------------------
+        // Edit-format modal (pre-filled)
+        // ---------------------------------------------------------------------------
+        function openEditFormatModal(fmt) {
+            buildFormatModal(fmt, function (payload) {
+                return fetch('/api/receipts/formats/' + fmt._id, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+            }, function (result) {
+                // Replace in local cache
+                var idx = receiptFormats.findIndex(function (f) { return f._id === fmt._id; });
+                if (idx !== -1) receiptFormats[idx] = result.data;
+                renderFormatCards();
+                showStatus('Format updated.', 'success');
+            });
+        }
+
+        // ---------------------------------------------------------------------------
+        // Generic format modal builder
+        // Handles both create (fmt === null) and edit (fmt filled in) flows.
+        // Includes an "add rule / remove rule" interface for lineRules.
+        // ---------------------------------------------------------------------------
+        function buildFormatModal(fmt, submitFn, onSuccess) {
+            var overlay = document.createElement('div');
+            overlay.className = 'modal-overlay';
+
+            var existingRules = (fmt && fmt.lineRules) || [];
+
+            overlay.innerHTML =
+                '<div class="modal-content" style="max-width: 720px;">' +
+                '  <button class="modal-close" id="fmtModalClose">&times;</button>' +
+                '  <h3 style="margin-bottom: 1rem;">' + (fmt ? 'Edit Format' : 'Create New Format') + '</h3>' +
+
+                '  <div class="format-form-row">' +
+                '    <label>Format Name <span style="color:#e53e3e;">*</span></label>' +
+                '    <input type="text" id="fmtModalName" value="' + escapeHtml(fmt ? fmt.name : '') + '" placeholder="e.g. Metro Quebec" />' +
+                '  </div>' +
+
+                '  <div class="format-form-row">' +
+                '    <label>Store Keywords</label>' +
+                '    <textarea id="fmtModalStoreKw" rows="2">' + escapeHtml(arrayToTextarea(fmt ? fmt.storeKeywords : [])) + '</textarea>' +
+                '    <div class="format-form-hint">One keyword per line. Substring match anywhere in OCR text.</div>' +
+                '  </div>' +
+
+                '  <div class="format-form-row">' +
+                '    <label>Section Headers (lines to skip)</label>' +
+                '    <textarea id="fmtModalHeaders" rows="3">' + escapeHtml(arrayToTextarea(fmt ? fmt.sectionHeaders : [])) + '</textarea>' +
+                '    <div class="format-form-hint">One per line. Exact case-insensitive match skips the line entirely.</div>' +
+                '  </div>' +
+
+                '  <div class="format-form-row">' +
+                '    <label>Total Keywords</label>' +
+                '    <textarea id="fmtModalTotals" rows="2">' + escapeHtml(arrayToTextarea(fmt ? fmt.totalKeywords : [])) + '</textarea>' +
+                '    <div class="format-form-hint">One prefix per line. Lines starting with these are recorded as totals.</div>' +
+                '  </div>' +
+
+                '  <div class="format-form-row">' +
+                '    <label>Discount Indicators</label>' +
+                '    <textarea id="fmtModalDiscounts" rows="2">' + escapeHtml(arrayToTextarea(fmt ? fmt.discountIndicators : [])) + '</textarea>' +
+                '    <div class="format-form-hint">One prefix per line. Adjusts the preceding item\'s price.</div>' +
+                '  </div>' +
+
+                '  <div class="format-form-row">' +
+                '    <label>Line Rules</label>' +
+                '    <div class="format-form-hint" style="margin-bottom: 0.5rem;">Each rule is a regex with named capture groups mapped to fields. First matching rule wins.</div>' +
+                '    <div id="fmtModalRulesContainer"></div>' +
+                '    <button id="fmtModalAddRule" class="button button-small button-secondary" style="margin-top: 0.5rem;">' +
+                '      <span class="button-icon">➕</span> Add Rule' +
+                '    </button>' +
+                '  </div>' +
+
+                '  <div class="format-form-actions">' +
+                '    <button id="fmtModalCancel" class="button button-secondary">Cancel</button>' +
+                '    <button id="fmtModalSubmit" class="button button-primary">' + (fmt ? 'Save Changes' : 'Create Format') + '</button>' +
+                '  </div>' +
+                '</div>';
+
+            document.body.appendChild(overlay);
+
+            // Seed existing rules
+            var rulesContainer = document.getElementById('fmtModalRulesContainer');
+            existingRules.forEach(function (rule) {
+                appendRuleEditor(rulesContainer, rule);
+            });
+            // Ensure at least one rule block if creating
+            if (existingRules.length === 0 && !fmt) {
+                appendRuleEditor(rulesContainer, {
+                    label: 'Item with inline price',
+                    pattern: '^(?<desc>.+?)\\s+(?<price>\\d+\\.\\d{2})\\s*$',
+                    captures: { desc: 'description', price: 'price' }
+                });
+            }
+
+            // "Add Rule" button
+            document.getElementById('fmtModalAddRule').addEventListener('click', function () {
+                appendRuleEditor(rulesContainer, { label: '', pattern: '', captures: {} });
+            });
+
+            // Close helpers
+            document.getElementById('fmtModalClose').addEventListener('click', function () { overlay.remove(); });
+            document.getElementById('fmtModalCancel').addEventListener('click', function () { overlay.remove(); });
+            overlay.addEventListener('click', function (e) { if (e.target === overlay) overlay.remove(); });
+
+            // Submit
+            document.getElementById('fmtModalSubmit').addEventListener('click', async function () {
+                var name = document.getElementById('fmtModalName').value.trim();
+                if (!name) {
+                    showMessage('Format name is required.', 'error');
+                    return;
+                }
+
+                var rules = collectRulesFromEditors(rulesContainer);
+                if (rules.length === 0) {
+                    showMessage('At least one line rule is required.', 'error');
+                    return;
+                }
+
+                var payload = {
+                    name: name,
+                    storeKeywords: textareaToArray('fmtModalStoreKw'),
+                    sectionHeaders: textareaToArray('fmtModalHeaders'),
+                    totalKeywords: textareaToArray('fmtModalTotals'),
+                    discountIndicators: textareaToArray('fmtModalDiscounts'),
+                    lineRules: rules
+                };
+
+                try {
+                    showLoader();
+                    var response = await submitFn(payload);
+                    var result = await response.json();
+                    if (result.success) {
+                        overlay.remove();
+                        onSuccess(result);
+                    } else {
+                        showMessage(result.error || 'Request failed', 'error');
+                    }
+                } catch (err) {
+                    showMessage('Error: ' + err.message, 'error');
+                } finally {
+                    hideLoader();
+                }
+            });
+        }
+
+        // Append one rule editor block into the container
+        function appendRuleEditor(container, rule) {
+            var wrapper = document.createElement('div');
+            wrapper.className = 'format-form-row';
+            wrapper.style.background = '#f9fafb';
+            wrapper.style.border = '1px solid #e5e7eb';
+            wrapper.style.borderRadius = '6px';
+            wrapper.style.padding = '0.75rem';
+            wrapper.style.marginBottom = '0.5rem';
+
+            wrapper.innerHTML =
+                '<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.4rem;">' +
+                '  <strong style="font-size: 0.85rem;">Rule</strong>' +
+                '  <button class="rule-remove-btn" style="background:none; border:none; color:#e53e3e; cursor:pointer; font-size: 1.1rem;">&times;</button>' +
+                '</div>' +
+                '<div style="margin-bottom: 0.35rem;">' +
+                '  <label style="font-size: 0.78rem; color: var(--text-secondary);">Label</label>' +
+                '  <input type="text" class="rule-label-input" value="' + escapeHtml(rule.label || '') + '" placeholder="e.g. Item with inline price" style="width:100%; padding: 0.4rem 0.5rem; border: 1px solid #ddd; border-radius: 4px; font-size: 0.82rem;" />' +
+                '</div>' +
+                '<div style="margin-bottom: 0.35rem;">' +
+                '  <label style="font-size: 0.78rem; color: var(--text-secondary);">Regex Pattern (use named groups: desc, price, qty, unit)</label>' +
+                '  <input type="text" class="rule-pattern-input" value="' + escapeHtml(rule.pattern || '') + '" placeholder="^(?<desc>.+?)\\s+(?<price>\\d+\\.\\d{2})\\s*$" style="width:100%; padding: 0.4rem 0.5rem; border: 1px solid #ddd; border-radius: 4px; font-size: 0.82rem; font-family: \'Courier New\', monospace;" />' +
+                '</div>' +
+                '<div>' +
+                '  <label style="font-size: 0.78rem; color: var(--text-secondary);">Capture Map (JSON: group name → field)</label>' +
+                '  <input type="text" class="rule-captures-input" value="' + escapeHtml(JSON.stringify(rule.captures || {})) + '" placeholder=\'{"desc":"description","price":"price"}\' style="width:100%; padding: 0.4rem 0.5rem; border: 1px solid #ddd; border-radius: 4px; font-size: 0.82rem; font-family: \'Courier New\', monospace;" />' +
+                '</div>';
+
+            // Remove button
+            wrapper.querySelector('.rule-remove-btn').addEventListener('click', function () {
+                wrapper.remove();
+            });
+
+            container.appendChild(wrapper);
+        }
+
+        // Collect all rule editors into an array
+        function collectRulesFromEditors(container) {
+            var wrappers = container.querySelectorAll('.format-form-row');
+            var rules = [];
+            wrappers.forEach(function (w) {
+                var label = w.querySelector('.rule-label-input').value.trim();
+                var pattern = w.querySelector('.rule-pattern-input').value.trim();
+                var capturesRaw = w.querySelector('.rule-captures-input').value.trim();
+                if (!pattern) return; // skip empty rule blocks
+
+                var captures = {};
+                try { captures = JSON.parse(capturesRaw); } catch (_e) { /* leave empty */ }
+
+                rules.push({ label: label || 'Unnamed rule', pattern: pattern, captures: captures });
+            });
+            return rules;
+        }
+
+        // ---------------------------------------------------------------------------
+        // Users
+        // ---------------------------------------------------------------------------
         async function loadUsers() {
             try {
-                const response = await fetch('/api/users');
-                const data = await response.json();
+                var response = await fetch('/api/users');
+                var data = await response.json();
                 if (data.success) {
                     users = data.data || [];
                     populateUserSelects();
@@ -1152,15 +1973,17 @@
 
         function populateUserSelects() {
             elements.primaryUser.innerHTML = '<option value="">Select a user...</option>';
-            users.forEach(user => {
-                const option = document.createElement('option');
+            users.forEach(function (user) {
+                var option = document.createElement('option');
                 option.value = user._id;
                 option.textContent = user.name;
                 elements.primaryUser.appendChild(option);
             });
         }
 
-        // File upload handlers
+        // ---------------------------------------------------------------------------
+        // CSV file upload handlers
+        // ---------------------------------------------------------------------------
         function handleDragOver(e) {
             e.preventDefault();
             elements.uploadArea.classList.add('drag-over');
@@ -1174,32 +1997,29 @@
         function handleDrop(e) {
             e.preventDefault();
             elements.uploadArea.classList.remove('drag-over');
-            const files = e.dataTransfer.files;
-            if (files.length > 0) {
-                elements.receiptFile.files = files;
+            if (e.dataTransfer.files.length > 0) {
+                elements.receiptFile.files = e.dataTransfer.files;
                 handleFileSelect();
             }
         }
 
         async function handleFileSelect() {
-            const file = elements.receiptFile.files[0];
+            var file = elements.receiptFile.files[0];
             if (!file) return;
 
             elements.fileName.textContent = file.name;
             elements.fileInfo.style.display = 'block';
 
-            const formData = new FormData();
+            var formData = new FormData();
             formData.append('receipt', file);
 
             try {
                 showMessage('Parsing receipt...', 'loading');
-
-                const response = await fetch('/api/receipts/parse-receipt-csv', {
+                var response = await fetch('/api/receipts/parse-receipt-csv', {
                     method: 'POST',
                     body: formData
                 });
-
-                const data = await response.json();
+                var data = await response.json();
 
                 if (data.success) {
                     currentReceipt = data.data || [];
@@ -1213,38 +2033,39 @@
             }
         }
 
+        // ---------------------------------------------------------------------------
+        // Receipt item display & selection (Upload tab)
+        // ---------------------------------------------------------------------------
         function displayReceipt() {
             elements.itemsList.innerHTML = '';
 
-            currentReceipt.forEach((item, index) => {
-                if (!isTotals(item.readableDescription)) {
-                    const itemDiv = document.createElement('div');
-                    itemDiv.className = 'receipt-item';
-                    itemDiv.dataset.index = index;
+            currentReceipt.forEach(function (item, index) {
+                if (isTotals(item.readableDescription)) return;
 
-                    const checkbox = document.createElement('input');
-                    checkbox.type = 'checkbox';
-                    checkbox.className = 'item-checkbox';
-                    checkbox.addEventListener('change', () => toggleItem(index));
+                var itemDiv = document.createElement('div');
+                itemDiv.className = 'receipt-item';
+                itemDiv.dataset.index = index;
 
-                    const itemDetails = document.createElement('div');
-                    itemDetails.className = 'item-details';
-                    itemDetails.innerHTML = `
-                        <div class="item-description">${escapeHtml(item.readableDescription)}</div>
-                        <div class="item-original">${escapeHtml(item.originalText)}</div>
-                        <div id="splits-${index}" class="item-splits"></div>
-                    `;
+                var checkbox = document.createElement('input');
+                checkbox.type = 'checkbox';
+                checkbox.className = 'item-checkbox';
+                checkbox.addEventListener('change', function () { toggleItem(index); });
 
-                    const itemPrice = document.createElement('div');
-                    itemPrice.className = 'item-price';
-                    itemPrice.textContent = `$${item.price.toFixed(2)}`;
+                var itemDetails = document.createElement('div');
+                itemDetails.className = 'item-details';
+                itemDetails.innerHTML =
+                    '<div class="item-description">' + escapeHtml(item.readableDescription) + '</div>' +
+                    '<div class="item-original">' + escapeHtml(item.originalText) + '</div>' +
+                    '<div id="splits-' + index + '" class="item-splits"></div>';
 
-                    itemDiv.appendChild(checkbox);
-                    itemDiv.appendChild(itemDetails);
-                    itemDiv.appendChild(itemPrice);
+                var itemPrice = document.createElement('div');
+                itemPrice.className = 'item-price';
+                itemPrice.textContent = '$' + item.price.toFixed(2);
 
-                    elements.itemsList.appendChild(itemDiv);
-                }
+                itemDiv.appendChild(checkbox);
+                itemDiv.appendChild(itemDetails);
+                itemDiv.appendChild(itemPrice);
+                elements.itemsList.appendChild(itemDiv);
             });
 
             elements.receiptItemsSection.style.display = 'block';
@@ -1253,8 +2074,8 @@
         }
 
         function toggleItem(index) {
-            const itemDiv = document.querySelector(`[data-index="${index}"]`);
-            const checkbox = itemDiv.querySelector('.item-checkbox');
+            var itemDiv = document.querySelector('[data-index="' + index + '"]');
+            var checkbox = itemDiv.querySelector('.item-checkbox');
 
             if (checkbox.checked) {
                 selectedItems.add(index);
@@ -1265,18 +2086,16 @@
             }
 
             elements.splitControls.classList.toggle('active', selectedItems.size > 0);
-
-            if (selectedItems.size > 0) {
-                updateSplitControls();
-            }
+            if (selectedItems.size > 0) updateSplitControls();
         }
 
         function toggleSelectAll() {
-            const allCheckboxes = document.querySelectorAll('.item-checkbox');
-            const allChecked = selectedItems.size === currentReceipt.filter(item => !isTotals(item.readableDescription)).length;
+            var allCheckboxes = document.querySelectorAll('.item-checkbox');
+            var visibleCount = currentReceipt.filter(function (item) { return !isTotals(item.readableDescription); }).length;
+            var allChecked = selectedItems.size === visibleCount;
 
-            allCheckboxes.forEach((checkbox, index) => {
-                const itemIndex = parseInt(checkbox.parentElement.dataset.index);
+            allCheckboxes.forEach(function (checkbox) {
+                var itemIndex = parseInt(checkbox.parentElement.dataset.index, 10);
                 checkbox.checked = !allChecked;
                 if (!allChecked) {
                     selectedItems.add(itemIndex);
@@ -1288,15 +2107,15 @@
             });
 
             elements.splitControls.classList.toggle('active', selectedItems.size > 0);
-
-            if (selectedItems.size > 0) {
-                updateSplitControls();
-            }
+            if (selectedItems.size > 0) updateSplitControls();
         }
 
+        // ---------------------------------------------------------------------------
+        // Split controls
+        // ---------------------------------------------------------------------------
         function setSplitType(type) {
             currentSplitType = type;
-            document.querySelectorAll('.split-type-button').forEach(button => {
+            document.querySelectorAll('.split-type-button').forEach(function (button) {
                 button.classList.toggle('active', button.dataset.type === type);
             });
             updateSplitControls();
@@ -1305,38 +2124,36 @@
         function updateSplitControls() {
             elements.userSplitList.innerHTML = '';
 
-            const selectedTotal = Array.from(selectedItems).reduce((sum, idx) => {
-                return sum + (currentReceipt[idx]?.price || 0);
+            var selectedTotal = Array.from(selectedItems).reduce(function (sum, idx) {
+                return sum + (currentReceipt[idx] ? currentReceipt[idx].price : 0);
             }, 0);
 
-            const info = document.createElement('div');
+            var info = document.createElement('div');
             info.style.marginBottom = '15px';
-            info.innerHTML = `<strong>Selected items total: $${selectedTotal.toFixed(2)}</strong>`;
+            info.innerHTML = '<strong>Selected items total: $' + selectedTotal.toFixed(2) + '</strong>';
             elements.userSplitList.appendChild(info);
 
-            users.forEach(user => {
-                const row = document.createElement('div');
+            users.forEach(function (user) {
+                var row = document.createElement('div');
                 row.className = 'user-split-row';
 
                 if (currentSplitType === 'equal') {
-                    const amountPerUser = selectedTotal / users.length;
-                    row.innerHTML = `
-                        <input type="checkbox" id="user-${user._id}" checked>
-                        <label for="user-${user._id}">${escapeHtml(user.name)}</label>
-                        <span>$${amountPerUser.toFixed(2)}</span>
-                    `;
+                    var amountPerUser = users.length > 0 ? selectedTotal / users.length : 0;
+                    row.innerHTML =
+                        '<input type="checkbox" id="user-' + user._id + '" checked>' +
+                        '<label for="user-' + user._id + '">' + escapeHtml(user.name) + '</label>' +
+                        '<span>$' + amountPerUser.toFixed(2) + '</span>';
                 } else if (currentSplitType === 'percentage') {
-                    row.innerHTML = `
-                        <input type="checkbox" id="user-${user._id}" checked>
-                        <label for="user-${user._id}">${escapeHtml(user.name)}</label>
-                        <input type="number" id="percent-${user._id}" value="${(100 / users.length).toFixed(0)}" min="0" max="100">%
-                    `;
-                } else { // custom
-                    row.innerHTML = `
-                        <input type="checkbox" id="user-${user._id}">
-                        <label for="user-${user._id}">${escapeHtml(user.name)}</label>
-                        $<input type="number" id="amount-${user._id}" value="0" min="0" step="0.01">
-                    `;
+                    var pct = users.length > 0 ? (100 / users.length).toFixed(0) : '0';
+                    row.innerHTML =
+                        '<input type="checkbox" id="user-' + user._id + '" checked>' +
+                        '<label for="user-' + user._id + '">' + escapeHtml(user.name) + '</label>' +
+                        '<input type="number" id="percent-' + user._id + '" value="' + pct + '" min="0" max="100">%';
+                } else {
+                    row.innerHTML =
+                        '<input type="checkbox" id="user-' + user._id + '">' +
+                        '<label for="user-' + user._id + '">' + escapeHtml(user.name) + '</label>' +
+                        '$<input type="number" id="amount-' + user._id + '" value="0" min="0" step="0.01">';
                 }
 
                 elements.userSplitList.appendChild(row);
@@ -1344,32 +2161,32 @@
         }
 
         function applySplit() {
-            Array.from(selectedItems).forEach(idx => {
-                const item = currentReceipt[idx];
+            Array.from(selectedItems).forEach(function (idx) {
+                var item = currentReceipt[idx];
                 if (!item) return;
 
                 item.isSplit = true;
                 item.userSplits = [];
 
-                users.forEach(user => {
-                    const checkbox = document.getElementById(`user-${user._id}`);
+                users.forEach(function (user) {
+                    var checkbox = document.getElementById('user-' + user._id);
                     if (!checkbox || !checkbox.checked) return;
 
-                    let amount, percentage;
-
+                    var amount, percentage;
                     if (currentSplitType === 'equal') {
-                        const activeUsers = users.filter(u =>
-                            document.getElementById(`user-${u._id}`)?.checked
-                        ).length;
+                        var activeUsers = users.filter(function (u) {
+                            var cb = document.getElementById('user-' + u._id);
+                            return cb && cb.checked;
+                        }).length;
                         amount = activeUsers > 0 ? item.price / activeUsers : 0;
                         percentage = activeUsers > 0 ? 100 / activeUsers : 0;
                     } else if (currentSplitType === 'percentage') {
-                        const percentInput = document.getElementById(`percent-${user._id}`);
-                        percentage = parseFloat(percentInput?.value) || 0;
+                        var pctInput = document.getElementById('percent-' + user._id);
+                        percentage = parseFloat(pctInput ? pctInput.value : '0') || 0;
                         amount = (item.price * percentage) / 100;
-                    } else { // custom
-                        const amountInput = document.getElementById(`amount-${user._id}`);
-                        amount = parseFloat(amountInput?.value) || 0;
+                    } else {
+                        var amtInput = document.getElementById('amount-' + user._id);
+                        amount = parseFloat(amtInput ? amtInput.value : '0') || 0;
                         percentage = item.price > 0 ? (amount / item.price) * 100 : 0;
                     }
 
@@ -1377,8 +2194,8 @@
                         item.userSplits.push({
                             userId: user._id,
                             userName: user.name,
-                            amount,
-                            percentage
+                            amount: amount,
+                            percentage: percentage
                         });
                     }
                 });
@@ -1391,109 +2208,102 @@
         }
 
         function clearSplit() {
-            Array.from(selectedItems).forEach(idx => {
-                const item = currentReceipt[idx];
+            Array.from(selectedItems).forEach(function (idx) {
+                var item = currentReceipt[idx];
                 if (item) {
                     delete item.isSplit;
                     delete item.userSplits;
                     updateItemSplitDisplay(idx);
                 }
             });
-
             updateSummary();
             showMessage('Split cleared!', 'success');
         }
 
         function updateItemSplitDisplay(index) {
-            const splitsDiv = document.getElementById(`splits-${index}`);
+            var splitsDiv = document.getElementById('splits-' + index);
             if (!splitsDiv) return;
 
-            const item = currentReceipt[index];
+            var item = currentReceipt[index];
             if (!item || !item.isSplit || !item.userSplits || item.userSplits.length === 0) {
                 splitsDiv.innerHTML = '';
                 return;
             }
 
-            const splitBadges = item.userSplits.map(split =>
-                `<span class="split-badge">${escapeHtml(split.userName)}: $${split.amount.toFixed(2)} (${split.percentage.toFixed(0)}%)</span>`
-            ).join('');
-
-            splitsDiv.innerHTML = splitBadges;
+            splitsDiv.innerHTML = item.userSplits.map(function (split) {
+                return '<span class="split-badge">' + escapeHtml(split.userName) + ': $' + split.amount.toFixed(2) + ' (' + split.percentage.toFixed(0) + '%)</span>';
+            }).join('');
         }
 
         function updateSummary() {
-            const userTotals = {};
-            const primaryUserId = elements.primaryUser.value;
+            var userTotals = {};
+            var primaryUserId = elements.primaryUser.value;
 
-            currentReceipt.forEach(item => {
-                if (!isTotals(item.readableDescription)) {
-                    if (item.isSplit && item.userSplits) {
-                        item.userSplits.forEach(split => {
-                            userTotals[split.userId] = (userTotals[split.userId] || 0) + split.amount;
-                        });
-                    } else if (primaryUserId) {
-                        userTotals[primaryUserId] = (userTotals[primaryUserId] || 0) + item.price;
-                    }
+            currentReceipt.forEach(function (item) {
+                if (isTotals(item.readableDescription)) return;
+                if (item.isSplit && item.userSplits) {
+                    item.userSplits.forEach(function (split) {
+                        userTotals[split.userId] = (userTotals[split.userId] || 0) + split.amount;
+                    });
+                } else if (primaryUserId) {
+                    userTotals[primaryUserId] = (userTotals[primaryUserId] || 0) + item.price;
                 }
             });
 
-            let summaryHTML = '';
-            let grandTotal = 0;
+            var summaryHTML = '';
+            var grandTotal = 0;
 
-            Object.entries(userTotals).forEach(([userId, total]) => {
-                const user = users.find(u => u._id === userId);
+            Object.entries(userTotals).forEach(function ([userId, total]) {
+                var user = users.find(function (u) { return u._id === userId; });
                 if (user) {
-                    summaryHTML += `
-                        <div class="user-total">
-                            <span class="name">${escapeHtml(user.name)}</span>
-                            <span class="amount">$${total.toFixed(2)}</span>
-                        </div>
-                    `;
+                    summaryHTML +=
+                        '<div class="user-total">' +
+                        '<span class="name">' + escapeHtml(user.name) + '</span>' +
+                        '<span class="amount">$' + total.toFixed(2) + '</span>' +
+                        '</div>';
                     grandTotal += total;
                 }
             });
 
-            summaryHTML += `
-                <div class="summary-row">
-                    <span>Total</span>
-                    <span>$${grandTotal.toFixed(2)}</span>
-                </div>
-            `;
+            summaryHTML +=
+                '<div class="summary-row">' +
+                '<span>Total</span>' +
+                '<span>$' + grandTotal.toFixed(2) + '</span>' +
+                '</div>';
 
             elements.summaryContent.innerHTML = summaryHTML;
             elements.receiptSummary.style.display = grandTotal > 0 ? 'block' : 'none';
         }
 
+        // ---------------------------------------------------------------------------
+        // Save receipt
+        // ---------------------------------------------------------------------------
         async function saveReceipt() {
-            const primaryUserId = elements.primaryUser.value;
-            const hasNonSplitItems = currentReceipt.some(item =>
-                !isTotals(item.readableDescription) && !item.isSplit
-            );
+            var primaryUserId = elements.primaryUser.value;
+            var hasNonSplitItems = currentReceipt.some(function (item) {
+                return !isTotals(item.readableDescription) && !item.isSplit;
+            });
 
             if (hasNonSplitItems && !primaryUserId) {
                 showMessage('Please select a primary user for non-split items', 'error');
                 return;
             }
 
-            const receiptData = {
+            var receiptData = {
                 items: currentReceipt,
                 userId: primaryUserId,
-                store: '', // Could add a store input field
+                store: '',
                 date: new Date().toISOString()
             };
 
             try {
                 showMessage('Saving receipt...', 'loading');
-
-                const response = await fetch('/api/receipts/save', {
+                var response = await fetch('/api/receipts/save', {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(receiptData)
                 });
-
-                const data = await response.json();
+                var data = await response.json();
 
                 if (data.success) {
                     showMessage('Receipt saved successfully!', 'success');
@@ -1519,32 +2329,33 @@
             elements.fileInfo.style.display = 'none';
         }
 
+        // ---------------------------------------------------------------------------
         // Tab switching
+        // ---------------------------------------------------------------------------
         function switchTab(tab) {
-            document.querySelectorAll('.tab-button').forEach(button => {
-                button.classList.remove('active');
-            });
-            document.querySelectorAll('.tab-content').forEach(content => {
-                content.classList.remove('active');
-            });
+            document.querySelectorAll('.tab-button').forEach(function (b) { b.classList.remove('active'); });
+            document.querySelectorAll('.tab-content').forEach(function (c) { c.classList.remove('active'); });
 
-            document.querySelector(`[data-tab="${tab}"]`).classList.add('active');
+            document.querySelector('[data-tab="' + tab + '"]').classList.add('active');
             document.getElementById(tab).classList.add('active');
             activeTab = tab;
 
-            // Refresh data when switching tabs
             if (tab === 'translations') {
                 loadTranslationMappings();
             } else if (tab === 'history') {
                 loadReceiptHistory();
+            } else if (tab === 'formats') {
+                loadReceiptFormats().then(function () { renderFormatCards(); });
             }
         }
 
+        // ---------------------------------------------------------------------------
         // Translation mappings
+        // ---------------------------------------------------------------------------
         async function loadTranslationMappings() {
             try {
-                const response = await fetch('/api/receipts/translations');
-                const result = await response.json();
+                var response = await fetch('/api/receipts/translations');
+                var result = await response.json();
 
                 if (result.success) {
                     translationMappings.clear();
@@ -1555,22 +2366,20 @@
                         return;
                     }
 
-                    result.data.forEach(mapping => {
+                    result.data.forEach(function (mapping) {
                         translationMappings.set(mapping.original, mapping.translation);
 
-                        const mappingItem = document.createElement('div');
+                        var mappingItem = document.createElement('div');
                         mappingItem.className = 'mapping-item';
+                        mappingItem.innerHTML =
+                            '<span class="mapping-original">' + escapeHtml(mapping.original) + '</span>' +
+                            '<span class="mapping-arrow">→</span>' +
+                            '<span class="mapping-translation">' + escapeHtml(mapping.translation) + '</span>';
 
-                        mappingItem.innerHTML = `
-                            <span class="mapping-original">${escapeHtml(mapping.original)}</span>
-                            <span class="mapping-arrow">→</span>
-                            <span class="mapping-translation">${escapeHtml(mapping.translation)}</span>
-                        `;
-
-                        const deleteBtn = document.createElement('button');
+                        var deleteBtn = document.createElement('button');
                         deleteBtn.className = 'button button-small button-danger';
                         deleteBtn.innerHTML = '<span class="button-icon">🗑️</span> Delete';
-                        deleteBtn.addEventListener('click', () => deleteTranslationMapping(mapping._id));
+                        deleteBtn.addEventListener('click', function () { deleteTranslationMapping(mapping._id); });
 
                         mappingItem.appendChild(deleteBtn);
                         elements.mappingsList.appendChild(mappingItem);
@@ -1582,8 +2391,8 @@
         }
 
         async function addTranslationMapping() {
-            const original = elements.newOriginal.value.trim();
-            const translation = elements.newTranslation.value.trim();
+            var original = elements.newOriginal.value.trim();
+            var translation = elements.newTranslation.value.trim();
 
             if (!original || !translation) {
                 showStatus('Please enter both original and translation text', 'warning');
@@ -1592,13 +2401,12 @@
 
             try {
                 showLoader();
-                const response = await fetch('/api/receipts/translations', {
+                var response = await fetch('/api/receipts/translations', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ original, translation })
+                    body: JSON.stringify({ originalText: original, translatedText: translation })
                 });
-
-                const result = await response.json();
+                var result = await response.json();
                 if (result.success) {
                     showStatus('Translation saved', 'success');
                     elements.newOriginal.value = '';
@@ -1615,15 +2423,9 @@
         }
 
         async function deleteTranslationMapping(id) {
-            if (!confirm('Are you sure you want to delete this translation mapping?')) {
-                return;
-            }
-
+            if (!confirm('Delete this translation mapping?')) return;
             try {
-                const response = await fetch(`/api/receipts/translations/${id}`, {
-                    method: 'DELETE'
-                });
-
+                var response = await fetch('/api/receipts/translations/' + id, { method: 'DELETE' });
                 if (response.ok) {
                     showStatus('Translation mapping deleted', 'success');
                     loadTranslationMappings();
@@ -1635,81 +2437,70 @@
             }
         }
 
+        // ---------------------------------------------------------------------------
         // Receipt history
+        // ---------------------------------------------------------------------------
         async function loadReceiptHistory() {
             try {
-                const primaryUserId = elements.primaryUser.value;
-
+                var primaryUserId = elements.primaryUser.value;
                 if (!primaryUserId) {
-                    elements.receiptHistory.innerHTML = `
-                        <div class="text-center text-secondary p-3">
-                            <p>Please select a user to view their receipts.</p>
-                        </div>
-                    `;
+                    elements.receiptHistory.innerHTML =
+                        '<div class="text-center text-secondary p-3"><p>Please select a user to view their receipts.</p></div>';
                     return;
                 }
 
                 showLoader();
-
-                const response = await fetch(`/api/receipts/user/${primaryUserId}`);
-                const result = await response.json();
+                var response = await fetch('/api/receipts/user/' + primaryUserId);
+                var result = await response.json();
 
                 if (result.success && result.data && result.data.length > 0) {
                     elements.receiptHistory.innerHTML = '';
 
-                    result.data.forEach(receipt => {
-                        const receiptDate = new Date(receipt.date).toLocaleDateString();
-                        const itemCount = receipt.items.filter(item =>
-                            !item.readableDescription.toLowerCase().includes('total')
-                        ).length;
+                    result.data.forEach(function (receipt) {
+                        var receiptDate = new Date(receipt.date).toLocaleDateString();
+                        var itemCount = receipt.items.filter(function (item) {
+                            return !item.readableDescription.toLowerCase().includes('total');
+                        }).length;
 
-                        const historyItem = document.createElement('div');
+                        var historyItem = document.createElement('div');
                         historyItem.className = 'history-item';
 
-                        const detailsDiv = document.createElement('div');
-                        detailsDiv.innerHTML = `
-                            <div class="history-date">${receiptDate}</div>
-                            <div class="history-details">
-                                ${itemCount} items • Total: $${receipt.total.toFixed(2)}
-                                ${receipt.store ? ` • ${escapeHtml(receipt.store)}` : ''}
-                            </div>
-                        `;
+                        var detailsDiv = document.createElement('div');
+                        detailsDiv.innerHTML =
+                            '<div class="history-date">' + receiptDate + '</div>' +
+                            '<div class="history-details">' +
+                            itemCount + ' items • Total: $' + receipt.total.toFixed(2) +
+                            (receipt.store ? ' • ' + escapeHtml(receipt.store) : '') +
+                            '</div>';
 
-                        const actionsDiv = document.createElement('div');
+                        var actionsDiv = document.createElement('div');
                         actionsDiv.className = 'history-actions';
 
-                        const viewBtn = document.createElement('button');
+                        var viewBtn = document.createElement('button');
                         viewBtn.className = 'button button-small button-primary';
                         viewBtn.textContent = 'View';
-                        viewBtn.addEventListener('click', () => viewReceiptDetails(receipt._id));
+                        viewBtn.addEventListener('click', function () { viewReceiptDetails(receipt._id); });
 
-                        const deleteBtn = document.createElement('button');
+                        var deleteBtn = document.createElement('button');
                         deleteBtn.className = 'button button-small button-danger';
                         deleteBtn.textContent = 'Delete';
-                        deleteBtn.addEventListener('click', () => deleteReceiptConfirm(receipt._id));
+                        deleteBtn.addEventListener('click', function () { deleteReceiptConfirm(receipt._id); });
 
                         actionsDiv.appendChild(viewBtn);
                         actionsDiv.appendChild(deleteBtn);
 
                         historyItem.appendChild(detailsDiv);
                         historyItem.appendChild(actionsDiv);
-
                         elements.receiptHistory.appendChild(historyItem);
                     });
                 } else {
-                    elements.receiptHistory.innerHTML = `
-                        <div class="text-center text-secondary p-3">
-                            <p>No receipts found for this user.</p>
-                        </div>
-                    `;
+                    elements.receiptHistory.innerHTML =
+                        '<div class="text-center text-secondary p-3"><p>No receipts found for this user.</p></div>';
                 }
             } catch (error) {
                 console.error('Error loading receipt history:', error);
-                elements.receiptHistory.innerHTML = `
-                    <div class="text-center text-danger p-3">
-                        <p>Error loading receipts: ${error.message}</p>
-                    </div>
-                `;
+                elements.receiptHistory.innerHTML =
+                    '<div class="text-center text-danger p-3"><p>Error loading receipts: ' + error.message + '</p></div>';
             } finally {
                 hideLoader();
             }
@@ -1718,89 +2509,69 @@
         async function viewReceiptDetails(receiptId) {
             try {
                 showLoader();
-                const response = await fetch(`/api/receipts/${receiptId}/with-totals`);
-                const result = await response.json();
+                var response = await fetch('/api/receipts/receipt/' + receiptId + '/with-totals');
+                var result = await response.json();
 
                 if (result.success) {
-                    const receipt = result.data;
+                    var receipt = result.data;
 
-                    const modalOverlay = document.createElement('div');
+                    var modalOverlay = document.createElement('div');
                     modalOverlay.className = 'modal-overlay';
 
-                    const modalContent = document.createElement('div');
+                    var modalContent = document.createElement('div');
                     modalContent.className = 'modal-content';
 
-                    const closeBtn = document.createElement('button');
+                    var closeBtn = document.createElement('button');
                     closeBtn.className = 'modal-close';
                     closeBtn.innerHTML = '&times;';
-                    closeBtn.addEventListener('click', () => modalOverlay.remove());
+                    closeBtn.addEventListener('click', function () { modalOverlay.remove(); });
 
-                    let itemsHTML = receipt.items
-                        .filter(item => !item.readableDescription.toLowerCase().includes('total'))
-                        .map(item => {
-                            let splitInfo = '';
+                    var itemsHTML = receipt.items
+                        .filter(function (item) { return !item.readableDescription.toLowerCase().includes('total'); })
+                        .map(function (item) {
+                            var splitInfo = '';
                             if (item.isSplit && item.userSplits) {
-                                splitInfo = `
-                                    <div class="item-splits">
-                                        ${item.userSplits.map(split =>
-                                    `<span class="split-badge">${escapeHtml(getUserNameById(split.userId))}: $${split.amount.toFixed(2)}</span>`
-                                ).join('')}
-                                    </div>
-                                `;
+                                splitInfo =
+                                    '<div class="item-splits">' +
+                                    item.userSplits.map(function (split) {
+                                        return '<span class="split-badge">' + escapeHtml(getUserNameById(split.userId)) + ': $' + split.amount.toFixed(2) + '</span>';
+                                    }).join('') +
+                                    '</div>';
                             }
-
-                            return `
-                                <div class="receipt-item">
-                                    <div class="item-details">
-                                        <div class="item-description">${escapeHtml(item.readableDescription)}</div>
-                                        <div class="item-original">${escapeHtml(item.originalText)}</div>
-                                        ${splitInfo}
-                                    </div>
-                                    <div class="item-price">$${item.price.toFixed(2)}</div>
-                                </div>
-                            `;
+                            return '<div class="receipt-item">' +
+                                '<div class="item-details">' +
+                                '<div class="item-description">' + escapeHtml(item.readableDescription) + '</div>' +
+                                '<div class="item-original">' + escapeHtml(item.originalText) + '</div>' +
+                                splitInfo +
+                                '</div>' +
+                                '<div class="item-price">$' + item.price.toFixed(2) + '</div>' +
+                                '</div>';
                         }).join('');
 
-                    let userTotalsHTML = '';
+                    var userTotalsHTML = '';
                     if (receipt.userTotals) {
-                        userTotalsHTML = `
-                            <div class="receipt-summary">
-                                <h4>User Totals</h4>
-                                ${Object.entries(receipt.userTotals).map(([userId, amount]) => `
-                                    <div class="user-total">
-                                        <span>${escapeHtml(getUserNameById(userId))}</span>
-                                        <span>$${amount.toFixed(2)}</span>
-                                    </div>
-                                `).join('')}
-                            </div>
-                        `;
+                        userTotalsHTML =
+                            '<div class="receipt-summary"><h4>User Totals</h4>' +
+                            Object.entries(receipt.userTotals).map(function ([userId, amount]) {
+                                return '<div class="user-total"><span>' + escapeHtml(getUserNameById(userId)) + '</span><span>$' + amount.toFixed(2) + '</span></div>';
+                            }).join('') +
+                            '</div>';
                     }
 
-                    modalContent.innerHTML = `
-                        <h3>Receipt Details</h3>
-                        <p>Date: ${new Date(receipt.date).toLocaleDateString()}</p>
-                        ${receipt.store ? `<p>Store: ${escapeHtml(receipt.store)}</p>` : ''}
-                        <div class="receipt-items">
-                            ${itemsHTML}
-                        </div>
-                        ${userTotalsHTML}
-                        <div class="receipt-summary">
-                            <div class="total">
-                                <span>Total:</span>
-                                <span>$${receipt.total.toFixed(2)}</span>
-                            </div>
-                        </div>
-                    `;
+                    modalContent.innerHTML =
+                        '<h3>Receipt Details</h3>' +
+                        '<p>Date: ' + new Date(receipt.date).toLocaleDateString() + '</p>' +
+                        (receipt.store ? '<p>Store: ' + escapeHtml(receipt.store) + '</p>' : '') +
+                        '<div class="receipt-items">' + itemsHTML + '</div>' +
+                        userTotalsHTML +
+                        '<div class="receipt-summary"><div class="total"><span>Total:</span><span>$' + receipt.total.toFixed(2) + '</span></div></div>';
 
                     modalContent.insertBefore(closeBtn, modalContent.firstChild);
                     modalOverlay.appendChild(modalContent);
                     document.body.appendChild(modalOverlay);
 
-                    // Close modal when clicking outside
-                    modalOverlay.addEventListener('click', (e) => {
-                        if (e.target === modalOverlay) {
-                            modalOverlay.remove();
-                        }
+                    modalOverlay.addEventListener('click', function (e) {
+                        if (e.target === modalOverlay) modalOverlay.remove();
                     });
                 } else {
                     showMessage('Error loading receipt details', 'error');
@@ -1813,16 +2584,10 @@
         }
 
         async function deleteReceiptConfirm(receiptId) {
-            if (!confirm('Are you sure you want to delete this receipt?')) {
-                return;
-            }
-
+            if (!confirm('Are you sure you want to delete this receipt?')) return;
             try {
                 showLoader();
-                const response = await fetch(`/api/receipts/${receiptId}`, {
-                    method: 'DELETE'
-                });
-
+                var response = await fetch('/api/receipts/receipt/' + receiptId, { method: 'DELETE' });
                 if (response.ok) {
                     showMessage('Receipt deleted successfully', 'success');
                     loadReceiptHistory();
@@ -1842,31 +2607,26 @@
                 return;
             }
 
-            const csvRows = [
-                ['Original Text', 'Description', 'Price'],
-                ...currentReceiptData.map(item => [
-                    item.originalText || '',
-                    item.readableDescription || '',
-                    item.price || 0
-                ])
-            ];
+            var csvRows = [['Original Text', 'Description', 'Price']].concat(
+                currentReceiptData.map(function (item) {
+                    return [item.originalText || '', item.readableDescription || '', item.price || 0];
+                })
+            );
 
-            const csvData = csvRows.map(row =>
-                row.map(cell =>
-                    typeof cell === 'string' && cell.includes(',')
-                        ? `"${cell}"`
-                        : cell
-                ).join(',')
-            ).join('\n');
+            var csvData = csvRows.map(function (row) {
+                return row.map(function (cell) {
+                    return typeof cell === 'string' && cell.includes(',') ? '"' + cell + '"' : cell;
+                }).join(',');
+            }).join('\n');
 
-            const blob = new Blob([csvData], { type: 'text/csv' });
-            const url = window.URL.createObjectURL(blob);
-            const a = document.createElement('a');
+            var blob = new Blob([csvData], { type: 'text/csv' });
+            var url = window.URL.createObjectURL(blob);
+            var a = document.createElement('a');
             a.href = url;
-            a.download = `receipt_${new Date().toISOString().split('T')[0]}.csv`;
+            a.download = 'receipt_' + new Date().toISOString().split('T')[0] + '.csv';
             document.body.appendChild(a);
             a.click();
-            setTimeout(() => {
+            setTimeout(function () {
                 document.body.removeChild(a);
                 window.URL.revokeObjectURL(url);
             }, 0);
@@ -1874,7 +2634,9 @@
             showStatus('Receipt downloaded successfully', 'success');
         }
 
-        // Utility functions
+        // ---------------------------------------------------------------------------
+        // UI helpers
+        // ---------------------------------------------------------------------------
         function showLoader() {
             elements.loader.style.display = 'block';
         }
@@ -1887,44 +2649,77 @@
             elements.status.textContent = message;
             elements.status.className = 'status ' + type;
             elements.status.style.display = 'block';
-
             if (type === 'success' || type === 'info') {
-                setTimeout(() => {
-                    elements.status.style.display = 'none';
-                }, 5000);
+                setTimeout(function () { elements.status.style.display = 'none'; }, 5000);
             }
         }
 
         function showMessage(text, type) {
             elements.message.className = type;
             elements.message.textContent = text;
-
             if (type !== 'loading') {
-                setTimeout(() => {
-                    elements.message.innerHTML = '';
-                }, 5000);
+                setTimeout(function () { elements.message.innerHTML = ''; }, 5000);
             }
         }
 
         function escapeHtml(unsafe) {
             if (typeof unsafe !== 'string') return '';
             return unsafe
-                .replace(/&/g, "&amp;")
-                .replace(/</g, "&lt;")
-                .replace(/>/g, "&gt;")
-                .replace(/"/g, "&quot;")
-                .replace(/'/g, "&#039;");
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
         }
 
         function isTotals(description) {
             if (!description) return false;
-            return description.toLowerCase().includes('sous-total') ||
-                description.toLowerCase().includes('total');
+            var lower = description.toLowerCase();
+            return lower.includes('sous-total') || lower.includes('total');
         }
 
         function getUserNameById(userId) {
-            const user = users.find(u => u._id === userId);
+            var user = users.find(function (u) { return u._id === userId; });
             return user ? user.name : 'Unknown User';
+        }
+
+        // Confidence badge text + colour based on percentage 0-100
+        function setConfidenceBadge(elementId, pct) {
+            var el = document.getElementById(elementId);
+            if (pct >= 80) {
+                el.className = 'badge badge-success';
+                el.textContent = 'Excellent';
+            } else if (pct >= 60) {
+                el.className = 'badge badge-warning';
+                el.textContent = 'Good';
+            } else {
+                el.className = 'badge badge-danger';
+                el.textContent = 'Poor';
+            }
+        }
+
+        // Fill a confidence-bar element to `pct`% width with colour
+        function setConfidenceBar(elementId, pct) {
+            var el = document.getElementById(elementId);
+            el.style.width = pct + '%';
+            if (pct >= 80) {
+                el.style.backgroundColor = 'var(--success-color)';
+            } else if (pct >= 60) {
+                el.style.backgroundColor = 'var(--warning-color)';
+            } else {
+                el.style.backgroundColor = 'var(--danger-color)';
+            }
+        }
+
+        // Textarea value → trimmed non-empty lines array
+        function textareaToArray(elementId) {
+            var val = document.getElementById(elementId).value;
+            return val.split('\n').map(function (l) { return l.trim(); }).filter(Boolean);
+        }
+
+        // Array → newline-joined string for textarea pre-fill
+        function arrayToTextarea(arr) {
+            return (arr || []).join('\n');
         }
     </script>
 </body>

@@ -1,423 +1,290 @@
 import TranslationMapping, { ITranslationMapping } from '../models/TranslationMapping.model';
-import Receipt, { IReceipt, IReceiptItem, ReceiptItem } from '../models/Receipt.model';
+import Receipt, { IReceipt, ReceiptItem } from '../models/Receipt.model';
 import { SplitConfig, ReceiptWithUserTotals } from '../types';
+import { parseReceiptText } from './ocrService';
 
+/**
+ * Parse a receipt CSV whose first row is a header line.
+ * Finds the column named "EPICERIE" (case-sensitive) and feeds those values
+ * through the format-aware parser via `parseReceiptLines`.
+ */
 export async function parseReceiptCSV(csv: string): Promise<ReceiptItem[]> {
-    const lines = csv.trim().split("\n");
-    const header = lines[0].trim();
-    const colIndex = header.split(",").indexOf("EPICERIE");
+  const lines = csv.trim().split("\n");
+  const header = lines[0].trim();
+  const colIndex = header.split(",").indexOf("EPICERIE");
 
-    if (colIndex === -1) throw new Error("Column 'EPICERIE' not found.");
+  if (colIndex === -1) throw new Error("Column 'EPICERIE' not found.");
 
-    const itemLines = lines.slice(1).map(line => {
-        const parts = line.split(",");
-        return parts[colIndex].trim();
-    });
+  const itemLines = lines.slice(1).map((line) => {
+    const parts = line.split(",");
+    return parts[colIndex].trim();
+  });
 
-    return await parseReceiptLines(itemLines);
+  return parseReceiptLines(itemLines);
 }
 
+/**
+ * Parse an array of receipt text lines into structured `ReceiptItem` objects.
+ *
+ * The lines are joined back into a single text block and fed through
+ * `parseReceiptText`, which will auto-detect the best stored format or fall
+ * back to the built-in heuristic parser.  Each successfully parsed line is
+ * then run through the translation layer to produce a `readableDescription`.
+ */
 export async function parseReceiptLines(lines: string[]): Promise<ReceiptItem[]> {
-    const items: ReceiptItem[] = [];
-    let i = 0;
+  // Rejoin lines so the format-aware parser can see the full receipt text
+  const rawText = lines.join('\n');
 
-    // Common section headers in grocery receipts (add more as needed)
-    const sectionHeaders = [
-        'EPICERIE', 'FRUIT/LEGUME', 'FROMAGE', 'PRODUIT LAIT',
-        'BOUL COMMERC', 'POISSON CON.', 'VIANDE', 'CHARCUTERIE',
-        'BOULANGERIE', 'PRET A MANGER', 'SURGELE', 'SOUS-TOTAL', 'TOTAL'
-    ];
+  const parsed = await parseReceiptText(rawText);
 
-    const isSectionHeader = (line: string): boolean => {
-        const upperLine = line.toUpperCase().trim();
-        return sectionHeaders.some(header => upperLine === header || upperLine.startsWith(header));
-    };
+  const items: ReceiptItem[] = [];
 
-    const isSubtotalOrTotal = (line: string): boolean => {
-        const upperLine = line.toUpperCase().trim();
-        return upperLine.startsWith('SOUS-TOTAL') || upperLine.startsWith('TOTAL');
-    };
+  for (const line of parsed.items) {
+    const readableDescription = await translateText(line.description);
 
-    while (i < lines.length) {
-        const line = lines[i].trim();
-
-        if (!line) {
-            i++;
-            continue;
-        }
-
-        // Skip section headers and totals
-        if (isSectionHeader(line)) {
-            // Check if this might be a subtotal/total line with a price
-            if (isSubtotalOrTotal(line)) {
-                const totalMatch = line.match(/^(.+?)\s+(-?\d+\.\d{2})$/);
-                if (totalMatch) {
-                    // You might want to store totals separately or just skip them
-                    console.log(`Skipping total line: ${line}`);
-                }
-            }
-            i++;
-            continue;
-        }
-
-        // Check if this line is a price line only (matching pattern like "2 @ $2.99 5.98")
-        const priceOnlyMatch = line.match(/^(\d+)\s*@\s*\$?(\d+\.\d{2})\s+(-?\d+\.\d{2})$/);
-        if (priceOnlyMatch) {
-            // This is a quantity @ unit price total line
-            // Look back to find the item name
-            let itemName = "";
-            let lookBack = i - 1;
-
-            while (lookBack >= 0) {
-                const prevLine = lines[lookBack].trim();
-                if (!prevLine) {
-                    lookBack--;
-                    continue;
-                }
-
-                // Skip section headers when looking back
-                if (isSectionHeader(prevLine)) {
-                    lookBack--;
-                    continue;
-                }
-
-                // Check if previous line is NOT a price line
-                if (!prevLine.match(/\d+\.\d{2}$/) && !prevLine.match(/^(\d+)\s*@/)) {
-                    itemName = prevLine;
-                    break;
-                }
-                lookBack--;
-            }
-
-            if (itemName) {
-                const [, quantity, unitPrice, totalPrice] = priceOnlyMatch;
-                const price = parseFloat(totalPrice);
-
-                const fullText = `${itemName} ${line}`;
-                const readableDescription = await translateText(itemName) + ` (${quantity} @ $${unitPrice})`;
-
-                items.push({
-                    originalText: fullText,
-                    readableDescription,
-                    price,
-                });
-            }
-            i++;
-            continue;
-        }
-
-        // Check if this line ends with a price
-        const lineWithPriceMatch = line.match(/^(.+?)\s+(-?\d+\.\d{2})$/);
-        if (lineWithPriceMatch) {
-            const [, rawDescription, priceStr] = lineWithPriceMatch;
-            const price = parseFloat(priceStr);
-
-            // Check if this is a discount line
-            const isDiscount = rawDescription.toUpperCase().includes('RABAIS') ||
-                rawDescription.toUpperCase().includes('DISCOUNT') ||
-                rawDescription.match(/^\(.+@.+%\)/) || // Pattern like (1.49@30.00%)
-                price < 0;
-
-            if (isDiscount && items.length > 0) {
-                // Apply discount to the previous item
-                const lastItem = items[items.length - 1];
-                const discountAmount = Math.abs(price);
-
-                if (price < 0) {
-                    // Price is negative for discount
-                    lastItem.price += price; // price is already negative
-                } else {
-                    // Price is positive for discount (like "Rabais 0.80")
-                    lastItem.price -= price;
-                }
-
-                // Add discount info to description
-                if (rawDescription.match(/^\(.+@.+%\)/)) {
-                    lastItem.readableDescription += ` ${rawDescription}`;
-                } else {
-                    lastItem.readableDescription += ` (Discount: $${discountAmount.toFixed(2)})`;
-                }
-                lastItem.suffixText = line;
-            } else {
-                // Regular item with price
-                const readableDescription = await translateText(rawDescription);
-                items.push({
-                    originalText: line,
-                    readableDescription,
-                    price,
-                });
-            }
-            i++;
-            continue;
-        }
-
-        // Check if the next line contains price information
-        if (i + 1 < lines.length) {
-            const nextLine = lines[i + 1].trim();
-
-            // Skip if next line is a section header
-            if (isSectionHeader(nextLine)) {
-                i++;
-                continue;
-            }
-
-            // Check if next line is a quantity @ price line
-            const quantityPriceMatch = nextLine.match(/^(\d+)\s*@\s*\$?(\d+\.\d{2})\s+(-?\d+\.\d{2})$/);
-            if (quantityPriceMatch) {
-                const [, quantity, unitPrice, totalPrice] = quantityPriceMatch;
-                const price = parseFloat(totalPrice);
-                const readableDescription = await translateText(line) + ` (${quantity} @ $${unitPrice})`;
-
-                items.push({
-                    originalText: line,
-                    suffixText: nextLine,
-                    readableDescription,
-                    price,
-                });
-                i += 2; // Skip both lines
-                continue;
-            }
-
-            // Check if next line is a simple price
-            const simplePriceMatch = nextLine.match(/^(-?\d+\.\d{2})$/);
-            if (simplePriceMatch) {
-                const price = parseFloat(simplePriceMatch[1]);
-                const readableDescription = await translateText(line);
-
-                items.push({
-                    originalText: line,
-                    suffixText: nextLine,
-                    readableDescription,
-                    price,
-                });
-                i += 2; // Skip both lines
-                continue;
-            }
-
-            // Check if next line is a weight-based price (e.g., "0.295 kg @ $6.59/kg 1.94")
-            const weightPriceMatch = nextLine.match(/^([\d.]+)\s*(kg|lb)\s*@\s*\$?([\d.]+)\/(kg|lb)\s+([\d.]+)$/);
-            if (weightPriceMatch) {
-                const [, weight, unit, unitPrice, , totalPrice] = weightPriceMatch;
-                const price = parseFloat(totalPrice);
-                const readableDescription = await translateText(line) + ` (${weight} ${unit} @ $${unitPrice}/${unit})`;
-
-                items.push({
-                    originalText: line,
-                    suffixText: nextLine,
-                    readableDescription,
-                    price,
-                });
-                i += 2; // Skip both lines
-                continue;
-            }
-        }
-
-        // If we get here and the line isn't a section header, it might be an item name
-        // waiting for a price on the next line, but we'll skip it for now
-        i++;
+    // Enrich description with quantity/unit when present
+    let displayDesc = readableDescription;
+    if (line.quantity && line.unit) {
+      displayDesc += ` (${line.quantity} ${line.unit})`;
+    } else if (line.quantity) {
+      displayDesc += ` (${line.quantity}x)`;
     }
 
-    return items;
+    items.push({
+      originalText: line.originalLine,
+      readableDescription: displayDesc,
+      price: line.price,
+    });
+  }
+
+  return items;
 }
 
-// Translation functions
+// ---------------------------------------------------------------------------
+// Translation helpers
+// ---------------------------------------------------------------------------
+
+/**
+ * Return every translation mapping stored in the database.
+ */
 export async function getAllTranslations(): Promise<ITranslationMapping[]> {
-    return await TranslationMapping.find({});
+  return TranslationMapping.find({});
 }
 
-export async function addTranslation(originalText: string, translatedText: string): Promise<ITranslationMapping> {
-    const translation = new TranslationMapping({
-        originalText: originalText.trim(),
-        translatedText: translatedText.trim()
-    });
-    return await translation.save();
+/**
+ * Create a new original→translated mapping.
+ */
+export async function addTranslation(
+  originalText: string,
+  translatedText: string
+): Promise<ITranslationMapping> {
+  const translation = new TranslationMapping({
+    original: originalText.trim(),
+    translation: translatedText.trim(),
+  });
+  return translation.save();
 }
 
+/**
+ * Overwrite an existing translation mapping by its database ID.
+ */
 export async function updateTranslation(
-    id: string,
-    originalText: string,
-    translatedText: string
+  id: string,
+  originalText: string,
+  translatedText: string
 ): Promise<ITranslationMapping | null> {
-    return await TranslationMapping.findByIdAndUpdate(
-        id,
-        {
-            originalText: originalText.trim(),
-            translatedText: translatedText.trim()
-        },
-        { new: true, runValidators: true }
-    );
+  return TranslationMapping.findByIdAndUpdate(
+    id,
+    { original: originalText.trim(), translation: translatedText.trim() },
+    { new: true, runValidators: true }
+  );
 }
 
+/**
+ * Delete a translation mapping by its database ID.
+ */
 export async function deleteTranslation(id: string): Promise<void> {
-    await TranslationMapping.findByIdAndDelete(id);
+  await TranslationMapping.findByIdAndDelete(id);
 }
 
+/**
+ * Look up a single translation.  Returns the original text unchanged when no
+ * mapping exists.
+ */
 export async function getTranslation(text: string): Promise<string> {
-    const mapping = await TranslationMapping.findOne({ originalText: text.trim() });
-    return mapping?.translation || text;
+  const mapping = await TranslationMapping.findOne({ original: text.trim() });
+  return mapping?.translation || text;
 }
 
+/**
+ * Convenience wrapper around `getTranslation` for use inside parsers.
+ */
 export async function translateText(text: string): Promise<string> {
-    return await getTranslation(text);
+  return getTranslation(text);
 }
 
-// Receipt saving functions
+// ---------------------------------------------------------------------------
+// Receipt persistence
+// ---------------------------------------------------------------------------
+
+/**
+ * Save a receipt with a designated primary user (no item-level splits).
+ */
 export async function saveReceipt(
-    items: ReceiptItem[],
-    userId: string,
-    store?: string,
-    date?: string
+  items: ReceiptItem[],
+  userId: string,
+  store?: string,
+  date?: string
 ): Promise<IReceipt> {
-    const receipt = new Receipt({
-        userId,
-        items: items.map(item => ({
-            ...item,
-            isSplit: false
-        })),
-        store,
-        date: date ? new Date(date) : new Date()
-    });
+  const receipt = new Receipt({
+    userId,
+    items: items.map((item) => ({ ...item, isSplit: false })),
+    store,
+    date: date ? new Date(date) : new Date(),
+  });
 
-    receipt.calculateTotal();
-    return await receipt.save();
+  receipt.calculateTotal();
+  return receipt.save();
 }
 
-// New function to save receipt with splits
+/**
+ * Save a receipt whose items may already carry per-user split information.
+ */
 export async function saveReceiptWithSplits(
-    items: ReceiptItem[],
-    store?: string,
-    date?: string
+  items: ReceiptItem[],
+  store?: string,
+  date?: string
 ): Promise<IReceipt> {
-    const receipt = new Receipt({
-        items,
-        store,
-        date: date ? new Date(date) : new Date()
-    });
+  const receipt = new Receipt({
+    items,
+    store,
+    date: date ? new Date(date) : new Date(),
+  });
 
-    receipt.calculateTotal();
-    return await receipt.save();
+  receipt.calculateTotal();
+  return receipt.save();
 }
 
-// Apply splits to specific items in a receipt
+/**
+ * Apply a split configuration to specific items within an already-saved receipt.
+ */
 export async function applyItemSplits(
-    receiptId: string,
-    itemIndices: number[],
-    splitConfig: SplitConfig
+  receiptId: string,
+  itemIndices: number[],
+  splitConfig: SplitConfig
 ): Promise<IReceipt | null> {
-    const receipt = await Receipt.findById(receiptId);
-    if (!receipt) {
-        throw new Error('Receipt not found');
+  const receipt = await Receipt.findById(receiptId);
+  if (!receipt) {
+    throw new Error('Receipt not found');
+  }
+
+  itemIndices.forEach((index) => {
+    if (index < 0 || index >= receipt.items.length) return;
+
+    const item = receipt.items[index];
+    const userSplits: { userId: string; amount: number; percentage: number }[] = [];
+
+    if (splitConfig.type === 'equal') {
+      // Divide evenly among all listed users
+      const amountPerUser = item.price / splitConfig.userIds.length;
+      const percentagePerUser = 100 / splitConfig.userIds.length;
+
+      for (const userId of splitConfig.userIds) {
+        userSplits.push({ userId, amount: amountPerUser, percentage: percentagePerUser });
+      }
+    } else if (splitConfig.type === 'percentage' && splitConfig.percentages) {
+      // Each user gets a specified percentage
+      for (const userId of splitConfig.userIds) {
+        const percentage = splitConfig.percentages[userId] || 0;
+        userSplits.push({ userId, amount: (item.price * percentage) / 100, percentage });
+      }
+    } else if (splitConfig.type === 'custom' && splitConfig.amounts) {
+      // Each user gets a specified dollar amount; validate it sums correctly
+      let totalAssigned = 0;
+      for (const userId of splitConfig.userIds) {
+        const amount = splitConfig.amounts[userId] || 0;
+        totalAssigned += amount;
+        userSplits.push({ userId, amount, percentage: (amount / item.price) * 100 });
+      }
+
+      if (Math.abs(totalAssigned - item.price) > 0.01) {
+        throw new Error(
+          `Total split amount (${totalAssigned}) does not match item price (${item.price})`
+        );
+      }
     }
 
-    // Apply splits to specified items
-    itemIndices.forEach(index => {
-        if (index >= 0 && index < receipt.items.length) {
-            const item = receipt.items[index];
-            const userSplits = [];
+    item.userSplits = userSplits;
+    item.isSplit = true;
+  });
 
-            if (splitConfig.type === 'equal') {
-                // Equal split among users
-                const amountPerUser = item.price / splitConfig.userIds.length;
-                const percentagePerUser = 100 / splitConfig.userIds.length;
-
-                for (const userId of splitConfig.userIds) {
-                    userSplits.push({
-                        userId,
-                        amount: amountPerUser,
-                        percentage: percentagePerUser
-                    });
-                }
-            } else if (splitConfig.type === 'percentage' && splitConfig.percentages) {
-                // Percentage-based split
-                for (const userId of splitConfig.userIds) {
-                    const percentage = splitConfig.percentages[userId] || 0;
-                    userSplits.push({
-                        userId,
-                        amount: (item.price * percentage) / 100,
-                        percentage
-                    });
-                }
-            } else if (splitConfig.type === 'custom' && splitConfig.amounts) {
-                // Custom amount split
-                let totalAssigned = 0;
-                for (const userId of splitConfig.userIds) {
-                    const amount = splitConfig.amounts[userId] || 0;
-                    totalAssigned += amount;
-                    userSplits.push({
-                        userId,
-                        amount,
-                        percentage: (amount / item.price) * 100
-                    });
-                }
-
-                // Validate that total assigned equals item price
-                if (Math.abs(totalAssigned - item.price) > 0.01) {
-                    throw new Error(`Total split amount (${totalAssigned}) does not match item price (${item.price})`);
-                }
-            }
-
-            item.userSplits = userSplits;
-            item.isSplit = true;
-        }
-    });
-
-    return await receipt.save();
+  return receipt.save();
 }
 
-// Get receipts for a specific user (including split receipts)
+/**
+ * Return all receipts that involve a given user (as primary owner or via splits).
+ */
 export async function getReceiptsByUser(userId: string): Promise<IReceipt[]> {
-    return await Receipt.findByUser(userId);
+  return Receipt.findByUser(userId);
 }
 
-// Get receipt by ID
+/**
+ * Return a single receipt by its database ID, with user references populated.
+ */
 export async function getReceiptById(id: string): Promise<IReceipt | null> {
-    return await Receipt.findById(id).populate('userId').populate('userIds');
+  return Receipt.findById(id).populate('userId').populate('userIds');
 }
 
-// Get receipt with user totals calculated
-export async function getReceiptWithUserTotals(id: string): Promise<ReceiptWithUserTotals | null> {
-    const receipt = await Receipt.findById(id).populate('userId').populate('userIds');
-    if (!receipt) {
-        return null;
-    }
+/**
+ * Return a receipt enriched with per-user totals calculated from item splits.
+ */
+export async function getReceiptWithUserTotals(
+  id: string
+): Promise<ReceiptWithUserTotals | null> {
+  const receipt = await Receipt.findById(id).populate('userId').populate('userIds');
+  if (!receipt) return null;
 
-    const userTotals = receipt.getUserSummary();
+  const userTotals = receipt.getUserSummary();
 
-    return {
-        _id: receipt.id,
-        items: receipt.items,
-        total: receipt.total,
-        store: receipt.store,
-        date: receipt.date,
-        userTotals,
-        userIds: receipt.userIds?.map(id => id.toString()) || []
-    };
+  return {
+    _id: receipt.id,
+    items: receipt.items,
+    total: receipt.total,
+    store: receipt.store,
+    date: receipt.date,
+    userTotals,
+    userIds: receipt.userIds?.map((id) => id.toString()) || [],
+  };
 }
 
-// Delete receipt
+/**
+ * Permanently delete a receipt by its database ID.
+ */
 export async function deleteReceipt(id: string): Promise<void> {
-    await Receipt.findByIdAndDelete(id);
+  await Receipt.findByIdAndDelete(id);
 }
 
-// Get user's total from all receipts
+/**
+ * Sum every receipt's contribution for a given user across the entire database.
+ */
 export async function getUserTotalFromAllReceipts(userId: string): Promise<number> {
-    const receipts = await getReceiptsByUser(userId);
-    return receipts.reduce((total, receipt) => {
-        return total + receipt.calculateUserTotal(userId);
-    }, 0);
+  const receipts = await getReceiptsByUser(userId);
+  return receipts.reduce((total, receipt) => total + receipt.calculateUserTotal(userId), 0);
 }
 
-// Get summary of all receipts by user
+/**
+ * Build a map of userId → total amount owed across all receipts.
+ */
 export async function getReceiptsSummaryByUser(): Promise<{ [userId: string]: number }> {
-    const allReceipts = await Receipt.find({}).populate('userId').populate('userIds');
-    const summary: { [userId: string]: number } = {};
+  const allReceipts = await Receipt.find({}).populate('userId').populate('userIds');
+  const summary: { [userId: string]: number } = {};
 
-    allReceipts.forEach(receipt => {
-        const userSummary = receipt.getUserSummary();
-        Object.entries(userSummary).forEach(([userId, amount]) => {
-            summary[userId] = (summary[userId] || 0) + amount;
-        });
+  allReceipts.forEach((receipt) => {
+    const userSummary = receipt.getUserSummary();
+    Object.entries(userSummary).forEach(([userId, amount]) => {
+      summary[userId] = (summary[userId] || 0) + amount;
     });
+  });
 
-    return summary;
+  return summary;
 }
