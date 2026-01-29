@@ -32,6 +32,14 @@ import {
   detectFormat,
 } from "../services/receiptFormatService";
 
+import {
+  getAllCorrections,
+  addCorrection,
+  addCorrectionsFromDiff,
+  deleteCorrection as deleteCorrectionService,
+  updateCorrection,
+} from '../services/ocrDictionaryService';
+
 // ---------------------------------------------------------------------------
 // Receipt CSV parsing
 // ---------------------------------------------------------------------------
@@ -349,39 +357,44 @@ export const getAllReceipts = async (req: Request, res: Response): Promise<void>
 // ---------------------------------------------------------------------------
 
 /**
- * Upload a receipt photo, run OCR, auto-detect the best format, and return
- * the structured parse result with parser-level confidence.
+ * Upload a receipt photo with optional auto-correction.
+ * Returns both raw and corrected text for user review.
  */
 export const uploadReceiptPhoto = async (req: Request, res: Response): Promise<void> => {
   try {
     const files = req.files as { [fieldname: string]: Express.Multer.File[] };
 
     if (!files || !files.photo || files.photo.length === 0) {
-      res.status(400).json({ success: false, error: "No receipt photo uploaded" });
+      res.status(400).json({ success: false, error: 'No receipt photo uploaded' });
       return;
     }
 
     const photoBuffer = files.photo[0].buffer;
+    const autoCorrect = req.body.autoCorrect !== 'false';
+    const context = req.body.context;
 
-    // Run OCR
-    const ocrResult = await extractTextFromImage(photoBuffer);
+    const ocrResult = await extractTextFromImage(photoBuffer, 'eng+fra', autoCorrect, context);
 
     if (ocrResult.confidence < 50) {
       res.status(400).json({
         success: false,
-        error: "Low OCR confidence. Please try a clearer photo.",
+        error: 'Low OCR confidence. Please try a clearer photo.',
         confidence: ocrResult.confidence,
+        rawText: ocrResult.text,
       });
       return;
     }
 
-    // Parse using auto-detected (or fallback) format
-    const parsed = await parseReceiptText(ocrResult.text);
+    // Use corrected text if available, otherwise raw text
+    const textToParse = ocrResult.correctedText || ocrResult.text;
+    const parsed = await parseReceiptText(textToParse);
 
     res.json({
       success: true,
       data: {
         rawText: ocrResult.text,
+        correctedText: ocrResult.correctedText,
+        appliedCorrections: ocrResult.appliedCorrections || [],
         ocrConfidence: ocrResult.confidence,
         parseConfidence: parsed.confidence,
         detectedFormat: parsed.detectedFormat,
@@ -392,10 +405,57 @@ export const uploadReceiptPhoto = async (req: Request, res: Response): Promise<v
       },
     });
   } catch (error) {
-    console.error("OCR Error:", error);
+    console.error('OCR Error:', error);
     res.status(500).json({
       success: false,
-      error: error instanceof Error ? error.message : "Failed to process receipt photo",
+      error: error instanceof Error ? error.message : 'Failed to process receipt photo',
+    });
+  }
+};
+
+/**
+ * Parse user-corrected text and optionally learn from corrections.
+ */
+export const parseCorrectText = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { originalText, correctedText, learnCorrections, context } = req.body;
+
+    if (!correctedText) {
+      res.status(400).json({ success: false, error: 'correctedText is required' });
+      return;
+    }
+
+    // If learning is enabled and we have both texts, extract and save corrections
+    let learnedCorrections: { from: string; to: string }[] = [];
+    if (learnCorrections && originalText && originalText !== correctedText) {
+      const origLines = originalText.split('\n');
+      const corrLines = correctedText.split('\n');
+      const corrections = await addCorrectionsFromDiff(origLines, corrLines, context);
+      learnedCorrections = corrections.map((c) => ({
+        from: c.ocrText,
+        to: c.correctedText,
+      }));
+    }
+
+    // Parse the corrected text
+    const parsed = await parseReceiptText(correctedText);
+
+    res.json({
+      success: true,
+      data: {
+        items: parsed.items,
+        total: parsed.total,
+        skippedLines: parsed.skippedLines,
+        confidence: parsed.confidence,
+        detectedFormat: parsed.detectedFormat,
+        learnedCorrections,
+      },
+    });
+  } catch (error) {
+    console.error('Parse error:', error);
+    res.status(500).json({
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to parse corrected text',
     });
   }
 };
@@ -436,6 +496,105 @@ export const convertPhotoToCSV = async (req: Request, res: Response): Promise<vo
     res.status(500).json({
       success: false,
       error: error instanceof Error ? error.message : "Failed to convert photo to CSV",
+    });
+  }
+};
+
+// ---------------------------------------------------------------------------
+// OCR Dictionary/Correction endpoints
+// ---------------------------------------------------------------------------
+
+/** Get all OCR corrections. */
+export const getOCRCorrections = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const context = req.query.context as string | undefined;
+    const corrections = await getAllCorrections(context);
+    res.json({ success: true, data: corrections });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to get corrections',
+    });
+  }
+};
+
+/** Add a new OCR correction. */
+export const createOCRCorrection = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { ocrText, correctedText, context } = req.body;
+
+    if (!ocrText || !correctedText) {
+      res.status(400).json({
+        success: false,
+        error: 'ocrText and correctedText are required',
+      });
+      return;
+    }
+
+    const correction = await addCorrection(ocrText, correctedText, context);
+    res.json({ success: true, data: correction });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to create correction',
+    });
+  }
+};
+
+/** Update an OCR correction. */
+export const editOCRCorrection = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { id } = req.params;
+    const { ocrText, correctedText, context } = req.body;
+
+    if (!id || !ocrText || !correctedText) {
+      res.status(400).json({
+        success: false,
+        error: 'id, ocrText, and correctedText are required',
+      });
+      return;
+    }
+
+    const correction = await updateCorrection(id, ocrText, correctedText, context);
+    if (!correction) {
+      res.status(404).json({ success: false, error: 'Correction not found' });
+      return;
+    }
+
+    res.json({ success: true, data: correction });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to update correction',
+    });
+  }
+};
+
+/** Delete an OCR correction. */
+export const removeOCRCorrection = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { id } = req.params;
+
+    if (!id) {
+      res.status(400).json({ success: false, error: 'Correction ID is required' });
+      return;
+    }
+
+    const deleted = await deleteCorrectionService(id);
+    if (!deleted) {
+      res.status(404).json({ success: false, error: 'Correction not found' });
+      return;
+    }
+
+    res.json({ success: true, message: 'Correction deleted successfully' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to delete correction',
     });
   }
 };

@@ -199,6 +199,7 @@
             gap: 1rem;
             margin-bottom: 2rem;
             border-bottom: 2px solid var(--border-color);
+            flex-wrap: wrap;
         }
 
         .tab-button {
@@ -414,6 +415,7 @@
             gap: 10px;
             margin-top: 20px;
             justify-content: center;
+            flex-wrap: wrap;
         }
 
         /* Modal styles */
@@ -703,6 +705,218 @@
             margin-top: 0.4rem;
         }
 
+        /* OCR Text Editor Styles */
+        .ocr-editor-container {
+            margin: 1.5rem 0;
+            border: 1px solid #d0d7de;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .ocr-editor-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem 1rem;
+            background: #f6f8fa;
+            border-bottom: 1px solid #d0d7de;
+        }
+
+        .ocr-editor-header h4 {
+            margin: 0;
+            font-size: 0.95rem;
+            color: var(--text-primary);
+        }
+
+        .ocr-editor-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .ocr-text-area {
+            width: 100%;
+            min-height: 300px;
+            padding: 1rem;
+            border: none;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+            line-height: 1.5;
+            resize: vertical;
+        }
+
+        .ocr-text-area:focus {
+            outline: none;
+            background: #fffef5;
+        }
+
+        .ocr-diff-view {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0;
+        }
+
+        .ocr-diff-pane {
+            padding: 1rem;
+            font-family: 'Courier New', monospace;
+            font-size: 0.85rem;
+            line-height: 1.6;
+            white-space: pre-wrap;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .ocr-diff-pane.original {
+            background: #fff5f5;
+            border-right: 1px solid #d0d7de;
+        }
+
+        .ocr-diff-pane.corrected {
+            background: #f0fff4;
+        }
+
+        .diff-word-removed {
+            background: #fecaca;
+            text-decoration: line-through;
+            padding: 0 2px;
+            border-radius: 2px;
+        }
+
+        .diff-word-added {
+            background: #bbf7d0;
+            padding: 0 2px;
+            border-radius: 2px;
+        }
+
+        /* Applied corrections list */
+        .applied-corrections {
+            background: #f0f9ff;
+            border: 1px solid #bae6fd;
+            border-radius: 6px;
+            padding: 0.75rem 1rem;
+            margin: 1rem 0;
+        }
+
+        .applied-corrections h5 {
+            margin: 0 0 0.5rem 0;
+            font-size: 0.85rem;
+            color: #0369a1;
+        }
+
+        .correction-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+            padding: 0.25rem 0.5rem;
+            margin: 0.15rem;
+            background: white;
+            border: 1px solid #7dd3fc;
+            border-radius: 4px;
+            font-size: 0.8rem;
+        }
+
+        .correction-chip .from {
+            text-decoration: line-through;
+            color: #dc2626;
+        }
+
+        .correction-chip .arrow {
+            color: #666;
+        }
+
+        .correction-chip .to {
+            color: #16a34a;
+            font-weight: 500;
+        }
+
+        /* Learn checkbox */
+        .learn-corrections-toggle {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.75rem 1rem;
+            background: #fefce8;
+            border: 1px solid #fde047;
+            border-radius: 6px;
+            margin: 1rem 0;
+        }
+
+        .learn-corrections-toggle input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+        }
+
+        .learn-corrections-toggle label {
+            font-size: 0.9rem;
+            color: #854d0e;
+        }
+
+        /* OCR Dictionary tab styles */
+        .dictionary-search {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .dictionary-search input {
+            flex: 1;
+            padding: 0.6rem 1rem;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            font-size: 0.95rem;
+        }
+
+        .dictionary-item {
+            display: flex;
+            align-items: center;
+            padding: 0.75rem 1rem;
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 6px;
+            margin-bottom: 0.5rem;
+            transition: all 0.2s;
+        }
+
+        .dictionary-item:hover {
+            border-color: var(--primary-color);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .dictionary-item .ocr-text {
+            flex: 1;
+            font-family: 'Courier New', monospace;
+            color: #dc2626;
+            text-decoration: line-through;
+        }
+
+        .dictionary-item .arrow {
+            margin: 0 1rem;
+            color: #999;
+        }
+
+        .dictionary-item .corrected-text {
+            flex: 1;
+            font-weight: 500;
+            color: #16a34a;
+        }
+
+        .dictionary-item .frequency {
+            padding: 0.2rem 0.5rem;
+            background: #f3f4f6;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            color: #666;
+            margin-right: 1rem;
+        }
+
+        .dictionary-item .context-badge {
+            padding: 0.2rem 0.5rem;
+            background: #e0e7ff;
+            color: #4338ca;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            margin-right: 1rem;
+        }
+
         @keyframes fadeIn {
             from {
                 opacity: 0;
@@ -775,6 +989,8 @@
                     data-tab="photo">📸 Photo Upload</button>
             <button class="tab-button"
                     data-tab="formats">📋 Receipt Formats</button>
+            <button class="tab-button"
+                    data-tab="dictionary">📖 OCR Dictionary</button>
         </div>
 
         <!-- Status Messages -->
@@ -934,7 +1150,7 @@
             <div class="section">
                 <h3 class="section-header">Upload Receipt Photo</h3>
                 <p class="text-secondary mb-3">
-                    Upload a photo of your receipt. The system will extract the text, auto-detect the best receipt format, and parse it into structured items.
+                    Upload a photo of your receipt. The system will extract the text, auto-detect the best receipt format, and parse it into structured items. You can review and correct the OCR text before parsing.
                 </p>
 
                 <!-- Photo Upload Area -->
@@ -961,11 +1177,11 @@
                     <h4>Preview</h4>
                     <img id="photoPreviewImage"
                          style="max-width: 100%; max-height: 400px; border-radius: 8px;" />
-                    <div style="margin-top: 1rem; display: flex; gap: 1rem;">
+                    <div style="margin-top: 1rem; display: flex; gap: 1rem; flex-wrap: wrap;">
                         <button id="processPhotoBtn"
                                 class="button button-primary">
                             <span class="button-icon">🔍</span>
-                            Process Receipt
+                            Extract Text (OCR)
                         </button>
                         <button id="clearPhotoBtn"
                                 class="button button-secondary">
@@ -975,11 +1191,83 @@
                     </div>
                 </div>
 
-                <!-- OCR Results -->
+                <!-- OCR Text Editor (NEW) -->
+                <div id="ocrEditorSection"
+                     class="hidden"
+                     style="margin-top: 2rem;">
+                    <div class="ocr-editor-container">
+                        <div class="ocr-editor-header">
+                            <h4>📝 Review & Correct OCR Text</h4>
+                            <div class="ocr-editor-actions">
+                                <button id="showDiffBtn"
+                                        class="button button-small button-secondary">
+                                    Show Diff
+                                </button>
+                                <button id="resetOcrTextBtn"
+                                        class="button button-small button-secondary">
+                                    Reset to Original
+                                </button>
+                            </div>
+                        </div>
+                        <textarea id="ocrTextEditor"
+                                  class="ocr-text-area"
+                                  placeholder="OCR text will appear here..."></textarea>
+                    </div>
+
+                    <!-- Diff View (hidden by default) -->
+                    <div id="diffViewContainer"
+                         class="ocr-editor-container hidden">
+                        <div class="ocr-editor-header">
+                            <h4>📊 Text Comparison</h4>
+                            <button id="closeDiffBtn"
+                                    class="button button-small button-secondary">
+                                Close Diff
+                            </button>
+                        </div>
+                        <div class="ocr-diff-view">
+                            <div class="ocr-diff-pane original"
+                                 id="diffOriginal">
+                                <strong style="display:block; margin-bottom:0.5rem;">Original OCR</strong>
+                            </div>
+                            <div class="ocr-diff-pane corrected"
+                                 id="diffCorrected">
+                                <strong style="display:block; margin-bottom:0.5rem;">Your Corrections</strong>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Auto-applied corrections info -->
+                    <div id="appliedCorrectionsInfo"
+                         class="applied-corrections hidden">
+                        <h5>🔧 Auto-Applied Corrections</h5>
+                        <div id="appliedCorrectionsList"></div>
+                    </div>
+
+                    <!-- Learn checkbox -->
+                    <div class="learn-corrections-toggle">
+                        <input type="checkbox"
+                               id="learnCorrectionsCheckbox"
+                               checked />
+                        <label for="learnCorrectionsCheckbox">
+                            <strong>Learn from my corrections</strong> — Save word corrections to improve future OCR accuracy
+                        </label>
+                    </div>
+
+                    <!-- Parse button -->
+                    <div style="margin-top: 1rem; display: flex; gap: 1rem; flex-wrap: wrap;">
+                        <button id="parseOcrTextBtn"
+                                class="button button-primary">
+                            <span class="button-icon">✅</span>
+                            Parse Corrected Text
+                        </button>
+                    </div>
+                </div>
+
+                <!-- OCR Results (existing, now shows parsed items) -->
                 <div id="ocrResults"
                      class="section hidden"
                      style="margin-top: 2rem;">
-                    <h4>Extraction Results</h4>
+                    <h4>Parsed Results</h4>
 
                     <!-- Confidence gauges -->
                     <div style="display: flex; gap: 2rem; margin-bottom: 1rem; flex-wrap: wrap;">
@@ -987,26 +1275,33 @@
                             <div style="display: flex; justify-content: space-between; align-items: center;">
                                 <strong>OCR Confidence</strong>
                                 <span id="ocrConfidence">0%</span>
-                                <span id="ocrConfidenceBadge" class="badge"></span>
+                                <span id="ocrConfidenceBadge"
+                                      class="badge"></span>
                             </div>
                             <div class="confidence-bar-track">
-                                <div id="ocrConfidenceBar" class="confidence-bar-fill" style="width: 0%;"></div>
+                                <div id="ocrConfidenceBar"
+                                     class="confidence-bar-fill"
+                                     style="width: 0%;"></div>
                             </div>
                         </div>
                         <div style="flex: 1; min-width: 180px;">
                             <div style="display: flex; justify-content: space-between; align-items: center;">
                                 <strong>Parse Confidence</strong>
                                 <span id="parseConfidence">0%</span>
-                                <span id="parseConfidenceBadge" class="badge"></span>
+                                <span id="parseConfidenceBadge"
+                                      class="badge"></span>
                             </div>
                             <div class="confidence-bar-track">
-                                <div id="parseConfidenceBar" class="confidence-bar-fill" style="width: 0%;"></div>
+                                <div id="parseConfidenceBar"
+                                     class="confidence-bar-fill"
+                                     style="width: 0%;"></div>
                             </div>
                         </div>
                     </div>
 
                     <!-- Detected format info -->
-                    <div id="detectedFormatInfo" class="format-detection-info hidden">
+                    <div id="detectedFormatInfo"
+                         class="format-detection-info hidden">
                         <span class="format-icon">📋</span>
                         <div class="format-text">
                             <strong id="detectedFormatName">—</strong>
@@ -1017,24 +1312,27 @@
                     <!-- Item count summary -->
                     <div style="margin-bottom: 0.75rem; font-size: 0.9rem; color: var(--text-secondary);">
                         <span id="itemsFound">0</span> items parsed
-                        <span id="skippedCount" style="margin-left: 1rem;"></span>
+                        <span id="skippedCount"
+                              style="margin-left: 1rem;"></span>
                     </div>
 
-                    <!-- Raw Text (collapsible) -->
-                    <details style="margin-bottom: 1rem;">
-                        <summary style="cursor: pointer; font-weight: 500; margin-bottom: 0.5rem;">
-                            View Raw OCR Text
-                        </summary>
-                        <pre id="rawOcrText"
-                             style="background: #f5f5f5; padding: 1rem; border-radius: 8px; overflow-x: auto; font-size: 0.9rem;"></pre>
-                    </details>
+                    <!-- Learned corrections info -->
+                    <div id="learnedCorrectionsInfo"
+                         class="applied-corrections hidden"
+                         style="background: #f0fdf4; border-color: #86efac;">
+                        <h5 style="color: #166534;">📚 Learned Corrections</h5>
+                        <div id="learnedCorrectionsList"></div>
+                    </div>
 
                     <!-- Skipped lines (collapsible) -->
-                    <details id="skippedLinesDetails" class="hidden" style="margin-bottom: 1rem;">
+                    <details id="skippedLinesDetails"
+                             class="hidden"
+                             style="margin-bottom: 1rem;">
                         <summary style="cursor: pointer; font-weight: 500; color: var(--warning-color);">
                             ⚠️ View Skipped Lines
                         </summary>
-                        <div id="skippedLinesContent" class="skipped-lines-detail"></div>
+                        <div id="skippedLinesContent"
+                             class="skipped-lines-detail"></div>
                     </details>
 
                     <!-- Parsed Items Table -->
@@ -1080,13 +1378,60 @@
                 </p>
 
                 <div style="margin-bottom: 1.5rem;">
-                    <button id="createFormatBtn" class="button button-primary">
+                    <button id="createFormatBtn"
+                            class="button button-primary">
                         <span class="button-icon">➕</span>
                         Create New Format
                     </button>
                 </div>
 
                 <div id="formatsList">
+                </div>
+            </div>
+        </div>
+
+        <!-- OCR Dictionary Tab (NEW) -->
+        <div id="dictionary"
+             class="tab-content">
+            <div class="section">
+                <h3 class="section-header">OCR Dictionary</h3>
+                <p class="text-secondary mb-3">
+                    Manage OCR corrections. These corrections are automatically applied when processing receipt photos to fix common OCR mistakes.
+                </p>
+
+                <!-- Add new correction -->
+                <div class="add-mapping"
+                     style="margin-bottom: 1.5rem;">
+                    <input type="text"
+                           id="newOcrText"
+                           placeholder="OCR text (wrong)"
+                           class="form-control">
+                    <input type="text"
+                           id="newCorrectedText"
+                           placeholder="Correct text"
+                           class="form-control">
+                    <button id="addCorrectionBtn"
+                            class="button button-primary">
+                        <span class="button-icon">➕</span>
+                        Add
+                    </button>
+                </div>
+
+                <!-- Search/filter -->
+                <div class="dictionary-search">
+                    <input type="text"
+                           id="dictionarySearch"
+                           placeholder="Search corrections..."
+                           class="form-control">
+                    <select id="dictionaryContextFilter"
+                            class="form-control"
+                            style="max-width: 200px;">
+                        <option value="">All contexts</option>
+                    </select>
+                </div>
+
+                <!-- Corrections list -->
+                <div id="dictionaryList">
                 </div>
             </div>
         </div>
@@ -1108,8 +1453,10 @@
         let selectedItems = new Set();
         let currentSplitType = 'equal';
         let currentPhotoFile = null;
-        let currentOCRResult = null;   // full response from /upload-photo
-        let receiptFormats = [];       // cached list from GET /formats
+        let currentOCRResult = null;
+        let originalOCRText = '';  // Store original for diff comparison
+        let receiptFormats = [];
+        let ocrCorrections = [];   // OCR dictionary entries
 
         // ---------------------------------------------------------------------------
         // DOM element cache
@@ -1149,7 +1496,29 @@
             newOriginal: document.getElementById('newOriginal'),
             newTranslation: document.getElementById('newTranslation'),
             formatsList: document.getElementById('formatsList'),
-            createFormatBtn: document.getElementById('createFormatBtn')
+            createFormatBtn: document.getElementById('createFormatBtn'),
+            // OCR Editor elements
+            ocrEditorSection: document.getElementById('ocrEditorSection'),
+            ocrTextEditor: document.getElementById('ocrTextEditor'),
+            showDiffBtn: document.getElementById('showDiffBtn'),
+            resetOcrTextBtn: document.getElementById('resetOcrTextBtn'),
+            diffViewContainer: document.getElementById('diffViewContainer'),
+            diffOriginal: document.getElementById('diffOriginal'),
+            diffCorrected: document.getElementById('diffCorrected'),
+            closeDiffBtn: document.getElementById('closeDiffBtn'),
+            appliedCorrectionsInfo: document.getElementById('appliedCorrectionsInfo'),
+            appliedCorrectionsList: document.getElementById('appliedCorrectionsList'),
+            learnCorrectionsCheckbox: document.getElementById('learnCorrectionsCheckbox'),
+            parseOcrTextBtn: document.getElementById('parseOcrTextBtn'),
+            learnedCorrectionsInfo: document.getElementById('learnedCorrectionsInfo'),
+            learnedCorrectionsList: document.getElementById('learnedCorrectionsList'),
+            // Dictionary elements
+            newOcrText: document.getElementById('newOcrText'),
+            newCorrectedText: document.getElementById('newCorrectedText'),
+            addCorrectionBtn: document.getElementById('addCorrectionBtn'),
+            dictionarySearch: document.getElementById('dictionarySearch'),
+            dictionaryContextFilter: document.getElementById('dictionaryContextFilter'),
+            dictionaryList: document.getElementById('dictionaryList')
         };
 
         // ---------------------------------------------------------------------------
@@ -1161,6 +1530,7 @@
             loadReceiptHistory();
             loadUsers();
             loadReceiptFormats();
+            loadOCRDictionary();
         });
 
         // ---------------------------------------------------------------------------
@@ -1213,6 +1583,17 @@
 
             // Format tab button
             elements.createFormatBtn.addEventListener('click', openCreateFormatModal);
+
+            // OCR Editor buttons
+            elements.showDiffBtn.addEventListener('click', showDiff);
+            elements.resetOcrTextBtn.addEventListener('click', resetOcrText);
+            elements.closeDiffBtn.addEventListener('click', closeDiff);
+            elements.parseOcrTextBtn.addEventListener('click', parseCorrectText);
+
+            // Dictionary buttons
+            elements.addCorrectionBtn.addEventListener('click', addOCRCorrection);
+            elements.dictionarySearch.addEventListener('input', filterDictionary);
+            elements.dictionaryContextFilter.addEventListener('change', filterDictionary);
 
             setupPhotoListeners();
         }
@@ -1268,6 +1649,7 @@
             reader.onload = function (e) {
                 document.getElementById('photoPreviewImage').src = e.target.result;
                 document.getElementById('photoPreview').classList.remove('hidden');
+                elements.ocrEditorSection.classList.add('hidden');
                 document.getElementById('ocrResults').classList.add('hidden');
             };
             reader.readAsDataURL(file);
@@ -1276,15 +1658,15 @@
         function clearPhoto() {
             currentPhotoFile = null;
             currentOCRResult = null;
+            originalOCRText = '';
             document.getElementById('photoFile').value = '';
             document.getElementById('photoPreview').classList.add('hidden');
+            elements.ocrEditorSection.classList.add('hidden');
             document.getElementById('ocrResults').classList.add('hidden');
         }
 
         // ---------------------------------------------------------------------------
-        // processPhoto – calls POST /api/receipts/upload-photo
-        // New response shape:
-        //   { rawText, ocrConfidence, parseConfidence, detectedFormat, items, total, skippedLines, itemCount }
+        // processPhoto – Now shows editable OCR text before parsing
         // ---------------------------------------------------------------------------
         async function processPhoto() {
             if (!currentPhotoFile) {
@@ -1293,7 +1675,7 @@
             }
 
             try {
-                showMessage('Processing receipt photo...', 'loading');
+                showMessage('Extracting text from receipt...', 'loading');
                 showLoader();
 
                 var formData = new FormData();
@@ -1307,10 +1689,26 @@
 
                 if (result.success) {
                     currentOCRResult = result.data;
-                    displayOCRResults(result.data);
-                    showMessage('Receipt processed successfully!', 'success');
+                    originalOCRText = result.data.rawText;
+
+                    // Show the editable OCR text
+                    elements.ocrTextEditor.value = result.data.correctedText || result.data.rawText;
+                    elements.ocrEditorSection.classList.remove('hidden');
+
+                    // Show auto-applied corrections if any
+                    if (result.data.appliedCorrections && result.data.appliedCorrections.length > 0) {
+                        displayAppliedCorrections(result.data.appliedCorrections);
+                        elements.appliedCorrectionsInfo.classList.remove('hidden');
+                    } else {
+                        elements.appliedCorrectionsInfo.classList.add('hidden');
+                    }
+
+                    // Hide the parsed results section until user clicks parse
+                    document.getElementById('ocrResults').classList.add('hidden');
+
+                    showMessage('Text extracted! Review and correct the OCR text below, then click "Parse Corrected Text".', 'success');
                 } else {
-                    showMessage(result.error || 'Failed to process receipt', 'error');
+                    showMessage(result.error || 'Failed to extract text from photo', 'error');
                 }
             } catch (error) {
                 showMessage('Error processing photo: ' + error.message, 'error');
@@ -1320,19 +1718,172 @@
         }
 
         // ---------------------------------------------------------------------------
-        // displayOCRResults – renders the new response shape
+        // Display auto-applied corrections
+        // ---------------------------------------------------------------------------
+        function displayAppliedCorrections(corrections) {
+            var html = corrections.map(function (c) {
+                return '<span class="correction-chip">' +
+                    '<span class="from">' + escapeHtml(c.from) + '</span>' +
+                    '<span class="arrow">→</span>' +
+                    '<span class="to">' + escapeHtml(c.to) + '</span>' +
+                    '</span>';
+            }).join('');
+            elements.appliedCorrectionsList.innerHTML = html;
+        }
+
+        // ---------------------------------------------------------------------------
+        // Show diff between original and corrected text
+        // ---------------------------------------------------------------------------
+        function showDiff() {
+            var original = originalOCRText;
+            var corrected = elements.ocrTextEditor.value;
+
+            var origLines = original.split('\n');
+            var corrLines = corrected.split('\n');
+
+            var origHtml = '<strong style="display:block; margin-bottom:0.5rem;">Original OCR</strong>';
+            var corrHtml = '<strong style="display:block; margin-bottom:0.5rem;">Your Corrections</strong>';
+
+            var maxLines = Math.max(origLines.length, corrLines.length);
+
+            for (var i = 0; i < maxLines; i++) {
+                var origLine = origLines[i] || '';
+                var corrLine = corrLines[i] || '';
+
+                if (origLine === corrLine) {
+                    origHtml += escapeHtml(origLine) + '\n';
+                    corrHtml += escapeHtml(corrLine) + '\n';
+                } else {
+                    // Simple word-level diff
+                    var origWords = origLine.split(/(\s+)/);
+                    var corrWords = corrLine.split(/(\s+)/);
+
+                    var origLineDiff = '';
+                    var corrLineDiff = '';
+
+                    var maxWords = Math.max(origWords.length, corrWords.length);
+                    for (var j = 0; j < maxWords; j++) {
+                        var ow = origWords[j] || '';
+                        var cw = corrWords[j] || '';
+
+                        if (ow === cw) {
+                            origLineDiff += escapeHtml(ow);
+                            corrLineDiff += escapeHtml(cw);
+                        } else {
+                            if (ow) origLineDiff += '<span class="diff-word-removed">' + escapeHtml(ow) + '</span>';
+                            if (cw) corrLineDiff += '<span class="diff-word-added">' + escapeHtml(cw) + '</span>';
+                        }
+                    }
+
+                    origHtml += origLineDiff + '\n';
+                    corrHtml += corrLineDiff + '\n';
+                }
+            }
+
+            elements.diffOriginal.innerHTML = origHtml;
+            elements.diffCorrected.innerHTML = corrHtml;
+            elements.diffViewContainer.classList.remove('hidden');
+        }
+
+        function closeDiff() {
+            elements.diffViewContainer.classList.add('hidden');
+        }
+
+        function resetOcrText() {
+            elements.ocrTextEditor.value = originalOCRText;
+            showMessage('OCR text reset to original.', 'info');
+        }
+
+        // ---------------------------------------------------------------------------
+        // Parse the corrected text
+        // ---------------------------------------------------------------------------
+        async function parseCorrectText() {
+            var correctedText = elements.ocrTextEditor.value;
+            var learnCorrections = elements.learnCorrectionsCheckbox.checked;
+
+            if (!correctedText.trim()) {
+                showMessage('No text to parse', 'warning');
+                return;
+            }
+
+            try {
+                showMessage('Parsing corrected text...', 'loading');
+                showLoader();
+
+                var response = await fetch('/api/receipts/parse-corrected', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        originalText: originalOCRText,
+                        correctedText: correctedText,
+                        learnCorrections: learnCorrections
+                    })
+                });
+                var result = await response.json();
+
+                if (result.success) {
+                    // Update currentOCRResult with parsed data
+                    currentOCRResult = {
+                        ...currentOCRResult,
+                        items: result.data.items,
+                        total: result.data.total,
+                        skippedLines: result.data.skippedLines,
+                        parseConfidence: result.data.confidence,
+                        detectedFormat: result.data.detectedFormat
+                    };
+
+                    // Display the parsed results
+                    displayOCRResults(currentOCRResult);
+
+                    // Show learned corrections if any
+                    if (result.data.learnedCorrections && result.data.learnedCorrections.length > 0) {
+                        displayLearnedCorrections(result.data.learnedCorrections);
+                        elements.learnedCorrectionsInfo.classList.remove('hidden');
+                        // Reload dictionary in background
+                        loadOCRDictionary();
+                    } else {
+                        elements.learnedCorrectionsInfo.classList.add('hidden');
+                    }
+
+                    showMessage('Text parsed successfully!', 'success');
+                } else {
+                    showMessage(result.error || 'Failed to parse text', 'error');
+                }
+            } catch (error) {
+                showMessage('Error parsing text: ' + error.message, 'error');
+            } finally {
+                hideLoader();
+            }
+        }
+
+        // ---------------------------------------------------------------------------
+        // Display learned corrections
+        // ---------------------------------------------------------------------------
+        function displayLearnedCorrections(corrections) {
+            var html = corrections.map(function (c) {
+                return '<span class="correction-chip">' +
+                    '<span class="from">' + escapeHtml(c.from) + '</span>' +
+                    '<span class="arrow">→</span>' +
+                    '<span class="to">' + escapeHtml(c.to) + '</span>' +
+                    '</span>';
+            }).join('');
+            elements.learnedCorrectionsList.innerHTML = html;
+        }
+
+        // ---------------------------------------------------------------------------
+        // displayOCRResults – renders the parsed results
         // ---------------------------------------------------------------------------
         function displayOCRResults(data) {
             var ocrResults = document.getElementById('ocrResults');
 
             // --- OCR confidence gauge ---
-            var ocrPct = Math.round(data.ocrConfidence);
+            var ocrPct = Math.round(data.ocrConfidence || 0);
             document.getElementById('ocrConfidence').textContent = ocrPct + '%';
             setConfidenceBadge('ocrConfidenceBadge', ocrPct);
             setConfidenceBar('ocrConfidenceBar', ocrPct);
 
             // --- Parse confidence gauge ---
-            var parsePct = Math.round(data.parseConfidence * 100);
+            var parsePct = Math.round((data.parseConfidence || 0) * 100);
             document.getElementById('parseConfidence').textContent = parsePct + '%';
             setConfidenceBadge('parseConfidenceBadge', parsePct);
             setConfidenceBar('parseConfidenceBar', parsePct);
@@ -1348,11 +1899,8 @@
                 formatInfo.classList.add('hidden');
             }
 
-            // --- Raw OCR text ---
-            document.getElementById('rawOcrText').textContent = data.rawText;
-
             // --- Item count + skipped-lines count ---
-            document.getElementById('itemsFound').textContent = data.itemCount;
+            document.getElementById('itemsFound').textContent = (data.items || []).length;
             var skippedEl = document.getElementById('skippedCount');
             var skippedArr = data.skippedLines || [];
             skippedEl.textContent = skippedArr.length > 0 ? '• ' + skippedArr.length + ' lines skipped' : '';
@@ -1370,8 +1918,8 @@
             var container = document.getElementById('parsedItemsContainer');
             container.innerHTML = '';
 
-            if (data.items.length === 0) {
-                container.innerHTML = '<p class="text-secondary">No items detected. Try a clearer photo or define a receipt format for this store.</p>';
+            if (!data.items || data.items.length === 0) {
+                container.innerHTML = '<p class="text-secondary">No items detected. Try correcting the OCR text or define a receipt format for this store.</p>';
             } else {
                 data.items.forEach(function (item) {
                     var div = document.createElement('div');
@@ -1408,70 +1956,167 @@
         }
 
         // ---------------------------------------------------------------------------
-        // convertPhotoToCSV – POST /api/receipts/photo-to-csv
-        // Response: { csv, parsed: { items, total, confidence, detectedFormat }, confidence }
+        // convertPhotoToCSV
         // ---------------------------------------------------------------------------
         async function convertPhotoToCSV() {
-            if (!currentPhotoFile) {
-                showMessage('Please select and process a photo first', 'warning');
+            if (!currentOCRResult || !currentOCRResult.items) {
+                showMessage('Please process and parse a photo first', 'warning');
+                return;
+            }
+
+            // Use the already-parsed items from currentOCRResult
+            currentReceipt = currentOCRResult.items.map(function (item) {
+                return {
+                    originalText: item.originalLine || item.description,
+                    readableDescription: item.description,
+                    price: item.price
+                };
+            });
+
+            switchTab('upload');
+            displayReceipt();
+            showMessage('Receipt converted successfully! Review and save below.', 'success');
+        }
+
+        // ---------------------------------------------------------------------------
+        // OCR Dictionary management
+        // ---------------------------------------------------------------------------
+        async function loadOCRDictionary() {
+            try {
+                var response = await fetch('/api/receipts/ocr-corrections');
+                var result = await response.json();
+
+                if (result.success) {
+                    ocrCorrections = result.data || [];
+                    renderDictionary();
+                    updateContextFilter();
+                }
+            } catch (error) {
+                console.error('Error loading OCR dictionary:', error);
+            }
+        }
+
+        function renderDictionary() {
+            var searchTerm = elements.dictionarySearch.value.toLowerCase();
+            var contextFilter = elements.dictionaryContextFilter.value;
+
+            var filtered = ocrCorrections.filter(function (c) {
+                var matchesSearch = !searchTerm ||
+                    c.ocrText.toLowerCase().includes(searchTerm) ||
+                    c.correctedText.toLowerCase().includes(searchTerm);
+                var matchesContext = !contextFilter || c.context === contextFilter;
+                return matchesSearch && matchesContext;
+            });
+
+            if (filtered.length === 0) {
+                elements.dictionaryList.innerHTML =
+                    '<p class="text-center text-secondary" style="padding: 2rem;">No corrections found.</p>';
+                return;
+            }
+
+            var html = filtered.map(function (c) {
+                return '<div class="dictionary-item" data-id="' + c._id + '">' +
+                    '<span class="ocr-text">' + escapeHtml(c.ocrText) + '</span>' +
+                    '<span class="arrow">→</span>' +
+                    '<span class="corrected-text">' + escapeHtml(c.correctedText) + '</span>' +
+                    '<span class="frequency">×' + c.frequency + '</span>' +
+                    (c.context ? '<span class="context-badge">' + escapeHtml(c.context) + '</span>' : '') +
+                    '<button class="button button-small button-danger dictionary-delete-btn" data-id="' + c._id + '">Delete</button>' +
+                    '</div>';
+            }).join('');
+
+            elements.dictionaryList.innerHTML = html;
+
+            // Attach delete handlers
+            elements.dictionaryList.querySelectorAll('.dictionary-delete-btn').forEach(function (btn) {
+                btn.addEventListener('click', function () {
+                    deleteOCRCorrection(btn.dataset.id);
+                });
+            });
+        }
+
+        function updateContextFilter() {
+            var contexts = [...new Set(ocrCorrections.map(function (c) { return c.context; }).filter(Boolean))];
+
+            elements.dictionaryContextFilter.innerHTML = '<option value="">All contexts</option>';
+            contexts.forEach(function (ctx) {
+                var option = document.createElement('option');
+                option.value = ctx;
+                option.textContent = ctx;
+                elements.dictionaryContextFilter.appendChild(option);
+            });
+        }
+
+        function filterDictionary() {
+            renderDictionary();
+        }
+
+        async function addOCRCorrection() {
+            var ocrText = elements.newOcrText.value.trim();
+            var correctedText = elements.newCorrectedText.value.trim();
+
+            if (!ocrText || !correctedText) {
+                showStatus('Please enter both OCR text and correction', 'warning');
                 return;
             }
 
             try {
-                showMessage('Converting to CSV format...', 'loading');
                 showLoader();
-
-                var formData = new FormData();
-                formData.append('photo', currentPhotoFile);
-
-                var response = await fetch('/api/receipts/photo-to-csv', {
+                var response = await fetch('/api/receipts/ocr-corrections', {
                     method: 'POST',
-                    body: formData
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ ocrText: ocrText, correctedText: correctedText })
                 });
                 var result = await response.json();
 
                 if (result.success) {
-                    // Map parsed items into the receipt-item shape the upload tab expects
-                    currentReceipt = result.data.parsed.items.map(function (item) {
-                        return {
-                            originalText: item.originalLine || item.description,
-                            readableDescription: item.description,
-                            price: item.price
-                        };
-                    });
-
-                    switchTab('upload');
-                    displayReceipt();
-                    showMessage('Receipt converted successfully! Review and save below.', 'success');
+                    elements.newOcrText.value = '';
+                    elements.newCorrectedText.value = '';
+                    showStatus('Correction added successfully', 'success');
+                    loadOCRDictionary();
                 } else {
-                    showMessage(result.error || 'Failed to convert receipt', 'error');
+                    showStatus(result.error || 'Failed to add correction', 'error');
                 }
             } catch (error) {
-                showMessage('Error converting photo: ' + error.message, 'error');
+                showStatus('Error: ' + error.message, 'error');
+            } finally {
+                hideLoader();
+            }
+        }
+
+        async function deleteOCRCorrection(id) {
+            if (!confirm('Delete this correction?')) return;
+
+            try {
+                showLoader();
+                var response = await fetch('/api/receipts/ocr-corrections/' + id, { method: 'DELETE' });
+                var result = await response.json();
+
+                if (result.success) {
+                    showStatus('Correction deleted', 'success');
+                    loadOCRDictionary();
+                } else {
+                    showStatus(result.error || 'Failed to delete correction', 'error');
+                }
+            } catch (error) {
+                showStatus('Error: ' + error.message, 'error');
             } finally {
                 hideLoader();
             }
         }
 
         // ---------------------------------------------------------------------------
-        // "Save as New Format" modal – opens from the Photo tab after OCR results
-        // Pre-fills suggested values by scanning the raw OCR text heuristically:
-        //   • All-caps-only lines → sectionHeaders
-        //   • Lines starting with "total" / "sous-total" → totalKeywords
-        //   • Lines starting with "rabais" / "discount" → discountIndicators
-        //   • First two lines → storeKeywords candidates
-        // The user can edit everything before saving.
+        // "Save as New Format" modal (existing code unchanged)
         // ---------------------------------------------------------------------------
         function openSaveFormatFromOCRModal() {
-            if (!currentOCRResult || !currentOCRResult.rawText) {
+            if (!currentOCRResult || !originalOCRText) {
                 showMessage('Process a photo first to generate a format from its text.', 'warning');
                 return;
             }
 
-            var raw = currentOCRResult.rawText;
+            var raw = elements.ocrTextEditor.value || originalOCRText;
             var lines = raw.split('\n').map(function (l) { return l.trim(); }).filter(Boolean);
 
-            // Heuristic extraction
             var sectionHeaders = [];
             var totalKeywords = [];
             var discountIndicators = [];
@@ -1479,33 +2124,27 @@
 
             lines.forEach(function (line, idx) {
                 var lower = line.toLowerCase();
-                // All-caps lines with no digits are likely section headers
                 if (/^[A-ZÀ-Ü\s\/\.\-]{2,}$/.test(line) && !/\d/.test(line)) {
                     sectionHeaders.push(line.toUpperCase().trim());
                 }
-                // Total / subtotal prefixes
                 if (/^(total|sous-total|subtotal|amount due|balance)\b/i.test(line)) {
                     var keyword = lower.match(/^[a-zé\-\s]+/);
                     if (keyword) totalKeywords.push(keyword[0].trim());
                 }
-                // Discount prefixes
                 if (/^(rabais|discount|promo|coupon)\b/i.test(line)) {
                     var disc = lower.match(/^[a-zé\-\s]+/);
                     if (disc) discountIndicators.push(disc[0].trim());
                 }
-                // First two non-header lines as store keyword candidates
                 if (idx < 2 && sectionHeaders.indexOf(line.toUpperCase().trim()) === -1) {
                     storeKeywords.push(line.trim());
                 }
             });
 
-            // Deduplicate
             sectionHeaders = [...new Set(sectionHeaders)];
             totalKeywords = [...new Set(totalKeywords)];
             discountIndicators = [...new Set(discountIndicators)];
             storeKeywords = [...new Set(storeKeywords)];
 
-            // Build modal
             var overlay = document.createElement('div');
             overlay.className = 'modal-overlay';
             overlay.id = 'saveFormatModal';
@@ -1514,42 +2153,35 @@
                 '<div class="modal-content" style="max-width: 700px;">' +
                 '  <button class="modal-close" id="closeFormatModal">&times;</button>' +
                 '  <h3 style="margin-bottom: 1rem;">Save as New Receipt Format</h3>' +
-                '  <p class="text-secondary mb-3" style="font-size: 0.88rem;">Review the auto-detected values below, edit as needed, then save. You can always update the format later from the Formats tab.</p>' +
-
+                '  <p class="text-secondary mb-3" style="font-size: 0.88rem;">Review the auto-detected values below, edit as needed, then save.</p>' +
                 '  <div class="format-form-row">' +
                 '    <label>Format Name <span style="color:#e53e3e;">*</span></label>' +
                 '    <input type="text" id="formatNameInput" placeholder="e.g. Metro Quebec" />' +
                 '  </div>' +
-
                 '  <div class="format-form-row">' +
                 '    <label>Store Keywords</label>' +
                 '    <textarea id="formatStoreKeywords" rows="2">' + escapeHtml(storeKeywords.join('\n')) + '</textarea>' +
-                '    <div class="format-form-hint">One keyword per line. Found anywhere in receipt text to boost detection.</div>' +
+                '    <div class="format-form-hint">One keyword per line.</div>' +
                 '  </div>' +
-
                 '  <div class="format-form-row">' +
                 '    <label>Section Headers (lines to skip)</label>' +
                 '    <textarea id="formatSectionHeaders" rows="3">' + escapeHtml(sectionHeaders.join('\n')) + '</textarea>' +
-                '    <div class="format-form-hint">One header per line. Exact match (case-insensitive) skips the line.</div>' +
+                '    <div class="format-form-hint">One header per line.</div>' +
                 '  </div>' +
-
                 '  <div class="format-form-row">' +
                 '    <label>Total Keywords (line prefixes)</label>' +
                 '    <textarea id="formatTotalKeywords" rows="2">' + escapeHtml(totalKeywords.join('\n')) + '</textarea>' +
-                '    <div class="format-form-hint">One prefix per line. Lines starting with these are treated as totals.</div>' +
+                '    <div class="format-form-hint">One prefix per line.</div>' +
                 '  </div>' +
-
                 '  <div class="format-form-row">' +
                 '    <label>Discount Indicators (line prefixes)</label>' +
                 '    <textarea id="formatDiscountIndicators" rows="2">' + escapeHtml(discountIndicators.join('\n')) + '</textarea>' +
-                '    <div class="format-form-hint">One prefix per line. Discount lines adjust the previous item\'s price.</div>' +
+                '    <div class="format-form-hint">One prefix per line.</div>' +
                 '  </div>' +
-
                 '  <div class="format-form-row">' +
                 '    <label>Raw OCR Text (reference)</label>' +
                 '    <div class="raw-text-preview">' + escapeHtml(raw) + '</div>' +
                 '  </div>' +
-
                 '  <div class="format-form-actions">' +
                 '    <button id="cancelFormatModal" class="button button-secondary">Cancel</button>' +
                 '    <button id="submitFormatModal" class="button button-primary">Create Format</button>' +
@@ -1558,12 +2190,10 @@
 
             document.body.appendChild(overlay);
 
-            // Close helpers
             document.getElementById('closeFormatModal').addEventListener('click', function () { overlay.remove(); });
             document.getElementById('cancelFormatModal').addEventListener('click', function () { overlay.remove(); });
             overlay.addEventListener('click', function (e) { if (e.target === overlay) overlay.remove(); });
 
-            // Submit
             document.getElementById('submitFormatModal').addEventListener('click', async function () {
                 var name = document.getElementById('formatNameInput').value.trim();
                 if (!name) {
@@ -1577,8 +2207,6 @@
                     sectionHeaders: textareaToArray('formatSectionHeaders'),
                     totalKeywords: textareaToArray('formatTotalKeywords'),
                     discountIndicators: textareaToArray('formatDiscountIndicators'),
-                    // A single generic line rule so the format is valid; the user
-                    // can add specific rules later from the Formats tab.
                     lineRules: [
                         {
                             label: 'Item with inline price',
@@ -1599,9 +2227,8 @@
 
                     if (result.success) {
                         overlay.remove();
-                        showMessage('Format "' + escapeHtml(name) + '" created! You can refine its line rules in the Formats tab.', 'success');
+                        showMessage('Format "' + escapeHtml(name) + '" created!', 'success');
                         receiptFormats.push(result.data);
-                        // Refresh the formats list if that tab is visible
                         if (activeTab === 'formats') renderFormatCards();
                     } else {
                         showMessage(result.error || 'Failed to create format', 'error');
@@ -1615,7 +2242,7 @@
         }
 
         // ---------------------------------------------------------------------------
-        // Receipt Formats tab – CRUD
+        // Receipt Formats tab (existing code)
         // ---------------------------------------------------------------------------
         async function loadReceiptFormats() {
             try {
@@ -1636,7 +2263,7 @@
             if (receiptFormats.length === 0) {
                 elements.formatsList.innerHTML =
                     '<p class="text-center text-secondary" style="padding: 2rem 0;">' +
-                    'No receipt formats defined yet. Process a photo and click "Save as New Format", or create one manually.' +
+                    'No receipt formats defined yet.' +
                     '</p>';
                 return;
             }
@@ -1646,7 +2273,6 @@
                 card.className = 'format-card';
                 card.id = 'format-card-' + fmt._id;
 
-                // Header row
                 var ruleCount = (fmt.lineRules || []).length;
                 var headerHtml =
                     '<div class="format-card-header" data-format-id="' + fmt._id + '">' +
@@ -1661,7 +2287,6 @@
                     '  </div>' +
                     '</div>';
 
-                // Body (detail) row
                 var bodyHtml =
                     '<div class="format-card-body" id="format-body-' + fmt._id + '">' +
                     renderFormatFieldGroup('Store Keywords', fmt.storeKeywords) +
@@ -1674,20 +2299,16 @@
                 card.innerHTML = headerHtml + bodyHtml;
                 elements.formatsList.appendChild(card);
 
-                // Toggle body on header click
                 card.querySelector('.format-card-header').addEventListener('click', function (e) {
-                    // Don't toggle if a button inside the header was clicked
                     if (e.target.closest('button')) return;
                     var body = document.getElementById('format-body-' + fmt._id);
                     body.classList.toggle('open');
                 });
 
-                // Edit button opens a modal with editable fields
                 card.querySelector('.format-edit-btn').addEventListener('click', function () {
                     openEditFormatModal(fmt);
                 });
 
-                // Delete button
                 card.querySelector('.format-delete-btn').addEventListener('click', async function () {
                     if (!confirm('Delete the "' + fmt.name + '" format?')) return;
                     try {
@@ -1737,9 +2358,6 @@
                 '</div>';
         }
 
-        // ---------------------------------------------------------------------------
-        // Create-format modal (blank, from the Formats tab button)
-        // ---------------------------------------------------------------------------
         function openCreateFormatModal() {
             buildFormatModal(null, function (payload) {
                 return fetch('/api/receipts/formats', {
@@ -1754,9 +2372,6 @@
             });
         }
 
-        // ---------------------------------------------------------------------------
-        // Edit-format modal (pre-filled)
-        // ---------------------------------------------------------------------------
         function openEditFormatModal(fmt) {
             buildFormatModal(fmt, function (payload) {
                 return fetch('/api/receipts/formats/' + fmt._id, {
@@ -1765,7 +2380,6 @@
                     body: JSON.stringify(payload)
                 });
             }, function (result) {
-                // Replace in local cache
                 var idx = receiptFormats.findIndex(function (f) { return f._id === fmt._id; });
                 if (idx !== -1) receiptFormats[idx] = result.data;
                 renderFormatCards();
@@ -1773,11 +2387,6 @@
             });
         }
 
-        // ---------------------------------------------------------------------------
-        // Generic format modal builder
-        // Handles both create (fmt === null) and edit (fmt filled in) flows.
-        // Includes an "add rule / remove rule" interface for lineRules.
-        // ---------------------------------------------------------------------------
         function buildFormatModal(fmt, submitFn, onSuccess) {
             var overlay = document.createElement('div');
             overlay.className = 'modal-overlay';
@@ -1788,45 +2397,38 @@
                 '<div class="modal-content" style="max-width: 720px;">' +
                 '  <button class="modal-close" id="fmtModalClose">&times;</button>' +
                 '  <h3 style="margin-bottom: 1rem;">' + (fmt ? 'Edit Format' : 'Create New Format') + '</h3>' +
-
                 '  <div class="format-form-row">' +
                 '    <label>Format Name <span style="color:#e53e3e;">*</span></label>' +
                 '    <input type="text" id="fmtModalName" value="' + escapeHtml(fmt ? fmt.name : '') + '" placeholder="e.g. Metro Quebec" />' +
                 '  </div>' +
-
                 '  <div class="format-form-row">' +
                 '    <label>Store Keywords</label>' +
                 '    <textarea id="fmtModalStoreKw" rows="2">' + escapeHtml(arrayToTextarea(fmt ? fmt.storeKeywords : [])) + '</textarea>' +
-                '    <div class="format-form-hint">One keyword per line. Substring match anywhere in OCR text.</div>' +
+                '    <div class="format-form-hint">One keyword per line.</div>' +
                 '  </div>' +
-
                 '  <div class="format-form-row">' +
                 '    <label>Section Headers (lines to skip)</label>' +
                 '    <textarea id="fmtModalHeaders" rows="3">' + escapeHtml(arrayToTextarea(fmt ? fmt.sectionHeaders : [])) + '</textarea>' +
-                '    <div class="format-form-hint">One per line. Exact case-insensitive match skips the line entirely.</div>' +
+                '    <div class="format-form-hint">One per line.</div>' +
                 '  </div>' +
-
                 '  <div class="format-form-row">' +
                 '    <label>Total Keywords</label>' +
                 '    <textarea id="fmtModalTotals" rows="2">' + escapeHtml(arrayToTextarea(fmt ? fmt.totalKeywords : [])) + '</textarea>' +
-                '    <div class="format-form-hint">One prefix per line. Lines starting with these are recorded as totals.</div>' +
+                '    <div class="format-form-hint">One prefix per line.</div>' +
                 '  </div>' +
-
                 '  <div class="format-form-row">' +
                 '    <label>Discount Indicators</label>' +
                 '    <textarea id="fmtModalDiscounts" rows="2">' + escapeHtml(arrayToTextarea(fmt ? fmt.discountIndicators : [])) + '</textarea>' +
-                '    <div class="format-form-hint">One prefix per line. Adjusts the preceding item\'s price.</div>' +
+                '    <div class="format-form-hint">One prefix per line.</div>' +
                 '  </div>' +
-
                 '  <div class="format-form-row">' +
                 '    <label>Line Rules</label>' +
-                '    <div class="format-form-hint" style="margin-bottom: 0.5rem;">Each rule is a regex with named capture groups mapped to fields. First matching rule wins.</div>' +
+                '    <div class="format-form-hint" style="margin-bottom: 0.5rem;">Each rule is a regex with named capture groups.</div>' +
                 '    <div id="fmtModalRulesContainer"></div>' +
                 '    <button id="fmtModalAddRule" class="button button-small button-secondary" style="margin-top: 0.5rem;">' +
                 '      <span class="button-icon">➕</span> Add Rule' +
                 '    </button>' +
                 '  </div>' +
-
                 '  <div class="format-form-actions">' +
                 '    <button id="fmtModalCancel" class="button button-secondary">Cancel</button>' +
                 '    <button id="fmtModalSubmit" class="button button-primary">' + (fmt ? 'Save Changes' : 'Create Format') + '</button>' +
@@ -1835,12 +2437,10 @@
 
             document.body.appendChild(overlay);
 
-            // Seed existing rules
             var rulesContainer = document.getElementById('fmtModalRulesContainer');
             existingRules.forEach(function (rule) {
                 appendRuleEditor(rulesContainer, rule);
             });
-            // Ensure at least one rule block if creating
             if (existingRules.length === 0 && !fmt) {
                 appendRuleEditor(rulesContainer, {
                     label: 'Item with inline price',
@@ -1849,17 +2449,14 @@
                 });
             }
 
-            // "Add Rule" button
             document.getElementById('fmtModalAddRule').addEventListener('click', function () {
                 appendRuleEditor(rulesContainer, { label: '', pattern: '', captures: {} });
             });
 
-            // Close helpers
             document.getElementById('fmtModalClose').addEventListener('click', function () { overlay.remove(); });
             document.getElementById('fmtModalCancel').addEventListener('click', function () { overlay.remove(); });
             overlay.addEventListener('click', function (e) { if (e.target === overlay) overlay.remove(); });
 
-            // Submit
             document.getElementById('fmtModalSubmit').addEventListener('click', async function () {
                 var name = document.getElementById('fmtModalName').value.trim();
                 if (!name) {
@@ -1900,7 +2497,6 @@
             });
         }
 
-        // Append one rule editor block into the container
         function appendRuleEditor(container, rule) {
             var wrapper = document.createElement('div');
             wrapper.className = 'format-form-row';
@@ -1920,15 +2516,14 @@
                 '  <input type="text" class="rule-label-input" value="' + escapeHtml(rule.label || '') + '" placeholder="e.g. Item with inline price" style="width:100%; padding: 0.4rem 0.5rem; border: 1px solid #ddd; border-radius: 4px; font-size: 0.82rem;" />' +
                 '</div>' +
                 '<div style="margin-bottom: 0.35rem;">' +
-                '  <label style="font-size: 0.78rem; color: var(--text-secondary);">Regex Pattern (use named groups: desc, price, qty, unit)</label>' +
+                '  <label style="font-size: 0.78rem; color: var(--text-secondary);">Regex Pattern</label>' +
                 '  <input type="text" class="rule-pattern-input" value="' + escapeHtml(rule.pattern || '') + '" placeholder="^(?<desc>.+?)\\s+(?<price>\\d+\\.\\d{2})\\s*$" style="width:100%; padding: 0.4rem 0.5rem; border: 1px solid #ddd; border-radius: 4px; font-size: 0.82rem; font-family: \'Courier New\', monospace;" />' +
                 '</div>' +
                 '<div>' +
-                '  <label style="font-size: 0.78rem; color: var(--text-secondary);">Capture Map (JSON: group name → field)</label>' +
+                '  <label style="font-size: 0.78rem; color: var(--text-secondary);">Capture Map (JSON)</label>' +
                 '  <input type="text" class="rule-captures-input" value="' + escapeHtml(JSON.stringify(rule.captures || {})) + '" placeholder=\'{"desc":"description","price":"price"}\' style="width:100%; padding: 0.4rem 0.5rem; border: 1px solid #ddd; border-radius: 4px; font-size: 0.82rem; font-family: \'Courier New\', monospace;" />' +
                 '</div>';
 
-            // Remove button
             wrapper.querySelector('.rule-remove-btn').addEventListener('click', function () {
                 wrapper.remove();
             });
@@ -1936,7 +2531,6 @@
             container.appendChild(wrapper);
         }
 
-        // Collect all rule editors into an array
         function collectRulesFromEditors(container) {
             var wrappers = container.querySelectorAll('.format-form-row');
             var rules = [];
@@ -1944,10 +2538,10 @@
                 var label = w.querySelector('.rule-label-input').value.trim();
                 var pattern = w.querySelector('.rule-pattern-input').value.trim();
                 var capturesRaw = w.querySelector('.rule-captures-input').value.trim();
-                if (!pattern) return; // skip empty rule blocks
+                if (!pattern) return;
 
                 var captures = {};
-                try { captures = JSON.parse(capturesRaw); } catch (_e) { /* leave empty */ }
+                try { captures = JSON.parse(capturesRaw); } catch (_e) { }
 
                 rules.push({ label: label || 'Unnamed rule', pattern: pattern, captures: captures });
             });
@@ -2034,7 +2628,7 @@
         }
 
         // ---------------------------------------------------------------------------
-        // Receipt item display & selection (Upload tab)
+        // Receipt item display & selection
         // ---------------------------------------------------------------------------
         function displayReceipt() {
             elements.itemsList.innerHTML = '';
@@ -2346,6 +2940,8 @@
                 loadReceiptHistory();
             } else if (tab === 'formats') {
                 loadReceiptFormats().then(function () { renderFormatCards(); });
+            } else if (tab === 'dictionary') {
+                loadOCRDictionary();
             }
         }
 
@@ -2683,7 +3279,6 @@
             return user ? user.name : 'Unknown User';
         }
 
-        // Confidence badge text + colour based on percentage 0-100
         function setConfidenceBadge(elementId, pct) {
             var el = document.getElementById(elementId);
             if (pct >= 80) {
@@ -2698,7 +3293,6 @@
             }
         }
 
-        // Fill a confidence-bar element to `pct`% width with colour
         function setConfidenceBar(elementId, pct) {
             var el = document.getElementById(elementId);
             el.style.width = pct + '%';
@@ -2711,13 +3305,11 @@
             }
         }
 
-        // Textarea value → trimmed non-empty lines array
         function textareaToArray(elementId) {
             var val = document.getElementById(elementId).value;
             return val.split('\n').map(function (l) { return l.trim(); }).filter(Boolean);
         }
 
-        // Array → newline-joined string for textarea pre-fill
         function arrayToTextarea(arr) {
             return (arr || []).join('\n');
         }

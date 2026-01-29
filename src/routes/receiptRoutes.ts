@@ -1,3 +1,4 @@
+// src/routes/receipt.routes.ts
 import { Router } from 'express';
 import multer from 'multer';
 import {
@@ -21,6 +22,12 @@ import {
   deleteReceiptFormatHandler,
   detectReceiptFormat,
   parseWithFormat,
+  // New exports
+  parseCorrectText,
+  getOCRCorrections,
+  createOCRCorrection,
+  editOCRCorrection,
+  removeOCRCorrection,
 } from '../controllers/receipt.controller';
 
 const router = Router();
@@ -51,6 +58,15 @@ router.get('/translate', translateText);
 // ---------------------------------------------------------------------------
 router.post('/upload-photo', upload.fields([{ name: 'photo', maxCount: 1 }]), uploadReceiptPhoto);
 router.post('/photo-to-csv', upload.fields([{ name: 'photo', maxCount: 1 }]), convertPhotoToCSV);
+router.post('/parse-corrected', parseCorrectText);
+
+// ---------------------------------------------------------------------------
+// OCR Corrections/Dictionary
+// ---------------------------------------------------------------------------
+router.get('/ocr-corrections', getOCRCorrections);
+router.post('/ocr-corrections', createOCRCorrection);
+router.put('/ocr-corrections/:id', editOCRCorrection);
+router.delete('/ocr-corrections/:id', removeOCRCorrection);
 
 // ---------------------------------------------------------------------------
 // Receipt-format CRUD and detection
